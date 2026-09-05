@@ -1,7 +1,8 @@
 ## Build using the command below
 
 ``` qt-cmake -S . -B build -G Ninja```
-OR
+
+followed by installation with
 
 ```cmake --build build         ```
 ## Remove build files with
@@ -15,3 +16,158 @@ Remove-Item -Recurse -Force build
 
 ## Install with 
 ```cmake --build build```
+
+
+## About Cliche Station
+
+Cliche Station is a midi compatible sound engine that uses the midi info inputed through a Midi Keyboard or other Midi devices and processes the digital signal to produce sound suitable for EDM and digital signal processing. It offers a wide range of processing capabilities on waveform like
+changing velocity, Attack-Decay-Sustain-Release Envelope, compressing, clipping, reverb, pitchbending, distorting, flanging and modulating the signal. 
+
+## How it works
+
+Cliche Station uses RtMidi (a cross platform Open Source Midi Library) to input sound from a Midi compatible Keyboard device.
+
+It has the following layout
+
+```
+root/
+    ---audio/
+        ---AudioEngine.cpp // contains the Synthesized sound with AudioEffects
+        ---AudioEngine.h
+        ---TrackProcessor.cpp // contains individual track specific settings
+        ---TrackProcessor.h
+        ---effects/
+            ---AudioEffect.h // Base Class of all audio effects (clipping, delay, distortion, saturation)
+            ---Clipping.cpp // Produces clipping effect
+            ---Clipping.h
+            ---Delay.cpp // Adds dealy effect 
+            ---Delay.h
+            ---Distortion.cpp // Adds distortion to the sound
+            ---Distortion.h
+            ---EffectChain.cpp // Chains all effects in a order
+            ---EffectChain.h
+            ---Saturation.cpp // 
+            ---Saturation.h
+    ---gui/
+        ---base.cpp // Main Window of the application
+        ---base.h
+        ---drumPad.cpp // Drum Pad layout
+        ---drumPad.h
+        ---instrument_settings.cpp //InstrumentSettingscard
+        ---instrument_settings.h
+        ---main.cpp // entry point of the program. Contains QtStyles
+        ---monitorWindow.cpp // window to connect to Midi Keyboard
+        ---monitorWindow.h
+        ---piano.cpp // piano layout incorporating piano roll and keyboard
+        ---piano.h
+        ---pianoKeyboard.cpp // Piano Keyboard Gui
+        ---pianoKeyBoard.h
+        ---pianoRoll.cpp // Synthesia or Piano Roll contains green Piano Tiles
+        ---pianoRoll.h
+        ---voice_track.cpp // Voice Track card
+        ---voice_track.h
+
+    ---midi/
+        ---MidiInput.cpp // Accepts midi input from Midi devices using RtMidi apis
+        ---MidiInput.h
+        ---RtMidi.cpp // RtMidi.cpp file taken from RtMidi github repository providing cross-platform supported midi apis
+        ---RtMidi.h
+    ---synth/
+        ---ADSREnvelope.cpp // Manages ADSR Envelope
+        ---ADSREnvelope.h
+        ---Oscillator.cpp //capable of generating classical Sine, Saw, Triangle, Square and other waves
+        ---Oscillator.h
+        ---SynthEngine.cpp // renders wave profile as described in a Voice object
+        ---SynthEngine.h
+        ---Voice.cpp // object representing a voice as a function of keys pressed frequency, wave velocity, ADSR envelope, oscillator type(Sine, Triangle, Saw) and pitchbend set
+        ---Voice.h
+    ---wav/
+        ---piano-sound-master/
+            ---a1.wav
+            ---a1s.wav
+            ---b1.wav
+            ---c1.wav
+            ...
+            ...
+            ...
+            ---g1s.wav
+        //contains wavs file for several instruments  
+```
+```
+A Single Voice Track is structured as follows:
+VoiceTrack
+    │
+    ├── PianoRoll
+    │
+    ├── EffectChain
+    │
+    └── Synth / instrument settings
+              │
+              ↓
+         SynthEngine
+              │
+       ┌──────┼──────┐
+       ↓      ↓      ↓
+     Voice  Voice  Voice
+       │      │      │
+       ├─ Oscillator
+       └─ ADSREnvelope
+```
+
+### Content Structure
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                            PLAYLIST                                  │
+│                                                                      │
+│ ┌──────────────────────────────────────────────────────────────────┐ │
+│ │ Sequence 1                                                       │ │
+│ │ ┌──────────────────────────────────────────────────────────────┐ │ │
+│ │ │ Layer 1     Piano Track                         [x]          │ │ │
+│ │ ├──────────────────────────────────────────────────────────────┤ │ │
+│ │ │ Layer 2     Bass Track                          [x]          │ │ │
+│ │ ├──────────────────────────────────────────────────────────────┤ │ │
+│ │ │ Layer 3     Lead Track                          [x]          │ │ │
+│ │ ├──────────────────────────────────────────────────────────────┤ │ │
+│ │ │                         [+ Add Layer]                         │ │ │
+│ │ └──────────────────────────────────────────────────────────────┘ │ │
+│ │                                                                  │ │
+│ │ Sequence 2                                                       │ │
+│ │ ┌──────────────────────────────────────────────────────────────┐ │ │
+│ │ │ Layer 1     Drums Track                         [x]          │ │ │
+│ │ ├──────────────────────────────────────────────────────────────┤ │ │
+│ │ │ Layer 2     Piano Track                         [x]          │ │ │
+│ │ ├──────────────────────────────────────────────────────────────┤ │ │
+│ │ │                         [+ Add Layer]                         │ │ │
+│ │ └──────────────────────────────────────────────────────────────┘ │ │
+│ │                                                                  │ │
+│ │                         ↑ vertical scrolling ↑                   │ │
+│ └──────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+├──────────────────────────────────────────────────────────────────────┤
+│ TRACK LIST                                                [+ Track]  │
+│                                                                      │
+│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐     │
+│ │ Piano       │ │ Bass        │ │ Lead        │ │ Drums       │     │
+│ │             │ │             │ │             │ │             │     │
+│ │ Piano Roll  │ │ Piano Roll  │ │ Piano Roll  │ │ Piano Roll  │     │
+│ │ Instrument  │ │ Instrument  │ │ Instrument  │ │ Instrument  │     │
+│ │ Effects     │ │ Effects     │ │ Effects     │ │ Effects     │     │
+│ │ Mute  Solo  │ │ Mute  Solo  │ │ Mute  Solo  │ │ Mute  Solo  │     │
+│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘     │
+│                ← horizontal scrolling →                            │
+└──────────────────────────────────────────────────────────────────────┘
+
+```
+```mermaid
+flowchart TB
+
+subgraph SignalProcessing[Signal Processing]
+    Start[Start]-->|Set Waveform, Sample Rate, Frequency to generate signal|Oscillator[Oscillator]
+    Oscillator-->|Set attack, decay, release time, sustain and gain levels for generated signal|ADSREnvelope[ADSR Envelope]
+    ADSREnvelope-->|set PitchBend,Render and provides Oscillator and ADSREnvelope parmas|Voice[Voice]
+    Voice-->|Renders the output signal|SynthEngine[Synth Engine]
+end
+    
+```
+

@@ -8,27 +8,71 @@ project(ClicheStation
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 CONFIG REQUIRED COMPONENTS Widgets)
+find_package(Qt6 CONFIG REQUIRED COMPONENTS Core Gui Widgets Multimedia)
+find_package(Threads REQUIRED)
 
 qt_standard_project_setup()
 
-# adds an executable named CicheStation which is created from the src mentioned
+# adds an executable named ClicheStation which is created from the src mentioned
 qt_add_executable(ClicheStation
-    main.cpp
-    MainWindow.cpp
-    MainWindow.h
-    MidiInput.cpp
-    MidiInput.h
+    gui/base.cpp
+    gui/base.h
+    gui/drumPad.cpp
+    gui/drumPad.h
+    gui/instrument_settings.cpp
+    gui/instrument_settings.h
+    gui/main.cpp
+    gui/monitorWindow.cpp
+    gui/monitorWindow.h
+    gui/piano.cpp
+    gui/piano.h
+    gui/pianoKeyboard.cpp
+    gui/pianoKeyboard.h
+    gui/pianoRoll.cpp
+    gui/pianoRoll.h
+    gui/track_list.cpp
+    gui/track_list.h
+    gui/voice_track.cpp
+    gui/voice_track.h
+    # Midi source
+    midi/RtMidi.cpp
+    midi/RtMidi.h
+    midi/MidiInput.cpp
+    midi/MidiInput.h
 
-    # RtMidi source
-    RtMidi.cpp
-    RtMidi.h
+    # Synth source
+    synth/ADSREnvelope.cpp
+    synth/ADSREnvelope.h
+    synth/InstrumentParameters.h
+    synth/Oscillator.cpp
+    synth/Oscillator.h
+    synth/SynthEngine.cpp
+    synth/SynthEngine.h
+    synth/Voice.cpp
+    synth/Voice.h
+
+    # Audio Engine
+    audio/AudioEngine.cpp
+    audio/AudioEngine.h
+
+    # Audio Effects
+    audio/effects/AudioEffect.h
+    audio/effects/Clipping.cpp
+    audio/effects/Delay.cpp
+    audio/effects/Distortion.cpp
+    audio/effects/Distortion.h
+    audio/effects/EffectChain.cpp
+    audio/effects/EFfectChain.h
+    audio/effects/Saturation.cpp
 )
 
 # links against -lQt6Widgets 
 target_link_libraries(ClicheStation
     PRIVATE
         Qt6::Widgets
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Multimedia
         Threads::Threads
 )
 

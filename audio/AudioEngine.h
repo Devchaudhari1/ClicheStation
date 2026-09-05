@@ -1,0 +1,70 @@
+#pragma once
+
+#include <QObject>
+#include <QAudioFormat>
+#include <QAudioSink>
+#include <QIODevice>
+
+#include "../synth/SynthEngine.h"
+#include "effects/EffectChain.h"
+
+class AudioEngine;
+
+class AudioOutputDevice : public QIODevice
+{
+public:
+    explicit AudioOutputDevice(AudioEngine *engine);
+
+protected:
+    qint64 readData(char *data, qint64 maxlen) override;
+    qint64 writeData(const char *data, qint64 len) override;
+    qint64 bytesAvailable() const override;
+
+private:
+    AudioEngine *m_engine;
+};
+
+class AudioEngine : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit AudioEngine(QObject *parent = nullptr);
+    ~AudioEngine();
+
+    bool initialize();
+
+    void start();
+    void stop();
+
+    void noteOn(int midiNote, int velocity);
+    void noteOff(int midiNote);
+    void pitchBend(int channel, int value);
+
+    void render(
+        float *left,
+        float *right,
+        std::size_t numSamples
+    );
+
+    double sampleRate() const;
+    int blockSize() const;
+
+    SynthEngine& synth();
+    EffectChain& effects();
+
+private:
+    double m_sampleRate = 48000.0;
+    int m_blockSize = 256;
+
+    QAudioFormat m_format;
+    QAudioSink *m_audioSink = nullptr;
+    QIODevice *m_audioDevice = nullptr;
+
+    AudioOutputDevice *m_outputDevice = nullptr;
+
+    SynthEngine m_synth;
+    EffectChain m_effectChain;
+
+    bool m_running = false;
+};
