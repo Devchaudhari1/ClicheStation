@@ -1,5 +1,15 @@
 #include "TrackProcessor.h"
 
+TrackProcessor::TrackProcessor(int trackId)
+    : m_trackId(trackId)
+{
+}
+
+int TrackProcessor::trackId() const
+{
+    return m_trackId;
+}
+
 void TrackProcessor::prepare(double sampleRate,
                              std::size_t blockSize)
 {

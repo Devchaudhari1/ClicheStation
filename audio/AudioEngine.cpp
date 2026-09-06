@@ -125,15 +125,8 @@ bool AudioEngine::initialize()
             qDebug() << "AudioSink state changed:" << state;
         });
 
-    m_synth.prepare(
-        m_sampleRate,
-        m_blockSize);
-
-    m_effectChain.prepare(
-        m_sampleRate,
-        m_blockSize,
-        2);
-
+    createTrack(1);
+    createTrack(2);
     m_outputDevice =new AudioOutputDevice(this);
 
     return true;
@@ -186,50 +179,70 @@ void AudioEngine::stop()
 
     m_running = false;
 }
-void AudioEngine::noteOn(
-    int midiNote,
-    int velocity)
+
+void AudioEngine::noteOn(int midiNote, int velocity)
 {
-    m_synth.noteOn(
-        midiNote,
-        velocity);
+    if (m_trackProcessors.empty())
+        return;
+
+    m_trackProcessors[0]->noteOn(midiNote, velocity);
+}
+
+void AudioEngine::noteOn(
+    int trackId,
+    int midiNote,
+    int velocity
+)
+{
+    TrackProcessor *processor =
+        findTrackProcessor(trackId);
+
+    if (!processor)
+        return;
+
+    processor->noteOn(midiNote, velocity);
+}
+
+void AudioEngine::noteOff(int midiNote)
+{
+    if (m_trackProcessors.empty())
+        return;
+
+    m_trackProcessors[0]->noteOff(midiNote);
 }
 
 void AudioEngine::noteOff(
-    int midiNote)
+    int trackId,
+    int midiNote
+)
 {
-    m_synth.noteOff(
-        midiNote);
+    TrackProcessor *processor =
+        findTrackProcessor(trackId);
+
+    if (!processor)
+        return;
+
+    processor->noteOff(midiNote);
 }
 
-void AudioEngine::pitchBend(
-    int channel,
-    int value)
+void AudioEngine::pitchBend(int channel, int value)
 {
-    m_synth.pitchBend(
-        channel,
-        value);
+    if (m_trackProcessors.empty())
+        return;
+
+    m_trackProcessors[0]->pitchBend(channel, value);
 }
 
-void AudioEngine::render(
-    float* left,
-    float* right,
-    std::size_t numSamples)
+void AudioEngine::render(float *left,
+                         float *right,
+                         std::size_t numSamples)
 {
-    m_synth.render(left, right, numSamples);
-    m_effectChain.process(left, right, numSamples);
-    for (std::size_t i = 0; i < numSamples; ++i)
-    {
-        if (!std::isfinite(left[i]) ||
-            !std::isfinite(right[i]))
-        {
-            qWarning() << "INVALID AUDIO SAMPLE:"
-                       << left[i]
-                       << right[i];
-            return;
-        }
-    }
+    if (m_trackProcessors.empty())
+        return;
+
+    m_trackProcessors[0]->render(left, right, numSamples);
 }
+
 
 double AudioEngine::sampleRate() const
 {
@@ -241,12 +254,27 @@ int AudioEngine::blockSize() const
     return m_blockSize;
 }
 
-SynthEngine& AudioEngine::synth()
+TrackProcessor* AudioEngine::createTrack(int trackId)
 {
-    return m_synth;
+    auto processor =
+        std::make_unique<TrackProcessor>(trackId);
+
+    processor->prepare(m_sampleRate, m_blockSize);
+
+    TrackProcessor* result = processor.get();
+
+    m_trackProcessors.push_back(std::move(processor));
+
+    return result;
 }
 
-EffectChain& AudioEngine::effects()
+TrackProcessor* AudioEngine::findTrackProcessor(int trackId)
 {
-    return m_effectChain;
+    for (auto& processor : m_trackProcessors)
+    {
+        if (processor->trackId() == trackId)
+            return processor.get();
+    }
+
+    return nullptr;
 }

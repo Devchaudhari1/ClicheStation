@@ -40,5 +40,12 @@ void TrackList::addVoiceTrack()
 
     m_trackLayout->insertWidget(insertPosition, track);
 
-    emit voiceTrackAdded(trackId);
+    m_tracks.append(qMakePair(trackId, trackName));
+    
+    emit tracksChanged(m_tracks);
+}
+
+QVector<QPair<int, QString>> TrackList::availableTracks() const
+{
+    return m_tracks;
 }

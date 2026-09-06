@@ -1,6 +1,9 @@
 #pragma once
 
 #include <QWidget>
+#include <QVector>
+#include <QPair>
+#include <QString>
 
 class QHBoxLayout;
 class QPushButton;
@@ -14,15 +17,16 @@ public:
     explicit TrackList(AudioEngine * audioEngine, QWidget *parent = nullptr);
 
     void addVoiceTrack();
-
+    QVector<QPair<int, QString>> availableTracks() const;
 signals:
-    void voiceTrackAdded(int trackId);
+    
+    void tracksChanged(const QVector<QPair<int, QString>> &tracks);
 
 private:
     void createUI();
     
     AudioEngine *m_audioEngine;
-
+    QVector<QPair<int, QString>> m_tracks;
     QHBoxLayout *m_trackLayout;
     QPushButton *m_addTrackButton;
 

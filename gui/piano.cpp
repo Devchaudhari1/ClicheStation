@@ -5,8 +5,13 @@
 
 #include <QVBoxLayout>
 
-Piano::Piano(AudioEngine *audioEngine, QWidget *parent)
+Piano::Piano(
+    int trackId,
+    AudioEngine *audioEngine,
+    QWidget *parent
+)
     : QWidget(parent, Qt::Window),
+      trackId(trackId),
       pianoRoll(nullptr),
       pianoKeyboard(nullptr),
       audioEngine(audioEngine)
@@ -40,7 +45,10 @@ void Piano::createUI()
     this,
     [this](int midiNote)
     {
-        audioEngine->noteOn(midiNote, 100);
+        if(audioEngine)
+        {
+            audioEngine->noteOn(trackId, midiNote, 100);
+        }
     }
     );
 
@@ -50,7 +58,10 @@ void Piano::createUI()
     this,
     [this](int midiNote)
     {
-        audioEngine->noteOff(midiNote);
+        if(audioEngine)
+        {
+            audioEngine->noteOff(trackId,midiNote);
+        }
     }
     );
     

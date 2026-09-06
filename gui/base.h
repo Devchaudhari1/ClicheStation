@@ -10,6 +10,7 @@ class VoiceTrack;
 class Piano;
 class MonitorWindow;
 class DrumPad;
+class Playlist;
 class Base : public QMainWindow
 {
 public:
@@ -19,6 +20,7 @@ public:
     void createUI();
     void playStartupSound();
 private:
+    Playlist *m_playlist;
     Piano *pianoWindow = nullptr;
     AudioEngine *m_audioEngine = nullptr;
     MonitorWindow *monitorWindow = nullptr;

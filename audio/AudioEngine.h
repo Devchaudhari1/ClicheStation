@@ -4,9 +4,9 @@
 #include <QAudioFormat>
 #include <QAudioSink>
 #include <QIODevice>
-
-#include "../synth/SynthEngine.h"
-#include "effects/EffectChain.h"
+#include <vector>
+#include <memory>
+#include "TrackProcessor.h"
 
 class AudioEngine;
 
@@ -39,6 +39,9 @@ public:
 
     void noteOn(int midiNote, int velocity);
     void noteOff(int midiNote);
+    void noteOn(int trackId, int midiNote, int velocity);
+    void noteOff(int trackId, int midiNote);
+    
     void pitchBend(int channel, int value);
 
     void render(
@@ -47,11 +50,10 @@ public:
         std::size_t numSamples
     );
 
+    TrackProcessor* createTrack(int trackId);
+    TrackProcessor* findTrackProcessor(int trackId);
     double sampleRate() const;
     int blockSize() const;
-
-    SynthEngine& synth();
-    EffectChain& effects();
 
 private:
     double m_sampleRate = 48000.0;
@@ -63,8 +65,7 @@ private:
 
     AudioOutputDevice *m_outputDevice = nullptr;
 
-    SynthEngine m_synth;
-    EffectChain m_effectChain;
+    std::vector<std::unique_ptr<TrackProcessor>> m_trackProcessors;
 
     bool m_running = false;
 };

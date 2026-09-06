@@ -1,5 +1,6 @@
 #include "base.h"
 #include "piano.h"
+#include "./playlist/playlist.h"
 #include "monitorWindow.h"
 #include "drumPad.h"
 #include <Qwidget>
@@ -9,6 +10,8 @@
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <QTimer>
+#include <QPair>
+#include <QSizePolicy>
 #include "../audio/AudioEngine.h"
 #include "voice_track.h"
 #include "track_list.h"
@@ -68,7 +71,8 @@ void Base::playStartupSound()
 
 
 Base::Base(QWidget *parent)
-    : QMainWindow(parent)
+    : QMainWindow(parent),
+    m_playlist(nullptr)
 {
     setWindowTitle("Qt Base");
 
@@ -85,97 +89,283 @@ Base::~Base()
 
 }
 
-
-
 void Base::createUI()
 {
-    QWidget * window = new QWidget(this);
-    setCentralWidget(window);
-    QVBoxLayout * layout = new QVBoxLayout(window);
-    // QWidget * HorizontalBar= new QWidget(window);
-    // QWidget * VerticalBar= new QWidget(window);
-    QWidget * Header= new QWidget(window);
-    Header->setObjectName("Header");
-    QWidget * Sidebar= new QWidget(window);
-    QLabel * heading = new QLabel("Heading", Header);
-    QHBoxLayout * hLayout = new QHBoxLayout(Header);
-    QWidget * buttonContainer= new QWidget(Header);
-    QHBoxLayout * buttonLayout = new QHBoxLayout(buttonContainer);
-    buttonLayout->setObjectName("buttonLayout");
-    buttonContainer->setObjectName("buttonContainer");
-    buttonContainer->setFixedHeight(40);
-    QPushButton * StartRecording = new QPushButton("Start Recording");
-    QPushButton * StopRecording = new QPushButton("Stop Recording");
-    QPushButton * PianoButton = new QPushButton("Piano");
-    QPushButton * MonitorButton = new QPushButton("Monitor");
-    QPushButton * DrumPadButton = new QPushButton("Drum Pad");
-    buttonLayout->addWidget(StartRecording);
-    buttonLayout->addWidget(StopRecording); 
-    buttonLayout->addWidget(PianoButton);
-    buttonLayout->addWidget(MonitorButton);
-    buttonLayout->addWidget(DrumPadButton);
-    QWidget * Spacer= new QWidget(Header);
-    hLayout->addWidget(Spacer,2);
-    hLayout->addWidget(buttonContainer);
+    QWidget *window =
+        new QWidget(this);
 
-    QWidget * ContentArea= new QWidget(window);
-    ContentArea->setObjectName("ContentArea");
-    
-    layout->addWidget(Header);
-    layout->addWidget(ContentArea, 1);
-    TrackList *trackList = new TrackList(m_audioEngine, window);
+    setCentralWidget(window);
+
+    QVBoxLayout *layout =
+        new QVBoxLayout(window);
+
+    layout->setContentsMargins(
+        0, 0, 0, 0
+    );
+
+    layout->setSpacing(0);
+
+    // -------------------------------------------------
+    // Header
+    // -------------------------------------------------
+
+    QWidget *Header =
+        new QWidget(window);
+
+    Header->setObjectName(
+        "Header"
+    );
+
+    // -------------------------------------------------
+    // Content Area
+    // -------------------------------------------------
+
+    QWidget *contentArea =
+        new QWidget(window);
+
+    contentArea->setObjectName(
+        "contentArea"
+    );
+
+    QVBoxLayout *contentLayout =
+        new QVBoxLayout(contentArea);
+
+    contentLayout->setContentsMargins(
+        0, 0, 0, 0
+    );
+
+    contentLayout->setSpacing(0);
+
+    // -------------------------------------------------
+    // Header UI
+    // -------------------------------------------------
+
+    QLabel *heading =
+        new QLabel("Heading", Header);
+
+    QHBoxLayout *hLayout =
+        new QHBoxLayout(Header);
+
+    QWidget *buttonContainer =
+        new QWidget(Header);
+
+    QHBoxLayout *buttonLayout =
+        new QHBoxLayout(buttonContainer);
+
+    buttonLayout->setObjectName(
+        "buttonLayout"
+    );
+
+    buttonContainer->setObjectName(
+        "buttonContainer"
+    );
+
+    buttonContainer->setFixedHeight(40);
+
+    QPushButton *AddSequenceButton =
+        new QPushButton("+ Add Sequence");
+
+    QPushButton *StartRecording =
+        new QPushButton("Start Recording");
+
+    QPushButton *StopRecording =
+        new QPushButton("Stop Recording");
+
+    QPushButton *PianoButton =
+        new QPushButton("Piano");
+
+    QPushButton *MonitorButton =
+        new QPushButton("Monitor");
+
+    QPushButton *DrumPadButton =
+        new QPushButton("Drum Pad");
+
+    QPushButton *TrackListButton =
+        new QPushButton("Track List");
+
+    buttonLayout->addWidget(
+        StartRecording
+    );
+
+    buttonLayout->addWidget(
+        StopRecording
+    );
+
+    buttonLayout->addWidget(
+        AddSequenceButton
+    );
+
+    buttonLayout->addWidget(
+        TrackListButton
+    );
+
+    buttonLayout->addWidget(
+        PianoButton
+    );
+
+    buttonLayout->addWidget(
+        MonitorButton
+    );
+
+    buttonLayout->addWidget(
+        DrumPadButton
+    );
+
+    QWidget *Spacer =
+        new QWidget(Header);
+
+    hLayout->addWidget(
+        Spacer,
+        2
+    );
+
+    hLayout->addWidget(
+        buttonContainer
+    );
+
+    // -------------------------------------------------
+    // Put Header + Content Area into main layout
+    // -------------------------------------------------
+
+    layout->addWidget(
+        Header
+    );
+
+    layout->addWidget(
+        contentArea,
+        1
+    );
+
+    // -------------------------------------------------
+    // Playlist
+    // -------------------------------------------------
+
+    m_playlist =
+        new Playlist(contentArea);
+
+    m_playlist->setSizePolicy(
+        QSizePolicy::Expanding,
+        QSizePolicy::Expanding
+    );
+
+    contentLayout->addWidget(
+        m_playlist
+    );
+
+    // -------------------------------------------------
+    // Track List
+    // -------------------------------------------------
+
+    TrackList *trackList =
+        new TrackList(
+            m_audioEngine,
+            window
+        );
+
+    // -------------------------------------------------
+    // Connections
+    // -------------------------------------------------
+
+    connect(
+        AddSequenceButton,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            m_playlist->addSequence();
+        }
+    );
+
+    connect(
+        trackList,
+        &TrackList::tracksChanged,
+        m_playlist,
+        &Playlist::setAvailableTracks
+    );
+
     trackList->addVoiceTrack();
 
-    layout->addWidget(trackList);
-    QWidget * Footer= new QWidget(window);
-    Footer->setObjectName("Footer");
-    layout->addWidget(Footer,2);
+    // -------------------------------------------------
+    // Styling
+    // -------------------------------------------------
+
     window->setStyleSheet(R"(
         QWidget#Header {
             background-color: #230c0c;
             border-color: #918c8c;
             color: white;
         }
-        QWidget#ContentArea {
-            background-color: #1c1c1c;
-            border-color: #918c8c;
-            color: white;
-        }
+
         QWidget#buttonContainer {
             background-color: #297731;
-            border-radius:20px;
+            border-radius: 20px;
             border-color: #918c8c;
-            border:1px solid;
-            color: white;
-        }
-        QWidget#Footer {
-            background-color: #230c0c;
-            border-color: #918c8c;
+            border: 1px solid;
             color: white;
         }
     )");
-    connect(PianoButton, &QPushButton::clicked, this, [this]()
-    {
-        if(!pianoWindow)
-            pianoWindow = new Piano(m_audioEngine, nullptr);
-        pianoWindow->show();
-        pianoWindow->raise();
-        pianoWindow->activateWindow();
-    });
-    connect(MonitorButton, &QPushButton::clicked, this, [this]()
-    {
-        if(!monitorWindow)
-            monitorWindow = new MonitorWindow(nullptr);
-        monitorWindow->show();
-        monitorWindow->raise();
-        monitorWindow->activateWindow();
-    });
-    connect(DrumPadButton, &QPushButton::clicked, this, [this]()
-    {
-        if(!drumPadWindow)
-            drumPadWindow = new DrumPad(nullptr);
-        drumPadWindow->show();
-        drumPadWindow->raise();
-        drumPadWindow->activateWindow();
-    });
+
+    // -------------------------------------------------
+    // Piano
+    // -------------------------------------------------
+
+    connect(
+        PianoButton,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            if (!pianoWindow)
+                pianoWindow =
+                    new Piano(
+                        0,
+                        m_audioEngine,
+                        nullptr
+                    );
+
+            pianoWindow->show();
+            pianoWindow->raise();
+            pianoWindow->activateWindow();
+        }
+    );
+
+    // -------------------------------------------------
+    // Monitor
+    // -------------------------------------------------
+
+    connect(
+        MonitorButton,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            if (!monitorWindow)
+                monitorWindow =
+                    new MonitorWindow(nullptr);
+
+            monitorWindow->show();
+            monitorWindow->raise();
+            monitorWindow->activateWindow();
+        }
+    );
+
+    // -------------------------------------------------
+    // Drum Pad
+    // -------------------------------------------------
+
+    connect(
+        DrumPadButton,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            if (!drumPadWindow)
+                drumPadWindow =
+                    new DrumPad(nullptr);
+
+            drumPadWindow->show();
+            drumPadWindow->raise();
+            drumPadWindow->activateWindow();
+        }
+    );
 }

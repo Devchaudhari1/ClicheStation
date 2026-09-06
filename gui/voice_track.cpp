@@ -1,11 +1,17 @@
 #include "voice_track.h"
 #include "../audio/AudioEngine.h"
 #include "instrument_settings.h"
+#include "piano.h"
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-
+#include <QMouseEvent>
+#include <QDrag>
+#include <QMimeData>
+#include <QByteArray>
+#include <QApplication>
+#include <QDebug>
 VoiceTrack::VoiceTrack(
     int trackId,
     const QString &trackName,
@@ -16,7 +22,8 @@ VoiceTrack::VoiceTrack(
       m_trackId(trackId),
       m_trackName(trackName),
       m_audioEngine(audioEngine),
-      m_instrumentSettings(nullptr)
+      m_instrumentSettings(nullptr),
+      m_piano(nullptr)
 {
     setFixedSize(180, 220);
 
@@ -69,11 +76,21 @@ void VoiceTrack::createUI()
 
     // Button signals
     connect(
-        m_pianoRollButton,
-        &QPushButton::clicked,
-        this,
-        &VoiceTrack::pianoRollRequested
-    );
+    m_pianoRollButton,
+    &QPushButton::clicked,
+    this,
+    [this]()
+    {
+        if (!m_piano)
+        {
+            m_piano = new Piano(m_trackId, m_audioEngine, nullptr);
+            m_piano->setWindowTitle(m_trackName + " - Piano");
+        }
+
+        m_piano->show();
+        m_piano->raise();
+        m_piano->activateWindow();
+    });
 
    connect(
     m_instrumentButton,
@@ -153,4 +170,41 @@ int VoiceTrack::trackId() const
 QString VoiceTrack::trackName() const
 {
     return m_trackName;
+}
+
+void VoiceTrack::mouseMoveEvent(QMouseEvent *event)
+{
+    if (!(event->buttons() & Qt::LeftButton))
+        return;
+
+    if ((event->pos() - m_dragStartPosition).manhattanLength()
+        < QApplication::startDragDistance())
+    {
+        return;
+    }
+
+    qDebug() << "STARTING DRAG FOR TRACK" << m_trackId;
+
+    QMimeData *mimeData = new QMimeData;
+
+    mimeData->setData(
+        "application/x-clichestation-track",
+        QByteArray::number(m_trackId)
+        );
+
+    QDrag *drag = new QDrag(this);
+
+    drag->setMimeData(mimeData);
+
+    drag->exec(Qt::CopyAction);
+}
+
+void VoiceTrack::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+    {
+        m_dragStartPosition = event->pos();
+    }
+
+    QWidget::mousePressEvent(event);
 }

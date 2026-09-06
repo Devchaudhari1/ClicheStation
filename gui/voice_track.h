@@ -1,11 +1,14 @@
 #pragma once
 
 #include <QWidget>
+#include <QPoint>
 #include "../synth/InstrumentParameters.h"
 class QLabel;
 class QPushButton;
 class InstrumentSettings;
 class AudioEngine;
+class Piano;
+class QMouseEvent;
 
 class VoiceTrack : public QWidget
 {
@@ -30,9 +33,13 @@ signals:
 
     void muteChanged(bool muted);
     void soloChanged(bool solo);
+protected:
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
 
 private:
     void createUI();
+    QPoint m_dragStartPosition;
 
     int m_trackId;
     QString m_trackName;
@@ -52,4 +59,5 @@ private:
     QPushButton *m_soloButton;
     InstrumentSettings *m_instrumentSettings;
     InstrumentParameters m_instrumentParameters;
+    Piano *m_piano ;
 };

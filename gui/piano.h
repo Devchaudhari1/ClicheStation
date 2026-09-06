@@ -11,13 +11,17 @@ class Piano : public QWidget
     Q_OBJECT
 
 public:
-    explicit Piano(AudioEngine *audioEngine,
-               QWidget *parent = nullptr);
+    explicit Piano(
+    int trackId,
+    AudioEngine *audioEngine,
+    QWidget *parent = nullptr
+);
     ~Piano();
 
 private:
     void createUI();
-
+    
+    int trackId;
     PianoRoll *pianoRoll;
     PianoKeyboard *pianoKeyboard;
     AudioEngine *audioEngine;
