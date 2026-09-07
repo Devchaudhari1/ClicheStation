@@ -1,10 +1,10 @@
 #include "sequence.h"
 #include "layer.h"
 #include "clip.h"
-#include "TimelineRow.h"
-#include "ClipArea.h"
+
 #include <QLabel>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QPushButton>
 #include <QMenu>
 
@@ -13,36 +13,26 @@ Sequence::Sequence(
     QWidget *parent
 )
     : QWidget(parent),
+    
       m_sequenceId(sequenceId),
       m_header(nullptr),
-      m_headerSpacer(nullptr),
       m_expandButton(nullptr),
       m_sequenceLabel(nullptr),
-      m_addLayerButton(nullptr),
-      m_layerContainer(nullptr),
-      m_layerLayout(nullptr)
+      m_addLayerButton(nullptr)
 {
-    QVBoxLayout *mainLayout =
-        new QVBoxLayout(this);
-
-    mainLayout->setContentsMargins(
-        0, 0, 0, 0
-    );
-
-    mainLayout->setSpacing(0);
-        setSizePolicy(
-        QSizePolicy::Preferred,
-        QSizePolicy::Preferred
-    );
-    // mainLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
-
     // -------------------------------------------------
     // Sequence header
     // -------------------------------------------------
 
     m_header =
-        new QWidget(this);
+        new QWidget(nullptr);
 
+    m_header->setFixedHeight(40);
+
+    m_header->setStyleSheet(
+        "background: #3a3a3a;"
+        "border: 1px solid #555555;"
+    );
     QHBoxLayout *headerLayout =
         new QHBoxLayout(m_header);
 
@@ -52,7 +42,6 @@ Sequence::Sequence(
 
     headerLayout->setSpacing(4);
 
-    // Expand/collapse button
     m_expandButton =
         new QPushButton("▼", m_header);
 
@@ -62,19 +51,20 @@ Sequence::Sequence(
         m_expandButton
     );
 
-    // Sequence name
     m_sequenceLabel =
         new QLabel(
             QString("Sequence %1")
                 .arg(m_sequenceId),
             m_header
         );
-
+    
+    m_sequenceLabel->setStyleSheet(
+        "color: #e0e0e0;"
+    );
     headerLayout->addWidget(
         m_sequenceLabel
     );
 
-    // Push Add Layer to the right
     headerLayout->addStretch();
 
     m_addLayerButton =
@@ -82,43 +72,19 @@ Sequence::Sequence(
             "+ Add Layer",
             m_header
         );
+    m_expandButton->setStyleSheet(
+        "background: #4a4a4a;"
+        "color: #e0e0e0;"
+        "border: 1px solid #666666;"
+    );
 
+    m_addLayerButton->setStyleSheet(
+        "background: #4a4a4a;"
+        "color: #e0e0e0;"
+        "border: 1px solid #666666;"
+    );
     headerLayout->addWidget(
         m_addLayerButton
-    );
-
-    mainLayout->addWidget(
-        m_header
-    );
-    m_headerSpacer =
-    new QWidget(this);
-
-    m_headerSpacer->setFixedHeight(40);
-
-    mainLayout->addWidget(
-        m_headerSpacer
-    );
-    // -------------------------------------------------
-    // Layer container
-    // -------------------------------------------------
-
-    m_layerContainer =
-        new QWidget(this);
-    m_layerContainer->setStyleSheet(
-    "background: orange; border: 4px solid red;"
-    );
-    m_layerLayout =
-        new QVBoxLayout(m_layerContainer);
-
-    m_layerLayout->setContentsMargins(
-        0, 0, 0, 0
-    );
-
-    m_layerLayout->setSpacing(0);
-
-
-    mainLayout->addWidget(
-        m_layerContainer,0
     );
 
     // -------------------------------------------------
@@ -155,123 +121,121 @@ void Sequence::toggleExpanded()
 {
     m_expanded = !m_expanded;
 
-    m_layerContainer->setVisible(m_expanded);
-
     m_expandButton->setText(
         m_expanded ? "▼" : "▶"
     );
-
-    updateGeometry();
 
     emit expandedChanged(m_expanded);
 }
 
 Layer *Sequence::addLayer()
 {
-    TimelineRow *row =
-        new TimelineRow(m_layerContainer);
-
     Layer *layer =
-        new Layer(row);
+        new Layer(nullptr);
 
-    
     connect(
-    layer,
-    &Layer::clipRequested,
-    this,
-    [this, layer]()
-    {
-        QMenu menu;
-
-        for (const auto &track : m_availableTracks)
+        layer,
+        &Layer::clipRequested,
+        this,
+        [this, layer]()
         {
-            QAction *action = menu.addAction(track.second);
-            action->setData(track.first);
-        }
+            QMenu menu;
 
-        if (menu.isEmpty())
-            return;
-
-        QAction *selected = menu.exec(
-            layer->mapToGlobal(
-                QPoint(layer->width(), layer->height())
-            )
-        );
-
-        if (!selected)
-            return;
-
-        int trackId = selected->data().toInt();
-        QString trackName = selected->text();
-
-        double startTime = 0.0;
-        double duration = 4.0;
-
-        const auto &clips = layer->clips();
-
-        if (!clips.isEmpty())
-        {
-            Clip *lastClip = clips.last();
-            startTime =
-                lastClip->startTime() +
-                lastClip->duration();
-        }
-
-        layer->addClip(
-            trackId,
-            trackName,
-            startTime,
-            duration
-        );
-    }
-);
-
-connect(
-    layer,
-    &Layer::trackDropped,
-    this,
-    [this, layer](int trackId, double startTime)
-    {
-        QString trackName;
-
-        for (const auto &track : m_availableTracks)
-        {
-            if (track.first == trackId)
+            for (const auto &track : m_availableTracks)
             {
-                trackName = track.second;
-                break;
+                QAction *action =
+                    menu.addAction(track.second);
+
+                action->setData(track.first);
             }
+
+            if (menu.isEmpty())
+                return;
+
+            QAction *selected =
+                menu.exec(
+                    layer->mapToGlobal(
+                        QPoint(
+                            layer->width(),
+                            layer->height()
+                        )
+                    )
+                );
+
+            if (!selected)
+                return;
+
+            int trackId =
+                selected->data().toInt();
+
+            QString trackName =
+                selected->text();
+
+            double startTime = 0.0;
+            double duration = 4.0;
+
+            const auto &clips =
+                layer->clips();
+
+            if (!clips.isEmpty())
+            {
+                Clip *lastClip =
+                    clips.last();
+
+                startTime =
+                    lastClip->startTime()
+                    + lastClip->duration();
+            }
+
+            layer->addClip(
+                trackId,
+                trackName,
+                startTime,
+                duration
+            );
         }
-
-        if (trackName.isEmpty())
-            return;
-
-        double duration = 1.0; // temporary
-
-        layer->addClip(
-            trackId,
-            trackName,
-            startTime,
-            duration
-        );
-    });
-    row->setLeftWidget(
-        layer->leftWidget()
     );
 
-    row->setTimelineWidget(
-        layer->clipArea()
+    connect(
+        layer,
+        &Layer::trackDropped,
+        this,
+        [this, layer](
+            int trackId,
+            double startTime
+        )
+        {
+            QString trackName;
+
+            for (const auto &track : m_availableTracks)
+            {
+                if (track.first == trackId)
+                {
+                    trackName =
+                        track.second;
+
+                    break;
+                }
+            }
+
+            if (trackName.isEmpty())
+                return;
+
+            double duration = 1.0;
+
+            layer->addClip(
+                trackId,
+                trackName,
+                startTime,
+                duration
+            );
+        }
     );
 
-    int insertPosition =
-        m_layerLayout->count();
-
-    m_layerLayout->insertWidget(insertPosition, row);
-
-    m_layerContainer->adjustSize();
-    updateGeometry();
+    m_layers.append(layer);
 
     emit layerAdded();
+
     return layer;
 }
 
@@ -282,44 +246,13 @@ void Sequence::setAvailableTracks(
     m_availableTracks = tracks;
 }
 
-QWidget *Sequence::layerContainer() const
-{
-    return m_layerContainer;
-}
-
 QWidget *Sequence::headerWidget() const
 {
     return m_header;
 }
 
-QVector<TimelineRow *> Sequence::layerRows() const
+
+const QVector<Layer *> &Sequence::layers() const
 {
-    QVector<TimelineRow *> rows;
-
-    for (int i = 0; i < m_layerLayout->count(); ++i)
-    {
-        QWidget *widget =
-            m_layerLayout->itemAt(i)->widget();
-
-        TimelineRow *row =
-            qobject_cast<TimelineRow *>(widget);
-
-        if (row)
-            rows.append(row);
-    }
-
-    return rows;
-}
-
-void Sequence::detachHeader()
-{
-    QVBoxLayout *layout =
-        qobject_cast<QVBoxLayout*>(this->layout());
-
-    if (!layout)
-        return;
-
-    layout->removeWidget(
-        m_header
-    );
+    return m_layers;
 }

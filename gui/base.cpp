@@ -298,15 +298,12 @@ void Base::createUI()
     // Connections
     // -------------------------------------------------
 
-    // connect(
-    //     AddSequenceButton,
-    //     &QPushButton::clicked,
-    //     this,
-    //     [this]()
-    //     {
-    //         m_playlist->addSequence();
-    //     }
-    // );
+    connect(
+        AddSequenceButton,
+        &QPushButton::clicked,
+        m_playlist,
+        &Playlist::addSequence
+    );
 
     // connect(
     //     trackList,

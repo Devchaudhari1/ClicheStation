@@ -13,7 +13,7 @@ ClipArea::ClipArea(QWidget *parent)
     setAcceptDrops(true);
 
     setMinimumWidth(2000);
-    setMinimumHeight(70);
+    setFixedHeight(80);
 }
 
 void ClipArea::dragEnterEvent(

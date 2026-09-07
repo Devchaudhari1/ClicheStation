@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <QVector>
 
 class QVBoxLayout;
 class QHBoxLayout;
@@ -8,6 +9,7 @@ class QScrollArea;
 class QLabel;
 
 class TimeRuler;
+class Sequence;
 
 class Playlist : public QWidget
 {
@@ -15,10 +17,11 @@ class Playlist : public QWidget
 
 public:
     explicit Playlist(QWidget *parent = nullptr);
-
+    void layoutSequences();
+public slots:
+    void addSequence();
 private:
     void createUI();
-
     // Main components
     TimeRuler *m_timeRuler;
     QWidget *m_timelineView;
@@ -26,13 +29,21 @@ private:
     // Left side
     QScrollArea *m_leftPane;
     QWidget *m_leftContent;
-    QVBoxLayout *m_leftLayout;
 
     // Right side
     QScrollArea *m_rightPane;
     QWidget *m_rightContent;
-    QVBoxLayout *m_rightLayout;
 
+    // Sequences
+    QVector<Sequence *> m_sequences;
+    int m_nextSequenceId = 1;
+    const int sequenceHeaderHeight = 40;
+    const int layerHeight = 80;
+    QVector<QWidget*> m_leftSequenceContainers;
+    QVector<QWidget*> m_rightSequenceContainers;
+
+    QVector<QVBoxLayout*> m_leftSequenceLayouts;
+    QVector<QVBoxLayout*> m_rightSequenceLayouts;
     // Scroll synchronization
     bool m_syncingVerticalScroll = false;
 };

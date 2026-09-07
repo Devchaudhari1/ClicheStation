@@ -22,6 +22,7 @@ Layer::Layer(QWidget *parent)
         new QWidget(nullptr);
 
     m_leftWidget->setFixedWidth(160);
+    m_leftWidget->setFixedHeight(80);
 
     QVBoxLayout *leftLayout =
         new QVBoxLayout(m_leftWidget);
@@ -45,8 +46,7 @@ Layer::Layer(QWidget *parent)
     // Timeline
     // ----------------------------------------
 
-    m_clipArea =
-        new ClipArea(nullptr);
+    m_clipArea = new ClipArea(nullptr);
 
     connect(
         m_clipArea,

@@ -1,12 +1,254 @@
 #include "Playlist.h"
 #include "TimeRuler.h"
+#include "Sequence.h"
+#include "ClipArea.h"
+#include "Layer.h"
 
+#include <QApplication>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QWidget>
 #include <QLabel>
+#include <QPushButton>
+#include <QDebug>
+#include <QMenu>
+#include <QAction>
+
+
+void Playlist::layoutSequences()
+{
+    int y = 0;
+
+    const int sequenceHeaderHeight = 40;
+    const int layerHeight = 80;
+
+    for (int i = 0; i < m_sequences.size(); ++i)
+    {
+        Sequence *sequence = m_sequences[i];
+
+        int layerCount = sequence->layers().size();
+
+        int sequenceHeight =
+            sequenceHeaderHeight +
+            layerCount * layerHeight;
+
+        qDebug() << "Sequence" << i
+                 << "height =" << sequenceHeight
+                 << "left content width =" << m_leftContent->width()
+                 << "right content width =" << m_rightContent->width();
+
+        m_leftSequenceContainers[i]->setGeometry(
+            0,
+            y,
+            m_leftContent->width(),
+            sequenceHeight
+        );
+        
+        m_rightSequenceContainers[i]->setGeometry(
+            0,
+            y,
+            m_rightContent->width(),
+            sequenceHeight
+        );
+
+        y += sequenceHeight;
+    }
+
+    m_leftContent->resize(
+        m_leftContent->width(),
+        y
+    );
+
+    m_rightContent->resize(
+        m_rightContent->width(),
+        y
+    );
+}
+
+void Playlist::addSequence()
+{
+    int sequenceId = m_nextSequenceId++;
+
+    Sequence *sequence = new Sequence(sequenceId, this);
+    m_sequences.append(sequence);
+
+    // --------------------------------------------------
+    // LEFT container for this Sequence
+    // --------------------------------------------------
+
+    QWidget *leftSequenceContainer = new QWidget(m_leftContent);
+    leftSequenceContainer->setStyleSheet(
+            "background: #303030;"
+            "border: 1px solid red;"
+        );
+    leftSequenceContainer->show();
+
+    QVBoxLayout *leftSequenceLayout =
+        new QVBoxLayout(leftSequenceContainer);
+
+    leftSequenceLayout->setContentsMargins(0, 0, 0, 0);
+    leftSequenceLayout->setSpacing(0);
+
+
+    // --------------------------------------------------
+    // RIGHT container for this Sequence
+    // --------------------------------------------------
+
+    QWidget *rightSequenceContainer = new QWidget(m_rightContent);
+    rightSequenceContainer->setStyleSheet(
+        "background: #303030;"
+        "border: 1px solid red;"
+    );
+    rightSequenceContainer->show();
+
+    QVBoxLayout *rightSequenceLayout =
+        new QVBoxLayout(rightSequenceContainer);
+
+    rightSequenceLayout->setContentsMargins(0, 0, 0, 0);
+    rightSequenceLayout->setSpacing(0);
+
+
+    // --------------------------------------------------
+    // Store the containers/layouts
+    // --------------------------------------------------
+
+    m_leftSequenceContainers.append(leftSequenceContainer);
+    m_rightSequenceContainers.append(rightSequenceContainer);
+
+    m_leftSequenceLayouts.append(leftSequenceLayout);
+    m_rightSequenceLayouts.append(rightSequenceLayout);
+
+
+    // --------------------------------------------------
+    // Sequence header
+    // --------------------------------------------------
+
+    leftSequenceLayout->addWidget(
+        sequence->headerWidget()
+    );
+    sequence->headerWidget()->setParent(leftSequenceContainer);
+    sequence->headerWidget()->setGeometry(
+        0,
+        0,
+        leftSequenceContainer->width(),
+        40
+    );
+    sequence->headerWidget()->show();
+    qDebug() << "HEADER:"
+         << sequence->headerWidget()
+         << "visible =" << sequence->headerWidget()->isVisible()
+         << "geometry =" << sequence->headerWidget()->geometry()
+         << "parent =" << sequence->headerWidget()->parentWidget();
+
+    // --------------------------------------------------
+    // Matching spacer on right side
+    // --------------------------------------------------
+
+    QWidget *spacer = new QWidget;
+    spacer->setFixedHeight(40);
+
+    rightSequenceLayout->addWidget(spacer);
+
+    spacer->show();
+
+
+    // --------------------------------------------------
+    // First Layer
+    //
+    // Sequence creates its first Layer in its constructor,
+    // before Playlist connects to layerAdded().
+    // Therefore we add this one manually.
+    // --------------------------------------------------
+
+    if (!sequence->layers().isEmpty())
+    {
+        Layer *layer = sequence->layers().first();
+
+        leftSequenceLayout->addWidget(
+            layer->leftWidget()
+        );
+
+        rightSequenceLayout->addWidget(
+            layer->clipArea()
+        );
+
+        layer->leftWidget()->show();
+        layer->clipArea()->show();
+        
+    qDebug() << "LEFT LAYER:"
+         << layer->leftWidget()
+         << "visible =" << layer->leftWidget()->isVisible()
+         << "geometry =" << layer->leftWidget()->geometry()
+         << "parent =" << layer->leftWidget()->parentWidget();
+
+qDebug() << "CLIP AREA:"
+         << layer->clipArea()
+         << "visible =" << layer->clipArea()->isVisible()
+         << "geometry =" << layer->clipArea()->geometry()
+         << "parent =" << layer->clipArea()->parentWidget();
+    }
+
+    // --------------------------------------------------
+    // Future Layers
+    // --------------------------------------------------
+
+    connect(
+        sequence,
+        &Sequence::layerAdded,
+        this,
+        [this,
+         sequence,
+         leftSequenceLayout,
+         rightSequenceLayout]()
+        {
+            Layer *layer = sequence->layers().last();
+
+            leftSequenceLayout->addWidget(
+                layer->leftWidget()
+            );
+
+            rightSequenceLayout->addWidget(
+                layer->clipArea()
+            );
+
+            layer->leftWidget()->show();
+            layer->clipArea()->show();
+
+            layoutSequences();
+        }
+    );
+
+
+    // --------------------------------------------------
+    // Calculate and position all Sequences
+    // --------------------------------------------------
+
+    layoutSequences();
+
+    // --------------------------------------------------
+    // Debug
+    // --------------------------------------------------
+
+    qDebug() << "Added Sequence" << sequenceId;
+
+    qDebug() << "LEFT CONTENT:"
+             << m_leftContent->size()
+             << "sizeHint:"
+             << m_leftContent->sizeHint();
+
+    qDebug() << "RIGHT CONTENT:"
+             << m_rightContent->size()
+             << "sizeHint:"
+             << m_rightContent->sizeHint();
+
+    qDebug() << "LEFT PANE:"
+             << m_leftPane->size();
+
+    qDebug() << "RIGHT PANE:"
+             << m_rightPane->size();
+}
 
 
 static QWidget *makeTestWidget(
@@ -79,7 +321,7 @@ void Playlist::createUI()
 
     m_leftPane = new QScrollArea(m_timelineView);
 
-    m_leftPane->setFixedWidth(160);
+    m_leftPane->setFixedWidth(220);
 
     m_leftPane->setHorizontalScrollBarPolicy(
         Qt::ScrollBarAlwaysOff
@@ -95,16 +337,11 @@ void Playlist::createUI()
     // ---------------------------------------------------------
 
     m_leftContent = new QWidget;
-
+    m_leftContent->setFixedWidth(220);
+    m_leftContent->setMinimumHeight(1);
     m_leftContent->setStyleSheet(
-        "background: darkblue;"
+        "background: #202020;"
     );
-
-    m_leftLayout = new QVBoxLayout(m_leftContent);
-
-    m_leftLayout->setContentsMargins(0, 0, 0, 0);
-    m_leftLayout->setSpacing(0);
-
 
     // =========================================================
     // Right Pane
@@ -172,14 +409,11 @@ void Playlist::createUI()
 
     m_rightContent = new QWidget;
 
+    m_rightContent->setMinimumWidth(2000);
+    m_rightContent->setMinimumHeight(1);
     m_rightContent->setStyleSheet(
-        "background: darkgreen;"
+        "background: #202020;"
     );
-
-    m_rightLayout = new QVBoxLayout(m_rightContent);
-
-    m_rightLayout->setContentsMargins(0, 0, 0, 0);
-    m_rightLayout->setSpacing(0);
 
 
     // =========================================================
@@ -189,82 +423,71 @@ void Playlist::createUI()
     m_leftPane->setWidget(m_leftContent);
     m_rightPane->setWidget(m_rightContent);
 
-
-    // =========================================================
-    // Timeline Layout
-    // =========================================================
-
-    timelineLayout->addWidget(m_leftPane);
-    timelineLayout->addWidget(m_rightPane, 1);
-
-
     // =========================================================
     // Add Timeline View to Playlist
     // =========================================================
-
-    playlistLayout->addWidget(m_timelineView, 1);
 
      timelineLayout->addWidget(m_leftPane);
     timelineLayout->addWidget(m_rightPane, 1);
 
     playlistLayout->addWidget(m_timelineView, 1);
-    // =========================================================
-    // TEMPORARY TEST CONTENT
-    // =========================================================
+    // // =========================================================
+    // // TEMPORARY TEST CONTENT
+    // // =========================================================
 
-    const int sequenceHeight = 40;
-    const int layerHeight = 70;
+    // const int sequenceHeight = 40;
+    // const int layerHeight = 70;
 
-    for (int sequence = 1; sequence <= 3; ++sequence)
-    {
-        // Sequence header - left
-        m_leftLayout->addWidget(
-            makeTestWidget(
-                QString("Sequence %1").arg(sequence),
-                sequenceHeight,
-                "orange",
-                m_leftContent
-            )
-        );
+    // for (int sequence = 1; sequence <= 3; ++sequence)
+    // {
+    //     // Sequence header - left
+    //     m_leftLayout->addWidget(
+    //         makeTestWidget(
+    //             QString("Sequence %1").arg(sequence),
+    //             sequenceHeight,
+    //             "orange",
+    //             m_leftContent
+    //         )
+    //     );
 
-        // Sequence header - right
-        m_rightLayout->addWidget(
-            makeTestWidget(
-                QString("Sequence %1").arg(sequence),
-                sequenceHeight,
-                "orange",
-                m_rightContent
-            )
-        );
+    //     // Sequence header - right
+    //     m_rightLayout->addWidget(
+    //         makeTestWidget(
+    //             QString("Sequence %1").arg(sequence),
+    //             sequenceHeight,
+    //             "orange",
+    //             m_rightContent
+    //         )
+    //     );
 
-        int layerCount = sequence + 2;
+    //     int layerCount = sequence + 2;
 
-        for (int layer = 1; layer <= layerCount; ++layer)
-        {
-            // Layer - left
-            m_leftLayout->addWidget(
-                makeTestWidget(
-                    QString("Layer %1").arg(layer),
-                    layerHeight,
-                    "steelblue",
-                    m_leftContent
-                )
-            );
+    //     for (int layer = 1; layer <= layerCount; ++layer)
+    //     {
+    //         // Layer - left
+    //         m_leftLayout->addWidget(
+    //             makeTestWidget(
+    //                 QString("Layer %1").arg(layer),
+    //                 layerHeight,
+    //                 "steelblue",
+    //                 m_leftContent
+    //             )
+    //         );
 
-            // ClipArea - right
-            m_rightLayout->addWidget(
-                makeTestWidget(
-                    QString("Layer %1 ClipArea").arg(layer),
-                    layerHeight,
-                    "seagreen",
-                    m_rightContent
-                )
-            );
-        }
-    }
-    m_rightContent->setMinimumWidth(3000);
+    //         // ClipArea - right
+    //         m_rightLayout->addWidget(
+    //             makeTestWidget(
+    //                 QString("Layer %1 ClipArea").arg(layer),
+    //                 layerHeight,
+    //                 "seagreen",
+    //                 m_rightContent
+    //             )
+    //         );
+    //     }
+    // }
+    // m_rightContent->setMinimumWidth(3000);
 
-    m_leftContent->adjustSize();
-    m_rightContent->adjustSize();
+    // m_leftContent->adjustSize();
+    // m_rightContent->adjustSize();
 
 }

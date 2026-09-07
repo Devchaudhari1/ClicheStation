@@ -66,6 +66,26 @@ root/
         ---pianoRoll.h
         ---voice_track.cpp // Voice Track card
         ---voice_track.h
+        ---playlist/
+            ---clip.cpp // class defining the structure of a clip
+            ---clip.h
+            ---ClipArea.cpp // class defining the Cliparea on the right pane of Playlist
+            ---ClipArea.h
+            ---ClipVisualiser.cpp // Visualiser for Clip
+            ---ClipVisualiser.h
+            ---layer.cpp // Several layers form a Sequence
+            ---layer.h
+            ---Playlist.cpp // Playlist is a collection of Sequence. (or a collection of song or music piece)
+            ---Playlist.h
+            ---sequence.cpp // A collection of several layers whch we may call a song or single music piece
+            ---sequence.h
+            ---TimelineView.cpp // Contains the timeline reference for the Clip
+            ---TimelineView.h
+            ---TimelineWidget.cpp // A widget that displays timeline
+            ---TimelineWidget.h
+            ---TimeRuler.cpp  // A ruler that tells time reference
+            ---TimeRuler.h
+
 
     ---midi/
         ---MidiInput.cpp // Accepts midi input from Midi devices using RtMidi apis
@@ -115,50 +135,6 @@ VoiceTrack
 ```
 
 ### Content Structure
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                            PLAYLIST                                  │
-│                                                                      │
-│ ┌──────────────────────────────────────────────────────────────────┐ │
-│ │ Sequence 1                                                       │ │
-│ │ ┌──────────────────────────────────────────────────────────────┐ │ │
-│ │ │ Layer 1     Piano Track                         [x]          │ │ │
-│ │ ├──────────────────────────────────────────────────────────────┤ │ │
-│ │ │ Layer 2     Bass Track                          [x]          │ │ │
-│ │ ├──────────────────────────────────────────────────────────────┤ │ │
-│ │ │ Layer 3     Lead Track                          [x]          │ │ │
-│ │ ├──────────────────────────────────────────────────────────────┤ │ │
-│ │ │                         [+ Add Layer]                         │ │ │
-│ │ └──────────────────────────────────────────────────────────────┘ │ │
-│ │                                                                  │ │
-│ │ Sequence 2                                                       │ │
-│ │ ┌──────────────────────────────────────────────────────────────┐ │ │
-│ │ │ Layer 1     Drums Track                         [x]          │ │ │
-│ │ ├──────────────────────────────────────────────────────────────┤ │ │
-│ │ │ Layer 2     Piano Track                         [x]          │ │ │
-│ │ ├──────────────────────────────────────────────────────────────┤ │ │
-│ │ │                         [+ Add Layer]                         │ │ │
-│ │ └──────────────────────────────────────────────────────────────┘ │ │
-│ │                                                                  │ │
-│ │                         ↑ vertical scrolling ↑                   │ │
-│ └──────────────────────────────────────────────────────────────────┘ │
-│                                                                      │
-├──────────────────────────────────────────────────────────────────────┤
-│ TRACK LIST                                                [+ Track]  │
-│                                                                      │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐     │
-│ │ Piano       │ │ Bass        │ │ Lead        │ │ Drums       │     │
-│ │             │ │             │ │             │ │             │     │
-│ │ Piano Roll  │ │ Piano Roll  │ │ Piano Roll  │ │ Piano Roll  │     │
-│ │ Instrument  │ │ Instrument  │ │ Instrument  │ │ Instrument  │     │
-│ │ Effects     │ │ Effects     │ │ Effects     │ │ Effects     │     │
-│ │ Mute  Solo  │ │ Mute  Solo  │ │ Mute  Solo  │ │ Mute  Solo  │     │
-│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘     │
-│                ← horizontal scrolling →                            │
-└──────────────────────────────────────────────────────────────────────┘
-
-```
 
 ```
                     horizontal scroll position
