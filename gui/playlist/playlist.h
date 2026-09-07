@@ -2,12 +2,13 @@
 
 #include <QWidget>
 #include <QVector>
+#include <QPair>
+#include <QString>
 
 class QVBoxLayout;
 class QHBoxLayout;
 class QScrollArea;
 class QLabel;
-
 class TimeRuler;
 class Sequence;
 
@@ -20,6 +21,9 @@ public:
     void layoutSequences();
 public slots:
     void addSequence();
+    void setAvailableTracks(
+        const QVector<QPair<int, QString>> &tracks
+    );
 private:
     void createUI();
     // Main components
@@ -44,6 +48,9 @@ private:
 
     QVector<QVBoxLayout*> m_leftSequenceLayouts;
     QVector<QVBoxLayout*> m_rightSequenceLayouts;
+
+    // Tracks
+    QVector<QPair<int, QString>> m_availableTracks;
     // Scroll synchronization
     bool m_syncingVerticalScroll = false;
 };

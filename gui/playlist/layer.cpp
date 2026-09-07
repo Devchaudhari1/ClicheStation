@@ -130,15 +130,15 @@ Clip *Layer::addClip(
         }
     );
 
-    // connect(
-    //     clip,
-    //     &Clip::deleteRequested,
-    //     this,
-    //     [this, clip]()
-    //     {
-    //         removeClip(clip);
-    //     }
-    // );
+    connect(
+        clip,
+        &Clip::deleteRequested,
+        this,
+        [this, clip]()
+        {
+            removeClip(clip);
+        }
+    );
 
     m_clips.append(clip);
 
@@ -151,17 +151,17 @@ Clip *Layer::addClip(
     return clip;
 }
 
-// void Layer::removeClip(Clip *clip)
-// {
-//     if (!clip)
-//         return;
+void Layer::removeClip(Clip *clip)
+{
+    if (!clip)
+        return;
 
-//     m_clips.removeOne(clip);
+    m_clips.removeOne(clip);
 
-//     clip->deleteLater();
+    clip->deleteLater();
 
-//     layoutClips();
-// }
+    layoutClips();
+}
 
 
 void Layer::layoutClips()

@@ -3,7 +3,7 @@
 #include "Sequence.h"
 #include "ClipArea.h"
 #include "Layer.h"
-
+#include "../track_list.h"
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -16,6 +16,16 @@
 #include <QMenu>
 #include <QAction>
 
+void Playlist::setAvailableTracks(
+    const QVector<QPair<int, QString>> &tracks
+)
+{
+    m_availableTracks = tracks;
+    for (Sequence *sequence : m_sequences)
+    {
+        sequence->setAvailableTracks(m_availableTracks);
+    }
+}
 
 void Playlist::layoutSequences()
 {
@@ -77,6 +87,7 @@ void Playlist::addSequence()
     int sequenceId = m_nextSequenceId++;
 
     Sequence *sequence = new Sequence(sequenceId, this);
+    sequence->setAvailableTracks(m_availableTracks);
     m_sequences.append(sequence);
 
     // --------------------------------------------------

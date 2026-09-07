@@ -30,7 +30,7 @@ public:
     ) const;
 
     const QVector<Clip*>& clips() const;
-
+    void removeClip(Clip * clip);
     QWidget *leftWidget() const;
     ClipArea *clipArea() const;
 

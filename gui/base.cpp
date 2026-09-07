@@ -305,12 +305,12 @@ void Base::createUI()
         &Playlist::addSequence
     );
 
-    // connect(
-    //     trackList,
-    //     &TrackList::tracksChanged,
-    //     m_playlist,
-    //     &Playlist::setAvailableTracks
-    // );
+    connect(
+        m_trackList,
+        &TrackList::tracksChanged,
+        m_playlist,
+        &Playlist::setAvailableTracks
+    );
 
     m_trackList->addVoiceTrack();
 
