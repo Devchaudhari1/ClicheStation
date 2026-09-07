@@ -256,3 +256,8 @@ const QVector<Layer *> &Sequence::layers() const
 {
     return m_layers;
 }
+
+bool Sequence::isExpanded() const
+{
+    return m_expanded;
+}

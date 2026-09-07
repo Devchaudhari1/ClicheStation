@@ -28,7 +28,7 @@ public:
     );
 
     QWidget *headerWidget() const;
-
+    bool isExpanded() const;
     const QVector<Layer *> &layers() const;
 
 signals:

@@ -31,8 +31,13 @@ void Playlist::layoutSequences()
         int layerCount = sequence->layers().size();
 
         int sequenceHeight =
-            sequenceHeaderHeight +
-            layerCount * layerHeight;
+            sequenceHeaderHeight;
+
+        if (sequence->isExpanded())
+        {
+            sequenceHeight +=
+                sequence->layers().size() * layerHeight;
+        }
 
         qDebug() << "Sequence" << i
                  << "height =" << sequenceHeight
@@ -199,9 +204,9 @@ qDebug() << "CLIP AREA:"
         &Sequence::layerAdded,
         this,
         [this,
-         sequence,
-         leftSequenceLayout,
-         rightSequenceLayout]()
+        sequence,
+        leftSequenceLayout,
+        rightSequenceLayout]()
         {
             Layer *layer = sequence->layers().last();
 
@@ -213,8 +218,29 @@ qDebug() << "CLIP AREA:"
                 layer->clipArea()
             );
 
-            layer->leftWidget()->show();
-            layer->clipArea()->show();
+            layer->leftWidget()->setVisible(
+                sequence->isExpanded()
+            );
+
+            layer->clipArea()->setVisible(
+                sequence->isExpanded()
+            );
+
+            layoutSequences();
+        }
+    );
+
+    connect(
+        sequence,
+        &Sequence::expandedChanged,
+        this,
+        [this, sequence](bool expanded)
+        {
+            for (Layer *layer : sequence->layers())
+            {
+                layer->leftWidget()->setVisible(expanded);
+                layer->clipArea()->setVisible(expanded);
+            }
 
             layoutSequences();
         }
