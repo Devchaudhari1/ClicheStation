@@ -22,16 +22,17 @@ qt_add_executable(ClicheStation
     gui/playlist/ClipArea.h
     gui/playlist/layer.cpp
     gui/playlist/layer.h
-    gui/playlist/playlist.cpp
-    gui/playlist/playlist.h
-    gui/playlist/sequence.cpp
-    gui/playlist/sequence.h
-    gui/playlist/TimelineRow.cpp
-    gui/playlist/TimelineRow.h
-    gui/playlist/TimelineWidget.cpp
-    gui/playlist/TimelineWidget.h
+    gui/playlist/Playlist.cpp
+    gui/playlist/Playlist.h
+    gui/playlist/TimelineView.cpp
+    gui/playlist/TimelineView.h
     gui/playlist/TimeRuler.cpp
     gui/playlist/TimeRuler.h
+    # gui/playlist/sequence.cpp
+    # gui/playlist/sequence.h
+    # gui/playlist/TimelineRow.cpp
+    # gui/playlist/TimelineRow.h
+
 
 
     #main gui

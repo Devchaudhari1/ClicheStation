@@ -1,375 +1,270 @@
-#include "playlist.h"
-#include "sequence.h"
+#include "Playlist.h"
 #include "TimeRuler.h"
-#include "TimelineRow.h"
-#include <QScrollArea>
-#include <QVBoxLayout>
-#include <QPushButton>
-#include <QWidget>
-#include <QScrollBar>
+
 #include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QScrollArea>
+#include <QScrollBar>
+#include <QWidget>
 #include <QLabel>
-#include <QLayout>
+
+
+static QWidget *makeTestWidget(
+    const QString &text,
+    int height,
+    const QString &color,
+    QWidget *parent = nullptr)
+{
+    QWidget *widget = new QWidget(parent);
+
+    widget->setFixedHeight(height);
+
+    widget->setStyleSheet(
+        QString(
+            "background: %1;"
+            "border: 1px solid black;"
+        ).arg(color)
+    );
+
+    QVBoxLayout *layout = new QVBoxLayout(widget);
+    layout->setContentsMargins(4, 4, 4, 4);
+
+    QLabel *label = new QLabel(text, widget);
+    layout->addWidget(label);
+
+    return widget;
+}
 
 Playlist::Playlist(QWidget *parent)
-    : QWidget(parent),
-      m_sequenceLayout(nullptr),
-      m_timelineBody(nullptr),
-      m_leftColumn(nullptr),
-      m_leftContent(nullptr),
-      m_leftLayout(nullptr), 
-      m_scrollArea(nullptr),
-      m_timelineContent(nullptr),
-      m_horizontalScrollBar(nullptr),
-      m_timeRuler(nullptr)
+    : QWidget(parent)
 {
-    QVBoxLayout *mainLayout =
-        new QVBoxLayout(this);
+    createUI();
+   
+}
 
-    mainLayout->setContentsMargins(
-        0, 0, 0, 0
+
+void Playlist::createUI()
+{
+    QVBoxLayout *playlistLayout = new QVBoxLayout(this);
+    playlistLayout->setContentsMargins(0, 0, 0, 0);
+    playlistLayout->setSpacing(0);
+
+    // =========================================================
+    // Time Ruler
+    // =========================================================
+
+    m_timeRuler = new TimeRuler(this);
+    playlistLayout->addWidget(m_timeRuler);
+
+
+    // =========================================================
+    // Timeline View
+    // =========================================================
+
+    m_timelineView = new QWidget(this);
+    m_timelineView->setStyleSheet(
+        "background: black;"
     );
 
-    mainLayout->setSpacing(0);
-    
-    // ----------------------------------------
-    // Shared time ruler
-    // ----------------------------------------
+    QHBoxLayout *timelineLayout =
+        new QHBoxLayout(m_timelineView);
 
-    m_timeRuler =
-        new TimeRuler(this);
+    timelineLayout->setContentsMargins(0, 0, 0, 0);
+    timelineLayout->setSpacing(0);
 
-    mainLayout->addWidget(
-        m_timeRuler
+
+    // =========================================================
+    // Left Pane
+    // =========================================================
+
+    m_leftPane = new QScrollArea(m_timelineView);
+
+    m_leftPane->setFixedWidth(160);
+
+    m_leftPane->setHorizontalScrollBarPolicy(
+        Qt::ScrollBarAlwaysOff
     );
 
-    // ----------------------------------------
-    // Scrollable timeline
-    // ----------------------------------------
+    m_leftPane->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    m_timelineBody =
-    new QWidget(this);
+    m_leftPane->setWidgetResizable(false);
 
-    m_timelineBody->setSizePolicy(
-        QSizePolicy::Expanding,
-        QSizePolicy::Expanding);
 
-    QHBoxLayout *timelineBodyLayout =
-        new QHBoxLayout(m_timelineBody);
+    // ---------------------------------------------------------
+    // Left Content
+    // ---------------------------------------------------------
 
-    timelineBodyLayout->setContentsMargins(
-        0, 0, 0, 0
+    m_leftContent = new QWidget;
+
+    m_leftContent->setStyleSheet(
+        "background: darkblue;"
     );
 
-    timelineBodyLayout->setSpacing(0);
+    m_leftLayout = new QVBoxLayout(m_leftContent);
 
-    m_leftColumn =
-    new QWidget(m_timelineBody);
-
-    m_leftColumn->setFixedWidth(160);
-
-    m_leftColumn =
-    new QWidget(m_timelineBody);
-
-    m_leftColumn->setFixedWidth(160);
-
-    m_leftLayout =
-        new QVBoxLayout(m_leftColumn);
-
-    m_leftLayout->setContentsMargins(
-        0, 0, 0, 0
-    );
-
+    m_leftLayout->setContentsMargins(0, 0, 0, 0);
     m_leftLayout->setSpacing(0);
 
-    QLabel *leftLabel =
-        new QLabel(
-            "Layers",
-            m_leftColumn
-        );
 
-    leftLabel->setAlignment(
-        Qt::AlignCenter
-    );
+    // =========================================================
+    // Right Pane
+    // =========================================================
 
-    m_leftLayout->addWidget(
-        leftLabel
-    );
+    m_rightPane = new QScrollArea(m_timelineView);
 
-    timelineBodyLayout->addWidget(
-        m_leftColumn
-    );
-
-    m_scrollArea =
-        new QScrollArea(m_timelineBody);
-
-    m_scrollArea->setSizePolicy(
-        QSizePolicy::Expanding,
-        QSizePolicy::Expanding
-    );
-
-    m_scrollArea->setWidgetResizable(true);
-
-    m_scrollArea->setHorizontalScrollBarPolicy(
+    m_rightPane->setHorizontalScrollBarPolicy(
         Qt::ScrollBarAsNeeded
     );
 
-    m_scrollArea->setVerticalScrollBarPolicy(
+    m_rightPane->setVerticalScrollBarPolicy(
         Qt::ScrollBarAsNeeded
     );
 
-    m_timelineContent =
-        new QWidget;
-    
-
-    m_timelineContent->setMinimumHeight(0);
-
-    m_sequenceLayout =
-        new QVBoxLayout(m_timelineContent);
-    
-    m_sequenceLayout->setContentsMargins(
-        0, 0, 0, 0
-    );
-
-    m_sequenceLayout->setSpacing(0);
-
-    m_sequenceLayout->setSizeConstraint(
-        QLayout::SetMinimumSize);
-
-    m_scrollArea->setWidget(
-        m_timelineContent
-    );
-
-    m_horizontalScrollBar =
-        m_scrollArea->horizontalScrollBar();
-
-    timelineBodyLayout->addWidget(
-        m_scrollArea,
-        1
-    );
+    m_rightPane->setWidgetResizable(false);
 
     connect(
-    m_horizontalScrollBar,
+    m_rightPane->horizontalScrollBar(),
     &QScrollBar::valueChanged,
-    this,
+    m_timeRuler,
     [this](int value)
     {
-        m_timeRuler->setScrollOffset(
-            value
-        );
+        m_timeRuler->setScrollOffset(value);
     }
     );
+    // Two way schronization with a boolean guard connections 
+    // for synchronized vertical scrolling
+    connect(
+        m_leftPane->verticalScrollBar(),
+        &QScrollBar::valueChanged,
+        this,
+        [this](int value)
+        {
+            if (m_syncingVerticalScroll)
+                return;
 
-    mainLayout->addWidget(
-        m_timelineBody
+            m_syncingVerticalScroll = true;
+
+            m_rightPane->verticalScrollBar()->setValue(value);
+
+            m_syncingVerticalScroll = false;
+        }
     );
-
-    // ----------------------------------------
-    // Default Sequence
-    // ----------------------------------------
-
-    addSequence();
-}
-Sequence *Playlist::addSequence()
-{
-    int sequenceId =
-        m_nextSequenceId++;
-
-    Sequence *sequence =
-        new Sequence(
-            sequenceId,
-            m_timelineContent
-        );
-
-    sequence->setAvailableTracks(
-        m_availableTracks
-    );
-
-    // -------------------------------------------------
-    // Create a left-side container for this Sequence
-    // -------------------------------------------------
-
-    QWidget *sequenceLeftContainer =
-        new QWidget(m_leftColumn);
-
-    QVBoxLayout *sequenceLeftLayout =
-        new QVBoxLayout(sequenceLeftContainer);
-
-    sequenceLeftLayout->setContentsMargins(
-        0, 0, 0, 0
-    );
-
-    sequenceLeftLayout->setSpacing(0);
-
-    m_leftLayout->addWidget(
-        sequenceLeftContainer
-    );
-
-    // -------------------------------------------------
-    // Move Sequence header into its container
-    // -------------------------------------------------
-
-    sequence->detachHeader();
-
-    QWidget *header =
-        sequence->headerWidget();
-
-    header->setParent(
-        sequenceLeftContainer
-    );
-
-    header->setFixedWidth(
-        160
-    );
-
-    sequenceLeftLayout->addWidget(
-        header
-    );
-
-    header->show();
-
-    // -------------------------------------------------
-    // Move the already-existing first layer
-    // -------------------------------------------------
-
-    const auto existingRows =
-        sequence->layerRows();
-
-    for (TimelineRow *row : existingRows)
-    {
-        if (!row)
-            continue;
-
-        QWidget *leftWidget =
-            row->leftWidget();
-
-        if (!leftWidget)
-            continue;
-
-        leftWidget->setParent(
-            sequenceLeftContainer
-        );
-
-        sequenceLeftLayout->addWidget(
-            leftWidget
-        );
-
-        leftWidget->show();
-    }
-
-    // -------------------------------------------------
-    // Handle future layers
-    // -------------------------------------------------
 
     connect(
-        sequence,
-        &Sequence::layerAdded,
+        m_rightPane->verticalScrollBar(),
+        &QScrollBar::valueChanged,
         this,
-        [sequence, sequenceLeftContainer]()
+        [this](int value)
         {
-            QVBoxLayout *layout =
-                qobject_cast<QVBoxLayout*>(
-                    sequenceLeftContainer->layout()
-                );
-
-            if (!layout)
+            if (m_syncingVerticalScroll)
                 return;
 
-            const auto rows =
-                sequence->layerRows();
+            m_syncingVerticalScroll = true;
 
-            if (rows.isEmpty())
-                return;
+            m_leftPane->verticalScrollBar()->setValue(value);
 
-            TimelineRow *row =
-                rows.last();
-
-            if (!row)
-                return;
-
-            QWidget *leftWidget =
-                row->leftWidget();
-
-            if (!leftWidget)
-                return;
-
-            leftWidget->setParent(
-                sequenceLeftContainer
-            );
-
-            layout->addWidget(
-                leftWidget
-            );
-
-            leftWidget->show();
+            m_syncingVerticalScroll = false;
         }
     );
+    // ---------------------------------------------------------
+    // Right Content
+    // ---------------------------------------------------------
 
-    // -------------------------------------------------
-    // Handle Sequence collapse / expand
-    // -------------------------------------------------
+    m_rightContent = new QWidget;
 
-    connect(
-        sequence,
-        &Sequence::expandedChanged,
-        this,
-        [sequence](bool expanded)
-        {
-            const auto rows =
-                sequence->layerRows();
-
-            for (TimelineRow *row : rows)
-            {
-                if (!row)
-                    continue;
-
-                QWidget *leftWidget =
-                    row->leftWidget();
-
-                if (leftWidget)
-                {
-                    leftWidget->setVisible(
-                        expanded
-                    );
-                }
-            }
-        }
+    m_rightContent->setStyleSheet(
+        "background: darkgreen;"
     );
 
-    // -------------------------------------------------
-    // Add Sequence to scrolling timeline
-    // -------------------------------------------------
+    m_rightLayout = new QVBoxLayout(m_rightContent);
 
-    m_sequenceLayout->addWidget(sequence);
+    m_rightLayout->setContentsMargins(0, 0, 0, 0);
+    m_rightLayout->setSpacing(0);
 
-    m_lastSequence =
-        sequence;
 
-    return sequence;
-}
+    // =========================================================
+    // Install Content
+    // =========================================================
 
-void Playlist::setAvailableTracks(
-    const QVector<QPair<int, QString>> &tracks
-)
-{
-    m_availableTracks = tracks;
+    m_leftPane->setWidget(m_leftContent);
+    m_rightPane->setWidget(m_rightContent);
 
-    // Existing sequences
-    for (int i = 0;
-         i < m_sequenceLayout->count();
-         ++i)
+
+    // =========================================================
+    // Timeline Layout
+    // =========================================================
+
+    timelineLayout->addWidget(m_leftPane);
+    timelineLayout->addWidget(m_rightPane, 1);
+
+
+    // =========================================================
+    // Add Timeline View to Playlist
+    // =========================================================
+
+    playlistLayout->addWidget(m_timelineView, 1);
+
+     timelineLayout->addWidget(m_leftPane);
+    timelineLayout->addWidget(m_rightPane, 1);
+
+    playlistLayout->addWidget(m_timelineView, 1);
+    // =========================================================
+    // TEMPORARY TEST CONTENT
+    // =========================================================
+
+    const int sequenceHeight = 40;
+    const int layerHeight = 70;
+
+    for (int sequence = 1; sequence <= 3; ++sequence)
     {
-        QWidget *widget =
-            m_sequenceLayout->itemAt(i)->widget();
+        // Sequence header - left
+        m_leftLayout->addWidget(
+            makeTestWidget(
+                QString("Sequence %1").arg(sequence),
+                sequenceHeight,
+                "orange",
+                m_leftContent
+            )
+        );
 
-        Sequence *sequence =
-            qobject_cast<Sequence*>(widget);
+        // Sequence header - right
+        m_rightLayout->addWidget(
+            makeTestWidget(
+                QString("Sequence %1").arg(sequence),
+                sequenceHeight,
+                "orange",
+                m_rightContent
+            )
+        );
 
-        if (sequence)
+        int layerCount = sequence + 2;
+
+        for (int layer = 1; layer <= layerCount; ++layer)
         {
-            sequence->setAvailableTracks(
-                m_availableTracks
+            // Layer - left
+            m_leftLayout->addWidget(
+                makeTestWidget(
+                    QString("Layer %1").arg(layer),
+                    layerHeight,
+                    "steelblue",
+                    m_leftContent
+                )
+            );
+
+            // ClipArea - right
+            m_rightLayout->addWidget(
+                makeTestWidget(
+                    QString("Layer %1 ClipArea").arg(layer),
+                    layerHeight,
+                    "seagreen",
+                    m_rightContent
+                )
             );
         }
     }
+    m_rightContent->setMinimumWidth(3000);
+
+    m_leftContent->adjustSize();
+    m_rightContent->adjustSize();
+
 }

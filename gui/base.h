@@ -1,8 +1,6 @@
-#ifndef BASE_H
-#define BASE_H
+#pragma once
 
-#include <QWidget>
-#include <QMainWindow>
+#include <QMainWIndow>
 #include <QVector>
 
 class AudioEngine;
@@ -11,6 +9,8 @@ class Piano;
 class MonitorWindow;
 class DrumPad;
 class Playlist;
+class TrackList;
+
 class Base : public QMainWindow
 {
 public:
@@ -19,13 +19,17 @@ public:
 
     void createUI();
     void playStartupSound();
+protected:
+    void resizeEvent(QResizeEvent *event) override;
 private:
     Playlist *m_playlist;
+
+    TrackList *m_trackList = nullptr;
+
     Piano *pianoWindow = nullptr;
     AudioEngine *m_audioEngine = nullptr;
     MonitorWindow *monitorWindow = nullptr;
     DrumPad *drumPadWindow = nullptr;
+
     QVector<VoiceTrack*> voiceTracks;
 };
-
-#endif // BASE_H

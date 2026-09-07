@@ -1,6 +1,6 @@
 #include "base.h"
 #include "piano.h"
-#include "./playlist/playlist.h"
+#include "./playlist/Playlist.h"
 #include "monitorWindow.h"
 #include "drumPad.h"
 #include <Qwidget>
@@ -12,6 +12,7 @@
 #include <QTimer>
 #include <QPair>
 #include <QSizePolicy>
+#include <QResizeEvent>
 #include "../audio/AudioEngine.h"
 #include "voice_track.h"
 #include "track_list.h"
@@ -256,34 +257,65 @@ void Base::createUI()
     // Track List
     // -------------------------------------------------
 
-    TrackList *trackList =
+    m_trackList =
         new TrackList(
             m_audioEngine,
             window
         );
+    m_trackList->hide();
+    
+    m_trackList->setGeometry(
+    0,
+    window->height() - 200,
+    window->width(),
+    200
+);
+
+    m_trackList->setStyleSheet(R"(
+        QWidget {
+            background-color: #171717;
+            color: white;
+        }
+
+        QPushButton {
+            background-color: #2b2b2b;
+            color: white;
+            border: 1px solid #444444;
+            border-radius: 6px;
+            padding: 6px 12px;
+        }
+
+        QPushButton:hover {
+            background-color: #3a3a3a;
+        }
+
+        QPushButton:pressed {
+            background-color: #222222;
+        }
+    )");
 
     // -------------------------------------------------
     // Connections
     // -------------------------------------------------
 
-    connect(
-        AddSequenceButton,
-        &QPushButton::clicked,
-        this,
-        [this]()
-        {
-            m_playlist->addSequence();
-        }
-    );
+    // connect(
+    //     AddSequenceButton,
+    //     &QPushButton::clicked,
+    //     this,
+    //     [this]()
+    //     {
+    //         m_playlist->addSequence();
+    //     }
+    // );
 
-    connect(
-        trackList,
-        &TrackList::tracksChanged,
-        m_playlist,
-        &Playlist::setAvailableTracks
-    );
+    // connect(
+    //     trackList,
+    //     &TrackList::tracksChanged,
+    //     m_playlist,
+    //     &Playlist::setAvailableTracks
+    // );
 
-    trackList->addVoiceTrack();
+    m_trackList->addVoiceTrack();
 
     // -------------------------------------------------
     // Styling
@@ -368,4 +400,36 @@ void Base::createUI()
             drumPadWindow->activateWindow();
         }
     );
+    // -------------------------------------------------
+    // Track List
+    // -------------------------------------------------
+    
+    connect(
+        TrackListButton,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            if (!m_trackList)
+            return;
+
+            m_trackList->setVisible(!m_trackList->isVisible());
+            m_trackList->raise();
+        }
+    );
+}
+
+void Base::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);
+
+    if (m_trackList)
+    {
+        m_trackList->setGeometry(
+            0,
+            centralWidget()->height() - m_trackList->height(),
+            centralWidget()->width(),
+            m_trackList->height()
+        );
+    }
 }

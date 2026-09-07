@@ -30,6 +30,11 @@ Sequence::Sequence(
     );
 
     mainLayout->setSpacing(0);
+        setSizePolicy(
+        QSizePolicy::Preferred,
+        QSizePolicy::Preferred
+    );
+    // mainLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
 
     // -------------------------------------------------
     // Sequence header
@@ -88,9 +93,7 @@ Sequence::Sequence(
     m_headerSpacer =
     new QWidget(this);
 
-    m_headerSpacer->setFixedHeight(
-        m_header->sizeHint().height()
-    );
+    m_headerSpacer->setFixedHeight(40);
 
     mainLayout->addWidget(
         m_headerSpacer
@@ -101,7 +104,9 @@ Sequence::Sequence(
 
     m_layerContainer =
         new QWidget(this);
-
+    m_layerContainer->setStyleSheet(
+    "background: orange; border: 4px solid red;"
+    );
     m_layerLayout =
         new QVBoxLayout(m_layerContainer);
 
@@ -111,8 +116,9 @@ Sequence::Sequence(
 
     m_layerLayout->setSpacing(0);
 
+
     mainLayout->addWidget(
-        m_layerContainer
+        m_layerContainer,0
     );
 
     // -------------------------------------------------
@@ -149,17 +155,15 @@ void Sequence::toggleExpanded()
 {
     m_expanded = !m_expanded;
 
-    m_layerContainer->setVisible(
-        m_expanded
-    );
+    m_layerContainer->setVisible(m_expanded);
 
     m_expandButton->setText(
         m_expanded ? "▼" : "▶"
     );
 
-    emit expandedChanged(
-        m_expanded
-    );
+    updateGeometry();
+
+    emit expandedChanged(m_expanded);
 }
 
 Layer *Sequence::addLayer()
@@ -262,12 +266,12 @@ connect(
     int insertPosition =
         m_layerLayout->count();
 
-    m_layerLayout->insertWidget(
-        insertPosition,
-        row
-    );
-    emit layerAdded();
+    m_layerLayout->insertWidget(insertPosition, row);
 
+    m_layerContainer->adjustSize();
+    updateGeometry();
+
+    emit layerAdded();
     return layer;
 }
 

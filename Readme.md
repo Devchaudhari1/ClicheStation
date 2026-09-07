@@ -190,6 +190,71 @@ VoiceTrack
 └────────────────┴──────────────────────────────────────────────┘
       ↕ vertical scrolling
 ```
+
+```
+Proposed Plan for Playlist
+
+Okay so lets discuuss the properties before hand
+
+
+
+
+
+Playlist // A QHBoxLayout  
+
+│
+
+├── TimeRuler  
+
+ |           |-------a spacer of length = length of left Pane
+
+ |           |--------actual ruler running to the right
+
+│
+
+└── TimelineView // a vertically  scrolling pane like QListView or QScrollBar with only Vertical Scroll enabled
+
+    │
+
+    ├── LeftPane // a fixed 160Hz Widget 
+
+    │   └── LeftContent   // I think we dont even need this
+
+    │       ├── Sequence 1 header // A fixed Size Widget
+
+    │       ├── Layer 1// Fixed Widget
+
+    │       ├── Layer 2// Fixed Widget
+
+    │       ├── Layer 3// Fixed Widget
+
+    │       ├── Sequence 2 header // Fixed Widget
+
+    │       ├── Layer 1// Fixed Widget
+
+    │       └── Layer 2// Fixed Widget
+
+    │
+
+    └── RightPane // A QScrollBar with only Horizontal SCroll possible
+
+        └── RightContent // Again I dont think we need this
+
+            ├── Sequence 1 header// Fixed Widget
+
+            ├── Layer 1 ClipArea// Fixed Widget
+
+            ├── Layer 2 ClipArea// Fixed Widget
+
+            ├── Layer 3 ClipArea// Fixed Widget
+
+            ├── Sequence 2 header// Fixed Widget
+
+            ├── Layer 1 ClipArea// Fixed Widget
+
+            └── Layer 2 ClipArea// Fixed Widget
+
+```
 ```mermaid
 flowchart TB
 
