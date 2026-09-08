@@ -1,5 +1,7 @@
 #include "instrument_settings.h"
+#include "effect_chain_editor.h"
 #include "pianoKeyboard.h"
+#include "../audio/effects/AudioEffect.h"
 
 #include <QComboBox>
 #include <QDoubleSpinBox>
@@ -11,7 +13,8 @@
 #include <QVBoxLayout>
 
 InstrumentSettings::InstrumentSettings(QWidget *parent)
-    : QWidget(parent, Qt::Window)
+    : QWidget(parent, Qt::Window),
+    m_effectChainEditor(nullptr)
 {
     setWindowTitle("Instrument Settings");
     resize(450, 650);
@@ -117,19 +120,25 @@ void InstrumentSettings::createUI()
     QVBoxLayout *effectsLayout =
         new QVBoxLayout(effectsGroup);
 
-    m_reverb =
-        new QCheckBox("Reverb", this);
+    m_effectChainEditor = new EffectChainEditor(this);
 
-    m_delay =
-        new QCheckBox("Delay", this);
+    m_effectChainEditor->addEffect(AudioEffectType::Clipping);
+    m_effectChainEditor->addEffect(AudioEffectType::Delay);
+    m_effectChainEditor->addEffect(AudioEffectType::Distortion);
+    m_effectChainEditor->addEffect(AudioEffectType::Reverb);
+    m_effectChainEditor->addEffect(AudioEffectType::Saturation);
+    effectsLayout->addWidget(m_effectChainEditor);
 
-    m_distortion =
-        new QCheckBox("Distortion", this);
+    m_distortionDrive = new QSlider(Qt::Horizontal, this);
+    m_distortionDrive->setRange(1, 20);
+    m_distortionDrive->setValue(5);
 
+    m_distortionDriveLabel = new QLabel("Drive: 5", this);
     effectsLayout->addWidget(m_reverb);
     effectsLayout->addWidget(m_delay);
     effectsLayout->addWidget(m_distortion);
-
+    effectsLayout->addWidget(m_distortionDriveLabel);
+    effectsLayout->addWidget(m_distortionDrive);
     // --------------------------------------------------
     // Delay
     // --------------------------------------------------
@@ -259,25 +268,33 @@ void InstrumentSettings::createUI()
         &InstrumentSettings::sampleRateChanged
     );
 
+    //Effect Chain Editor Signals
     connect(
-        m_reverb,
-        &QCheckBox::toggled,
+        m_effectChainEditor,
+        &EffectChainEditor::effectEnabledChanged,
         this,
-        &InstrumentSettings::reverbChanged
+        &InstrumentSettings::effectEnabledChanged
     );
 
     connect(
-        m_delay,
-        &QCheckBox::toggled,
+        m_effectChainEditor,
+        &EffectChainEditor::effectOrderChanged,
         this,
-        &InstrumentSettings::delayChanged
+        &InstrumentSettings::effectOrderChanged
     );
 
     connect(
-        m_distortion,
-        &QCheckBox::toggled,
+        m_distortionDrive,
+        &QSlider::valueChanged,
         this,
-        &InstrumentSettings::distortionChanged
+        [this](int value)
+        {
+            m_distortionDriveLabel->setText(
+                QString("Drive: %1").arg(value)
+            );
+
+            emit distortionDriveChanged(static_cast<float>(value));
+        }
     );
 
     connect(
@@ -300,7 +317,7 @@ void InstrumentSettings::createUI()
         this,
         &InstrumentSettings::delayMixChanged
     );
-
+    
     connect(
     m_previewKeyboard,
     &PianoKeyboard::notePressed,

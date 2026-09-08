@@ -1,52 +1,35 @@
-#include<atomic>
-#include<algorithm>
-#include "AudioEffect.h"
+#include "Clipping.h"
 
-class Clipper : public AudioEffect
+#include <algorithm>
+
+void Clipping::prepare(double,
+                       std::size_t,
+                       std::size_t)
 {
-public:
-    void prepare(
-        double,
-        std::size_t,
-        std::size_t) override
+}
+
+void Clipping::process(float *left,
+                       float *right,
+                       std::size_t numSamples)
+{
+    for (std::size_t i = 0; i < numSamples; ++i)
     {
+        left[i] = std::clamp(left[i], -1.0f, 1.0f);
+        right[i] = std::clamp(right[i], -1.0f, 1.0f);
     }
+}
 
-    void reset() override
-    {
-    }
+void Clipping::reset()
+{
+}
 
-    void setThreshold(float value)
-    {
-        threshold.store(value);
-    }
+AudioEffectType Clipping::effectType() const
+{
+    return AudioEffectType::Clipping;
+}
 
-    void process(
-        float* left,
-        float* right,
-        std::size_t count) override
-    {
-        const float t =
-            threshold.load();
 
-        for (std::size_t i = 0;
-             i < count;
-             ++i)
-        {
-            left[i] =
-                std::clamp(
-                    left[i],
-                    -t,
-                    t);
-
-            right[i] =
-                std::clamp(
-                    right[i],
-                    -t,
-                    t);
-        }
-    }
-
-private:
-    std::atomic<float> threshold { 0.8f };
-};
+QString Clipping::effectName() const
+{
+    return "Clipping";
+}

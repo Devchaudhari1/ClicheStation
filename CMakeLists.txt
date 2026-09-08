@@ -20,6 +20,8 @@ qt_add_executable(ClicheStation
     gui/playlist/clip.h
     gui/playlist/ClipArea.cpp
     gui/playlist/ClipArea.h
+    gui/playlist/ClipVisualizer.cpp
+    gui/playlist/ClipVisualizer.h
     gui/playlist/layer.cpp
     gui/playlist/layer.h
     gui/playlist/Playlist.cpp  
@@ -36,6 +38,10 @@ qt_add_executable(ClicheStation
     gui/base.h
     gui/drumPad.cpp
     gui/drumPad.h
+    gui/effect_chain_editor.cpp
+    gui/effect_chain_editor.h
+    gui/effect_slot.cpp
+    gui/effect_slot.h
     gui/instrument_settings.cpp
     gui/instrument_settings.h
     gui/main.cpp
@@ -51,7 +57,6 @@ qt_add_executable(ClicheStation
     gui/track_list.h
     gui/voice_track.cpp
     gui/voice_track.h
-
     # Midi source
     midi/RtMidi.cpp
     midi/RtMidi.h
@@ -77,13 +82,21 @@ qt_add_executable(ClicheStation
     
     # Audio Effects
     audio/effects/AudioEffect.h
+    audio/effects/AudioEffectFactory.cpp
+    audio/effects/AudioEffectFactory.h
     audio/effects/Clipping.cpp
+    audio/effects/Clipping.h
     audio/effects/Delay.cpp
+    audio/effects/Delay.h
     audio/effects/Distortion.cpp
     audio/effects/Distortion.h
     audio/effects/EffectChain.cpp
-    audio/effects/EFfectChain.h
+    audio/effects/EffectChain.h
+    audio/effects/Reverb.cpp
+    audio/effects/Reverb.h
     audio/effects/Saturation.cpp
+    audio/effects/Saturation.h
+
 )
 
 # links against -lQt6Widgets 

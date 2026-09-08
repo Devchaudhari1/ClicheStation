@@ -6,6 +6,8 @@
 #include <QIODevice>
 #include <vector>
 #include <memory>
+#include <QString>
+#include <QVector>
 #include "TrackProcessor.h"
 
 class AudioEngine;
@@ -41,6 +43,8 @@ public:
     void noteOff(int midiNote);
     void noteOn(int trackId, int midiNote, int velocity);
     void noteOff(int trackId, int midiNote);
+
+    void setDistortionDrive(int trackId, float drive);
     
     void pitchBend(int channel, int value);
 
@@ -50,6 +54,16 @@ public:
         std::size_t numSamples
     );
 
+    void setEffectEnabled(
+        int trackId,
+        AudioEffectType effectType,
+        bool enabled
+    );
+
+    void setEffectOrder(
+        int trackId,
+        const QVector<AudioEffectType> &order
+    );
     TrackProcessor* createTrack(int trackId);
     TrackProcessor* findTrackProcessor(int trackId);
     double sampleRate() const;

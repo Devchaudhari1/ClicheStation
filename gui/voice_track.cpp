@@ -92,7 +92,7 @@ void VoiceTrack::createUI()
         m_piano->activateWindow();
     });
 
-   connect(
+connect(
     m_instrumentButton,
     &QPushButton::clicked,
     this,
@@ -103,6 +103,7 @@ void VoiceTrack::createUI()
             m_instrumentSettings =
                 new InstrumentSettings(nullptr);
 
+            // Preview note
             connect(
                 m_instrumentSettings,
                 &InstrumentSettings::previewNotePressed,
@@ -124,13 +125,70 @@ void VoiceTrack::createUI()
                         m_audioEngine->noteOff(midiNote);
                 }
             );
+
+            // Distortion
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::distortionDriveChanged,
+                this,
+                [this](float drive)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setDistortionDrive(
+                            m_trackId,
+                            drive
+                        );
+                }
+            );
+
+            // Effect enabled / bypass
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::effectEnabledChanged,
+                this,
+                [this](AudioEffectType effectType, bool enabled)
+                {
+                    qDebug() << "VoiceTrack received effect signal:"
+                             << "type =" << static_cast<int>(effectType)
+                             << "enabled =" << enabled;
+
+                    if (!m_audioEngine)
+                    {
+                        qDebug() << "VoiceTrack: m_audioEngine is NULL";
+                        return;
+                    }
+
+                    m_audioEngine->setEffectEnabled(
+                        m_trackId,
+                        effectType,
+                        enabled
+                    );
+                }
+            );
+
+            // Effect order
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::effectOrderChanged,
+                this,
+                [this](const QVector<AudioEffectType> &order)
+                {
+                    if (!m_audioEngine)
+                        return;
+
+                    m_audioEngine->setEffectOrder(
+                        m_trackId,
+                        order
+                    );
+                }
+            );
         }
 
         m_instrumentSettings->show();
         m_instrumentSettings->raise();
         m_instrumentSettings->activateWindow();
-        }
-    );
+    }
+);
 
     connect(
         m_effectsButton,
@@ -160,6 +218,7 @@ void VoiceTrack::createUI()
             emit soloChanged(m_solo);
         }
     );
+
 }
 
 int VoiceTrack::trackId() const

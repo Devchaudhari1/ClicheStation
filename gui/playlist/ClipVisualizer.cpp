@@ -3,11 +3,15 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QtGlobal>
+#include <QSizePolicy>
 
 ClipVisualizer::ClipVisualizer(QWidget *parent)
     : QWidget(parent)
 {
-    setMinimumHeight(80);
+    setSizePolicy(
+        QSizePolicy::Expanding,
+        QSizePolicy::Expanding
+    );
 }
 
 void ClipVisualizer::setSamples(const QVector<float> &samples)

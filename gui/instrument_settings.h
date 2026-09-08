@@ -2,13 +2,15 @@
 
 #include <QWidget>
 #include "../synth/Oscillator.h"
-
+#include "../audio/effects/AudioEffect.h"
 class QComboBox;
 class QDoubleSpinBox;
 class QSpinBox;
 class QSlider;
 class QCheckBox;
 class PianoKeyboard;
+class QLabel;
+class EffectChainEditor;
 
 class InstrumentSettings : public QWidget
 {
@@ -39,11 +41,14 @@ signals:
     void delayMixChanged(double mix);
 
     void distortionChanged(bool enabled);
+    void distortionDriveChanged(float drive);
     void saturationChanged(bool enabled);
 
     void previewNotePressed(int midiNote);
     void previewNoteReleased(int midiNote);
 
+    void effectEnabledChanged(AudioEffectType effectType, bool enabled);
+    void effectOrderChanged(const QVector<AudioEffectType> &order);
 private:
     void createUI();
 
@@ -64,5 +69,8 @@ private:
     QDoubleSpinBox *m_delayFeedback;
     QDoubleSpinBox *m_delayMix;
 
+    QSlider *m_distortionDrive;
+    QLabel *m_distortionDriveLabel;
+    EffectChainEditor *m_effectChainEditor;
     PianoKeyboard *m_previewKeyboard;
 };

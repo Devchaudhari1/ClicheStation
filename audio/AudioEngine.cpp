@@ -278,3 +278,54 @@ TrackProcessor* AudioEngine::findTrackProcessor(int trackId)
 
     return nullptr;
 }
+
+void AudioEngine::setDistortionDrive(int trackId, float drive)
+{
+    TrackProcessor *processor = findTrackProcessor(trackId);
+
+    if (!processor)
+        return;
+
+    processor->setDistortionDrive(drive);
+}
+
+// handles effectEnabledChanged signal from InstrumentSettigs->VoiceTrack->AudioEngine->Processor
+void AudioEngine::setEffectEnabled(
+    int trackId,
+    AudioEffectType effectType,
+    bool enabled)
+{
+    qDebug() << "AudioEngine::setEffectEnabled:"
+             << "trackId =" << trackId
+             << "type =" << static_cast<int>(effectType)
+             << "enabled =" << enabled;
+
+    TrackProcessor *processor =
+        findTrackProcessor(trackId);
+
+    if (!processor)
+    {
+        qDebug() << "AudioEngine: TrackProcessor NOT FOUND";
+        return;
+    }
+
+    qDebug() << "AudioEngine: TrackProcessor found";
+    processor->setEffectEnabled(
+        effectType,
+        enabled
+    );
+}
+// handles effectOrderChanged signal from InstrumentSettigs->VoiceTrack->AudioEngine->Processor
+
+void AudioEngine::setEffectOrder(
+    int trackId,
+    const QVector<AudioEffectType> &order)
+{
+    TrackProcessor *processor =
+        findTrackProcessor(trackId);
+
+    if (!processor)
+        return;
+
+    processor->setEffectOrder(order);
+}

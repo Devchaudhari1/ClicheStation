@@ -2,6 +2,8 @@
 
 #include "../synth/SynthEngine.h"
 #include "effects/EffectChain.h"
+#include <QString>
+#include <QVector>
 
 class TrackProcessor
 {
@@ -20,6 +22,16 @@ public:
 
     int trackId() const;
 
+    void setDistortionDrive(float drive);
+    
+    void setEffectEnabled(
+        AudioEffectType effectType,
+        bool enabled
+    );
+
+    void setEffectOrder(
+        const QVector<AudioEffectType> &order
+    );
 private:
     int m_trackId;
 

@@ -6,7 +6,8 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QWidget>
-
+#include <cmath>
+#include <QVector>
 Layer::Layer(QWidget *parent)
     : QWidget(parent),
       m_leftWidget(nullptr),
@@ -74,6 +75,20 @@ Clip *Layer::addClip(
             duration,
             m_clipArea
         );
+
+    QVector<float> samples;
+
+    for (int i = 0; i < 2000; ++i)
+    {
+        double t = static_cast<double>(i) / 2000.0;
+
+        float sample =
+            0.6f * std::sin(t * 20.0 * M_PI);
+
+        samples.append(sample);
+    }
+
+    clip->setSamples(samples);
 
     connect(
         clip,

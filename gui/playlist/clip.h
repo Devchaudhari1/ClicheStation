@@ -1,10 +1,13 @@
 #pragma once
 
 #include <QWidget>
+#include <QString>
+#include <QVector>
 
 class QLabel;
 class QMouseEvent;
 class QPaintEvent;
+class ClipVisualizer;
 
 class Clip : public QWidget
 {
@@ -28,6 +31,7 @@ public:
 
     void setStartTime(double startTime);
     void setDuration(double duration);
+    void setSamples(const QVector<float> &samples);
 signals:
     void moveRequested(double newStartTime);
     void resizeRequested(
@@ -59,4 +63,6 @@ private:
     double m_duration;
 
     QLabel *m_trackLabel;
+
+    ClipVisualizer *m_visualizer;
 };

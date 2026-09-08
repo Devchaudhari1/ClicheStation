@@ -1,6 +1,7 @@
 #include "Distortion.h"
 
 #include <cmath>
+#include <QDebug>
 
 void Distortion::prepare(
     double,
@@ -36,4 +37,15 @@ void Distortion::process(
         right[i] =
             std::tanh(right[i] * drive);
     }
+
+}
+
+AudioEffectType Distortion::effectType() const
+{
+    return AudioEffectType::Distortion;
+}
+
+QString Distortion::effectName() const
+{
+    return "Distortion";
 }

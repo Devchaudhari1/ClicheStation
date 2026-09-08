@@ -1,5 +1,7 @@
-#include "clip.h"
+#include "Clip.h"
+#include "ClipVisualizer.h"
 
+#include <QVBoxLayout>
 #include <QLabel>
 #include <QHBoxLayout>
 #include <QMouseEvent>
@@ -20,6 +22,19 @@ Clip::Clip(
       m_duration(duration)
 {
     setMinimumHeight(50);
+    QVBoxLayout *layout = new QVBoxLayout(this);
+
+    layout->setContentsMargins(2, 2, 2, 2);
+    layout->setSpacing(0);
+
+    m_visualizer = new ClipVisualizer(this);
+
+    layout->addWidget(m_visualizer);
+}
+
+void Clip::setSamples(const QVector<float> &samples)
+{
+    m_visualizer->setSamples(samples);
 }
 
 void Clip::paintEvent(QPaintEvent *event)

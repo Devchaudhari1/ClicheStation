@@ -3,9 +3,11 @@
 #pragma once
 
 #include "AudioEffect.h"
-
+#include "AudioEffectFactory.h"
 #include <memory>
 #include <vector>
+#include <QString>
+#include <QVector>
 
 class EffectChain
 {
@@ -25,6 +27,18 @@ public:
 
     void reset();
 
+    void addEffect(AudioEffectType type);
+
+    AudioEffect *findEffect(AudioEffectType type);
+
+    void setEffectEnabled(
+        AudioEffectType effectType,
+        bool enabled
+    );
+
+    void setEffectOrder(
+        const QVector<AudioEffectType> &order
+    );
 private:
     std::vector<std::unique_ptr<AudioEffect>> effects;
 };
