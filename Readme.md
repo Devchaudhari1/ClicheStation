@@ -71,8 +71,8 @@ root/
             ---clip.h
             ---ClipArea.cpp // class defining the Cliparea on the right pane of Playlist
             ---ClipArea.h
-            ---ClipVisualiser.cpp // Visualiser for Clip
-            ---ClipVisualiser.h
+            ---ClipVisualizer.cpp // Visualiser for Clip
+            ---ClipVisualizer.h
             ---layer.cpp // Several layers form a Sequence
             ---layer.h
             ---Playlist.cpp // Playlist is a collection of Sequence. (or a collection of song or music piece)
@@ -170,11 +170,6 @@ VoiceTrack
 ```
 Proposed Plan for Playlist
 
-Okay so lets discuuss the properties before hand
-
-
-
-
 
 Playlist // A QHBoxLayout  
 
@@ -231,15 +226,164 @@ Playlist // A QHBoxLayout
             └── Layer 2 ClipArea// Fixed Widget
 
 ```
+
+### TrackProcessor Integral Structure
 ```mermaid
-flowchart TB
+
+flowchart LR
+subgraph TrackProcessor["TrackProcessor"]
+    subgraph VoiceTrack["VoiceTrack"]
+        subgraph InstrumentSettings_["Instrument Settings"]
+            subgraph ActualSettings["Actual Settings parameters"]
+                OscillatorType_["OscillatorType"]
+                Volume_["Volume"]
+                Frequency_["Frequency"]
+                SampleRate_["Sample Rate"]
+                Reverb_["Reverb"]
+                Distortion_["Distortion"]
+                Delay_["Delay"]
+            end
+            subgraph PreviewKeyBoard["Preview Keyboard (Dedicated PianoKeyboard to preview Settings)"]
+                MidiNote_P["Midi Note"]
+                NoteName_P["Note Name"]
+            end
+        end
+        subgraph Piano_["Piano"]
+            subgraph PianoRoll_["PianoRoll"]
+                subgraph PlacedNotes["Placed Notes Vector"]
+                    subgraph PlacedNote1["Placed Note 1"]
+                        MidiNote1["Midi Note"]
+                        Time1["Time Clicked at"]
+                        Duration1["Duration"]
+                    end
+                    subgraph PlacedNote2["Placed Note 2"]
+                        MidiNote2["Midi Note"]
+                        Time2["Time Clicked at"]
+                        Duration2["Duration"]
+                    end
+                    subgraph PlacedNote3["Placed Note 3"]
+                        MidiNote3["Midi Note"]
+                        Time3["Time Clicked at"]
+                        Duration3["Duration"]
+                    end
+                    subgraph PlacedNoteN["Placed Note N"]
+                        MidiNoteN["Midi Note"]
+                        TimeN["Time Clicked at"]
+                        DurationN["Duration"]
+                    end
+                end
+            end
+            subgraph PianoKeyboard_["Piano Keyboard"]
+                subgraph PianoKey["Piano Key"]
+                    MidiNote["Midi Note"]
+                    NoteName["Note Name"]
+                end
+            end
+        end
+        subgraph InstrumentParameters_["Instrument Parameters"]
+            MostlyUnused["Not used at all"]
+        end
+    end
+    subgraph SynthEngines["Synth Engine "]
+        subgraph Voice1["Voice 1 (Computes Output from Oscillator and Synth Engine)"]
+            Oscillator1["Oscillator 1 (Computes Samples based on SampleRate, Frequency, Waveform phase+Type )"]
+            ADSREnvelope1["ADSR Envelope 1 (Computes Gain level of Samples at different ADSR Phase)"]
+        end
+        subgraph Voice2["Voice 2 (Computes Output from Oscillator and Synth Engine)"]
+            Oscillator2["Oscillator 2 (Computes Samples based on SampleRate, Frequency, Waveform phase+Type )"]
+            ADSREnvelope2["ADSR Envelope 2 (Computes Gain level of Samples at different ADSR Phase)"]
+        end
+        subgraph Voice3["Voice 3 (Computes Output from Oscillator and Synth Engine)"]
+            Oscillator3["Oscillator 3 (Computes Samples based on SampleRate, Frequency, Waveform phase+Type )"]
+            ADSREnvelope3["ADSR Envelope 3 (Computes Gain level of Samples at different ADSR Phase)"]
+        end
+        subgraph Voice4["Voice 4 (Computes Output from Oscillator and Synth Engine)"]
+            Oscillator4["Oscillator 4 (Computes Samples based on SampleRate, Frequency, Waveform phase+Type )"]
+            ADSREnvelope4["ADSR Envelope 4 (Computes Gain level of Samples at different ADSR Phase)"]
+        end
+        subgraph VoiceN["Voice N (Computes Output from Oscillator and Synth Engine)"]
+            OscillatorN["Oscillator N (Computes Samples based on SampleRate, Frequency, Waveform phase+Type )"]
+            ADSREnvelopeN["ADSR Envelope N (Computes Gain level of Samples at different ADSR Phase)"]
+        end
+    end
+    subgraph EffectChain["Effect Chain (has a process function which when called triggers the non bypassed effects to be triggered in order)"]
+    direction TB
+    subgraph Effect1["Effect 1 say Clipping"]
+        subgraph parameter1["Parameters"]
+            Threshold["Threshold"]
+        end
+
+        process1["Limits the value of the volume to a threshold variable"]
+    end
+    subgraph Effect2["Effect 2 say Delay"]
+        subgraph parameter2["Parameters"]
+            Delay["Delay in Ms"]
+            Feedback["Feedback to be added"]
+        end
+        process2["Not implemented Yet"]
+    end
+    subgraph Effect3["Effect 3 say Distortion"]
+        subgraph parameter3["Parameters"]
+            Drive["Drive"]
+        end
+
+        process3["Create Distortion as tanh(val*drive)"]
+    end
+    Effect1-->Effect2
+    Effect2-->Effect3
+end
+end
+```
+
+
+### Track Processors Process Individual Tracks and sends them to Audio Engine
+```mermaid
+
+flowchart LR
+
+subgraph TrackProcessors["Track Processors"]
+    direction LR
+    AudioEngine["Audio Engine"]
+
+    subgraph TrackProcessor1["TrackProcessor1"]
+        SynthEngine1["SynthEngine1"]
+        EffectChain1["EffectChain1"]
+    end
+    subgraph TrackProcessor2["TrackProcessor2"]
+        SynthEngine2["SynthEngine2"]
+        EffectChain2["EffectChain2"]
+    end
+    subgraph TrackProcessor3["TrackProcessor3"]
+        SynthEngine3["SynthEngine3"]
+        EffectChain3["EffectChain3"]
+    end
+    subgraph TrackProcessor4["TrackProcessor4"]
+        SynthEngine4["SynthEngine4"]
+        EffectChain4["EffectChain4"]
+    end
+    subgraph TrackProcessorN["TrackProcessorN"]
+        SynthEngineN["SynthEngineN"]
+        EffectChainN["EffectChainN"]
+    end
+end
+TrackProcessor1-.->AudioEngine
+TrackProcessor2-.->AudioEngine
+TrackProcessor3-.->AudioEngine
+TrackProcessor4-.->AudioEngine
+TrackProcessorN-.->AudioEngine
+```
+
+
+### Basic Signal Processing without Effects
+```mermaid
+
+flowchart LR
 
 subgraph SignalProcessing[Signal Processing]
     Start[Start]-->|Set Waveform, Sample Rate, Frequency to generate signal|Oscillator[Oscillator]
-    Oscillator-->|Set attack, decay, release time, sustain and gain levels for generated signal|ADSREnvelope[ADSR Envelope]
-    ADSREnvelope-->|set PitchBend,Render and provides Oscillator and ADSREnvelope parmas|Voice[Voice]
-    Voice-->|Renders the output signal|SynthEngine[Synth Engine]
+    Start-->|Set attack, decay, release time, sustain and gain levels for generated signal|ADSREnvelope[ADSR Envelope]
+    Oscillator-->|Generated Sample of given Waveform, Sample Rate and Frequency at different datapoint Sent|Voice["Voice"]
+    ADSREnvelope-->|Generated ADSR envelope gain lavel at differnet datapoint sent|Voice
+    Voice-->|Computed Output Signal using Pitch Bend and Velocity Sent|SynthEngine["Synth Engine (Adds PitchBend to voices and aggregate all voices)" ]
 end
-    
 ```
-
