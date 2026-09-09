@@ -1,12 +1,18 @@
-#include "MainWindow.h"
+#include "monitorWindow.h"
+#include "../midi/MidiInput.h"
 
+#include <QComboBox>
+#include <QPushButton>
+#include <QLabel>
+#include <QTableWidget>
+#include <QTableWidgetItem>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QDateTime>
 #include <QMessageBox>
 
-MainWindow::MainWindow(QWidget *parent)
+MonitorWindow::MonitorWindow(QWidget *parent)
     : QMainWindow(parent),
       midiInput(new MidiInput(this))
 {
@@ -88,14 +94,14 @@ MainWindow::MainWindow(QWidget *parent)
     );
 
 
-    auto *mainLayout =
+    auto *MonitorLayout =
         new QVBoxLayout();
 
-    mainLayout->addLayout(
+    MonitorLayout->addLayout(
         topLayout
     );
 
-    mainLayout->addWidget(
+    MonitorLayout->addWidget(
         messageTable
     );
 
@@ -103,7 +109,7 @@ MainWindow::MainWindow(QWidget *parent)
     auto *central =
         new QWidget(this);
 
-    central->setLayout(mainLayout);
+    central->setLayout(MonitorLayout);
 
     setCentralWidget(central);
 
@@ -116,28 +122,28 @@ MainWindow::MainWindow(QWidget *parent)
         refreshButton,
         &QPushButton::clicked,
         this,
-        &MainWindow::refreshPorts
+        &MonitorWindow::refreshPorts
     );
 
     connect(
         connectButton,
         &QPushButton::clicked,
         this,
-        &MainWindow::connectMidi
+        &MonitorWindow::connectMidi
     );
 
     connect(
         midiInput,
         &MidiInput::midiMessage,
         this,
-        &MainWindow::processMidiMessage
+        &MonitorWindow::processMidiMessage
     );
 
     connect(
         midiInput,
         &MidiInput::errorMessage,
         this,
-        &MainWindow::showError
+        &MonitorWindow::showError
     );
 
 
@@ -145,7 +151,7 @@ MainWindow::MainWindow(QWidget *parent)
     refreshPorts();
 }
 
-MainWindow::~MainWindow()
+MonitorWindow::~MonitorWindow()
 {
 }
 
@@ -154,7 +160,7 @@ MainWindow::~MainWindow()
 // Find MIDI devices
 // ------------------------------------------------------
 
-void MainWindow::refreshPorts()
+void MonitorWindow::refreshPorts()
 {
     portCombo->clear();
 
@@ -183,7 +189,7 @@ void MainWindow::refreshPorts()
 // Connect to selected MIDI device
 // ------------------------------------------------------
 
-void MainWindow::connectMidi()
+void MonitorWindow::connectMidi()
 {
     if (portCombo->count() == 0)
         return;
@@ -231,7 +237,7 @@ void MainWindow::connectMidi()
 // MIDI message received
 // ------------------------------------------------------
 
-void MainWindow::processMidiMessage(
+void MonitorWindow::processMidiMessage(
     double deltaTime,
     const QByteArray &data)
 {
@@ -588,7 +594,7 @@ void MainWindow::processMidiMessage(
 // Convert MIDI note number to musical note
 // ------------------------------------------------------
 
-QString MainWindow::noteName(int note) const
+QString MonitorWindow::noteName(int note) const
 {
     static const QString names[] =
     {
@@ -612,7 +618,7 @@ QString MainWindow::noteName(int note) const
 // Debug decoder
 // ------------------------------------------------------
 
-QString MainWindow::decodeMidiMessage(
+QString MonitorWindow::decodeMidiMessage(
     double deltaTime,
     const QByteArray &data)
 {
@@ -699,9 +705,9 @@ QString MainWindow::decodeMidiMessage(
 // Error
 // ------------------------------------------------------
 
-void MainWindow::showError(
+void MonitorWindow::showError(
     const QString &message)
-{
+{       
     QMessageBox::warning(
         this,
         "MIDI Error",

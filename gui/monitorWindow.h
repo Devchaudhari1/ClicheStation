@@ -1,24 +1,24 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef MONITORWINDOW_H
+#define MONITORWINDOW_H
 
 #include <QMainWindow>
-#include <QComboBox>
-#include <QPushButton>
-#include <QTableWidget>
-#include <QLabel>
-#include <QCheckBox>
 
-#include "MidiInput.h"
+class QComboBox;
+class QPushButton;
+class QLabel;
+class QTableWidget;
+class QString;
+class QByteArray;
 
-class MainWindow : public QMainWindow
+class MidiInput;
+
+class MonitorWindow : public QMainWindow
 {
-    Q_OBJECT
-
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    explicit MonitorWindow(QWidget *parent = nullptr);
+    ~MonitorWindow();
 
-private slots:
+private:
     void refreshPorts();
     void connectMidi();
 
@@ -27,26 +27,25 @@ private slots:
         const QByteArray &data
     );
 
-    void showError(const QString &message);
-
-private:
     QString noteName(int note) const;
+
     QString decodeMidiMessage(
         double deltaTime,
         const QByteArray &data
     );
 
-    MidiInput *midiInput;
+    void showError(const QString &message);
 
+private:
     QComboBox *portCombo;
     QPushButton *refreshButton;
     QPushButton *connectButton;
-
+    QLabel *statusLabel;
     QTableWidget *messageTable;
 
-    QLabel *statusLabel;
+    MidiInput *midiInput;
 
     bool connected = false;
 };
 
-#endif
+#endif // MONITORWINDOW_H
