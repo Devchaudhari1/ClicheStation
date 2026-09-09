@@ -118,6 +118,22 @@ public:
     void setPhaserFeedback(int trackId, float feedback);
     void setPhaserMix(int trackId, float mix);
     
+    // Oscillator and Voice
+
+    // void setOscillatorFrequency(int trackId, float frequency);
+
+    void setOscillatorVolume(int trackId,float volume);
+
+    void setOscillatorWaveform(int trackId,Oscillator::Waveform waveform);
+
+    void setVelocity(int trackId,float velocity);
+    // ADSR
+    void setAttack(int trackId, float seconds);
+    void setDecay(int trackId, float seconds);
+    void setSustain(int trackId, float level);
+    void setRelease(int trackId, float seconds);
+    void setPeakGain(int trackId, float level);
+    
     void pitchBend(int channel, int value);
 
     void render(

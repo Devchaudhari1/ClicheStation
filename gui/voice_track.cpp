@@ -125,6 +125,99 @@ connect(
                         m_audioEngine->noteOff(midiNote);
                 }
             );
+            // Oscillator and Voice
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::oscillatorTypeChanged,
+                this,
+                [this](Oscillator::Waveform waveform)
+                {
+                    if(m_audioEngine)
+                    m_audioEngine->setOscillatorWaveform(m_trackId,waveform);
+                });
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::volumeChanged,
+                this,
+                [this](double volume)
+                {
+                    if(m_audioEngine)
+                    m_audioEngine->setOscillatorVolume(m_trackId,static_cast<float>(volume));
+                });  
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::velocityChanged,
+                this,
+                [this](double velocity)
+                {
+                    if(m_audioEngine)
+                    m_audioEngine->setVelocity(m_trackId,static_cast<float>(velocity));
+                });
+            //ADSR
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::attackChanged,
+                this,
+                [this](float value)
+                {
+                    m_audioEngine->setAttack(
+                        m_trackId,
+                        value
+                    );
+                });
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::decayChanged,
+                this,
+                [this](float value)
+                {
+                    m_audioEngine->setDecay(
+                        m_trackId,
+                        value
+                    );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::sustainChanged,
+                this,
+                [this](float value)
+                {
+                    m_audioEngine->setSustain(
+                        m_trackId,
+                        value
+                    );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::releaseChanged,
+                this,
+                [this](float value)
+                {
+                    m_audioEngine->setRelease(
+                        m_trackId,
+                        value
+                    );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::peakGainChanged,
+                this,
+                [this](float value)
+                {
+                    m_audioEngine->setPeakGain(
+                        m_trackId,
+                        value
+                    );
+                }
+            );
             // Clipping
             connect(
                 m_instrumentSettings,

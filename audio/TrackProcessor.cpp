@@ -647,3 +647,49 @@ void TrackProcessor::setPhaserMix(float mix)
 
     phaser->setMix(mix);
 }
+
+void TrackProcessor::setFrequency(float frequency)
+{
+    m_synth.setFrequency(frequency);
+}
+
+void TrackProcessor::setVolume(float volume)
+{
+    m_synth.setVolume(volume);
+}
+
+void TrackProcessor::setWaveform(
+    Oscillator::Waveform waveform)
+{
+    m_synth.setWaveform(waveform);
+}
+
+void TrackProcessor::setVelocity(float velocity)
+{
+    m_synth.setVelocity(velocity);
+}
+
+void TrackProcessor::setAttack(float seconds)
+{
+    m_synth.setAttack(seconds);
+}
+
+void TrackProcessor::setDecay(float seconds)
+{
+    m_synth.setDecay(seconds);
+}
+
+void TrackProcessor::setSustain(float level)
+{
+    m_synth.setSustain(level);
+}
+
+void TrackProcessor::setRelease(float seconds)
+{
+    m_synth.setRelease(seconds);
+}
+
+void TrackProcessor::setPeakGain(float level)
+{
+    m_synth.setPeakGain(level);
+}

@@ -86,7 +86,56 @@ void InstrumentSettings::createUI()
         "Velocity:",
         m_velocity
     );
+    // ADSR
+    QGroupBox *adsrGroup = new QGroupBox("ADSR", this);
 
+    QFormLayout *adsrLayout = new QFormLayout(adsrGroup);
+
+    m_attack =
+        new QDoubleSpinBox(this);
+
+    m_decay =
+        new QDoubleSpinBox(this);
+
+    m_sustain =
+        new QDoubleSpinBox(this);
+
+    m_release =
+        new QDoubleSpinBox(this);
+
+    m_peakGain =
+        new QDoubleSpinBox(this);
+
+    m_attack->setRange(0.0, 5000.0);
+    m_attack->setValue(10.0);
+    m_attack->setSuffix(" ms");
+    m_attack->setDecimals(1);
+
+    m_decay->setRange(0.0, 5000.0);
+    m_decay->setValue(100.0);
+    m_decay->setSuffix(" ms");
+    m_decay->setDecimals(1);
+
+    m_sustain->setRange(0.0, 1.0);
+    m_sustain->setValue(0.8);
+    m_sustain->setSingleStep(0.01);
+    m_sustain->setDecimals(2);
+
+    m_release->setRange(0.0, 5000.0);
+    m_release->setValue(200.0);
+    m_release->setSuffix(" ms");
+    m_release->setDecimals(1);
+
+    m_peakGain->setRange(0.0, 1.0);
+    m_peakGain->setValue(1.0);
+    m_peakGain->setSingleStep(0.01);
+    m_peakGain->setDecimals(2);
+
+    adsrLayout->addRow("Attack", m_attack);
+    adsrLayout->addRow("Decay", m_decay);
+    adsrLayout->addRow("Sustain", m_sustain);
+    adsrLayout->addRow("Release", m_release);
+    adsrLayout->addRow("Peak Gain", m_peakGain);
     // --------------------------------------------------
     // Audio
     // --------------------------------------------------
@@ -160,9 +209,6 @@ void InstrumentSettings::createUI()
     m_distortionDrive->setValue(5);
 
     m_distortionDriveLabel = new QLabel("Distortion Drive: 5", this);
-    // effectsLayout->addWidget(m_reverb);
-    // effectsLayout->addWidget(m_delay);
-    // effectsLayout->addWidget(m_distortion);
     QVBoxLayout * distortionLayout = new QVBoxLayout;
     distortionLayout->addWidget(m_distortionDriveLabel);
     distortionLayout->addWidget(m_distortionDrive);
@@ -683,6 +729,7 @@ void InstrumentSettings::createUI()
 
     // Row 2
     midLayout->addWidget(eqGroup);
+    midLayout->addWidget(adsrGroup);
     midLayout->addWidget(clippingGroup);
     midLayout->addStretch();
 
@@ -732,6 +779,7 @@ void InstrumentSettings::createUI()
     // Signals
     // --------------------------------------------------
 
+    //Oscillator 
     connect(
     m_oscillatorType,
     &QComboBox::currentIndexChanged,
@@ -741,32 +789,32 @@ void InstrumentSettings::createUI()
         Oscillator::Waveform waveform;
 
         switch (index)
-        {
-            case 0:
-                waveform = Oscillator::Waveform::Sine;
-                break;
+    {
+        case 0:
+            waveform = Oscillator::Waveform::Sine;
+            break;
 
-            case 1:
-                waveform = Oscillator::Waveform::Saw;
-                break;
+        case 1:
+            waveform = Oscillator::Waveform::Square;
+            break;
 
-            case 2:
-                waveform = Oscillator::Waveform::Square;
-                break;
+        case 2:
+            waveform = Oscillator::Waveform::Triangle;
+            break;
 
-            case 3:
-                waveform = Oscillator::Waveform::Triangle;
-                break;
+        case 3:
+            waveform = Oscillator::Waveform::Saw;
+            break;
 
-            default:
-                waveform = Oscillator::Waveform::Sine;
-                break;
-        }
+        default:
+            waveform = Oscillator::Waveform::Sine;
+            break;
+    }
 
         emit oscillatorTypeChanged(waveform);
     }
 );
-
+    // Oscillator
     connect(
         m_frequency,
         &QDoubleSpinBox::valueChanged,
@@ -795,6 +843,67 @@ void InstrumentSettings::createUI()
         &InstrumentSettings::sampleRateChanged
     );
 
+    //ADSR
+
+    connect(
+        m_attack,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit attackChanged(
+                static_cast<float>(value / 1000.0)
+            );
+        }
+    );
+
+    connect(
+        m_decay,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit decayChanged(
+                static_cast<float>(value / 1000.0)
+            );
+        }
+    );
+
+    connect(
+        m_sustain,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit sustainChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_release,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit releaseChanged(
+                static_cast<float>(value / 1000.0)
+            );
+        }
+    );
+
+    connect(
+        m_peakGain,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit peakGainChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
     //Effect Chain Editor Signals
     connect(
         m_effectChainEditor,

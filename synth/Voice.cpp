@@ -1,12 +1,12 @@
 #include <cmath>
 #include <algorithm>
-#include "Voice.h"
-#include <QDebug>
 
+#include "Voice.h"
+
+#include <QDebug>
 
 Voice::Voice()
 {
-
 }
 
 void Voice::prepare(
@@ -18,7 +18,6 @@ void Voice::prepare(
     m_envelope.prepare(
         sampleRate);
 }
-
 
 float midiNoteToFrequency(int note)
 {
@@ -40,20 +39,17 @@ void Voice::startNote(
     m_midiNote = midiNote;
 
     m_velocity =
-        velocity / 127.0f;
+        std::clamp(
+            velocity / 127.0f,
+            0.0f,
+            1.0f);
 
-    float frequency =
-        midiNoteToFrequency(
-            midiNote);
-
-    m_oscillator.setFrequency(
-        frequency);
+    updateFrequency();
 
     m_envelope.noteOn();
 
     m_active = true;
 }
-
 
 void Voice::stopNote()
 {
@@ -70,6 +66,7 @@ void Voice::stopNote()
         m_active = false;
     }
 }
+
 void Voice::render(
     float* output,
     std::size_t numSamples)
@@ -110,19 +107,70 @@ void Voice::updateFrequency()
             (m_midiNote - 69) / 12.0f
             + semitoneOffset / 12.0f);
 
-    m_oscillator.setFrequency(frequency);
+    m_oscillator.setFrequency(
+        frequency);
 }
 
 void Voice::setPitchBend(float bend)
 {
-    // Keep bend in the range [-1, +1]
+    /*
+     * Keep pitch bend in the range [-1, +1].
+     */
     m_pitchBend =
-        std::clamp(bend, -1.0f, 1.0f);
+        std::clamp(
+            bend,
+            -1.0f,
+            1.0f);
 
     updateFrequency();
+}
+
+void Voice::setFrequency(float frequency)
+{
+    m_oscillator.setFrequency(frequency);
+}
+
+void Voice::setVolume(float volume)
+{
+    m_oscillator.setVolume(volume);
+}
+
+void Voice::setVelocity(float velocity)
+{
+    m_velocity=velocity;
+}
+
+void Voice::setWaveform(Oscillator::Waveform waveform)
+{
+    m_oscillator.setWaveform(waveform);
 }
 
 int Voice::getMidiNote() const
 {
     return m_midiNote;
+}
+
+void Voice::setAttack(float seconds)
+{
+    m_envelope.setAttack(seconds);
+}
+
+void Voice::setDecay(float seconds)
+{
+    m_envelope.setDecay(seconds);
+}
+
+void Voice::setSustain(float level)
+{
+    m_envelope.setSustain(level);
+}
+
+void Voice::setRelease(float seconds)
+{
+    m_envelope.setRelease(seconds);
+}
+
+void Voice::setPeakGain(float level)
+{
+    m_envelope.setPeakGain(level);
 }

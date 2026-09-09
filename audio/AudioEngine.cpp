@@ -796,3 +796,98 @@ void AudioEngine::setPhaserMix(
 
     processor->setPhaserMix(mix);
 }
+
+
+void AudioEngine::setOscillatorVolume(
+    int trackId,
+    float volume)
+{
+    TrackProcessor *track =
+        findTrackProcessor(trackId);
+
+    if (!track)
+        return;
+
+    track->setVolume(volume);
+}
+
+void AudioEngine::setOscillatorWaveform(
+    int trackId,
+    Oscillator::Waveform waveform)
+{
+    TrackProcessor *track =
+        findTrackProcessor(trackId);
+
+    if (!track)
+        return;
+
+    track->setWaveform(waveform);
+}
+
+void AudioEngine::setVelocity(
+    int trackId,
+    float velocity)
+{
+    TrackProcessor *track =
+        findTrackProcessor(trackId);
+
+    if (!track)
+        return;
+
+    track->setVelocity(velocity);
+}
+
+void AudioEngine::setAttack(int trackId, float seconds)
+{
+    TrackProcessor* track =
+        findTrackProcessor(trackId);
+
+    if (!track)
+        return;
+
+    track->setAttack(seconds);
+}
+
+void AudioEngine::setDecay(int trackId, float seconds)
+{
+    TrackProcessor* track =
+        findTrackProcessor(trackId);
+
+    if (!track)
+        return;
+
+    track->setDecay(seconds);
+}
+
+void AudioEngine::setSustain(int trackId, float level)
+{
+    TrackProcessor* track =
+        findTrackProcessor(trackId);
+
+    if (!track)
+        return;
+
+    track->setSustain(level);
+}
+
+void AudioEngine::setRelease(int trackId, float seconds)
+{
+    TrackProcessor* track =
+        findTrackProcessor(trackId);
+
+    if (!track)
+        return;
+
+    track->setRelease(seconds);
+}
+
+void AudioEngine::setPeakGain(int trackId, float level)
+{
+    TrackProcessor* track =
+        findTrackProcessor(trackId);
+
+    if (!track)
+        return;
+
+    track->setPeakGain(level);
+}

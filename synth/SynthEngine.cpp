@@ -143,3 +143,57 @@ void SynthEngine::pitchBend(
         }
     }
 }
+
+void SynthEngine::setFrequency(float frequency)
+{
+    for (auto& voice : m_voices)
+        voice.setFrequency(frequency);
+}
+
+void SynthEngine::setVolume(float volume)
+{
+    for (auto& voice : m_voices)
+        voice.setVolume(volume);
+}
+
+void SynthEngine::setWaveform(Oscillator::Waveform waveform)
+{
+    for (auto& voice : m_voices)
+        voice.setWaveform(waveform);
+}
+
+void SynthEngine::setVelocity(float velocity)
+{
+    for (auto& voice : m_voices)
+        voice.setVelocity(velocity);
+}
+
+void SynthEngine::setAttack(float seconds)
+{
+    for (auto& voice : m_voices)
+        voice.setAttack(seconds);
+}
+
+void SynthEngine::setDecay(float seconds)
+{
+    for (auto& voice : m_voices)
+        voice.setDecay(seconds);
+}
+
+void SynthEngine::setSustain(float level)
+{
+    for (auto& voice : m_voices)
+        voice.setSustain(level);
+}
+
+void SynthEngine::setRelease(float seconds)
+{
+    for (auto& voice : m_voices)
+        voice.setRelease(seconds);
+}
+
+void SynthEngine::setPeakGain(float level)
+{
+    for (auto& voice : m_voices)
+        voice.setPeakGain(level);
+}

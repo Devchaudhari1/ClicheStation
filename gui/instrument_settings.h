@@ -26,10 +26,11 @@ signals:
     void volumeChanged(float volume);
     void velocityChanged(float velocity);
 
-    void attackChanged(float attack);
-    void decayChanged(float decay);
-    void sustainChanged(float sustain);
-    void releaseChanged(float release);
+    void attackChanged(float seconds);
+    void decayChanged(float seconds);
+    void sustainChanged(float level);
+    void releaseChanged(float seconds);
+    void peakGainChanged(float level);
 
     void sampleRateChanged(int sampleRate);
 
@@ -99,7 +100,7 @@ signals:
     void phaserMixChanged(float mix);
 private:
     void createUI();
-
+    //Oscillator params
     QComboBox *m_oscillatorType;
 
     QDoubleSpinBox *m_frequency;
@@ -107,11 +108,12 @@ private:
     QDoubleSpinBox *m_velocity;
 
     QSpinBox *m_sampleRate;
-
-    QCheckBox *m_reverb;
-    QCheckBox *m_delay;
-    QCheckBox *m_distortion;
-    QCheckBox *m_saturation;
+    // ADSR
+    QDoubleSpinBox *m_attack;
+    QDoubleSpinBox *m_decay;
+    QDoubleSpinBox *m_sustain;
+    QDoubleSpinBox *m_release;
+    QDoubleSpinBox *m_peakGain;
     
     //Reverb params
     QDoubleSpinBox *m_reverbRoomSize;

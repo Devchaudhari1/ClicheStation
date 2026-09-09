@@ -351,6 +351,8 @@ subgraph TrackProcessor["TrackProcessor"]
     Effect2-->Effect3
 end
 end
+subgraph AudioEngine["Audio Engine"]
+end
 ```
 
 
@@ -391,6 +393,22 @@ TrackProcessor4-.->AudioEngine
 TrackProcessorN-.->AudioEngine
 ```
 
+### Instrument Settings Signals and Functions flow
+```mermaid
+flowchart LR
+subgraph Signals
+    QSpinBox["QSpinBox"]-->|Signals|InstrumentSettings["InstrumentSettings"]
+    InstrumentSettings-->|Signals|VoiceTrack["VoiceTrack"]
+    VoiceTrack-->|Signals|AudioEngine["Audio Engine"]
+    AudioEngine-->|Function calls|TrackProcessor["Track Processor"]
+    TrackProcessor-->|Function calls|EffectChain["Effect Chain"]
+    EffectChain-->|Function Calls|Effect["Effect"]
+    TrackProcessor-->|Function calls|SynthEngine["Synth Engine"]
+    SynthEngine-->|Function calls|Voice["Voice"]
+    Voice-->|Function calls|Oscillator["Oscillator"]
+    Voice-->|Function calls|ADSREnvelope["ADSR Envelope"]
+end
+```
 
 ### Basic Signal Processing without Effects
 ```mermaid

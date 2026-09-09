@@ -1,15 +1,21 @@
 #include "Oscillator.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace
 {
     constexpr double TwoPi =
         6.28318530717958647692;
+
+    constexpr double Pi =
+        TwoPi * 0.5;
 }
 
 /*
- *  Oscillator class generates audio waveforms based on the specified waveform type and frequency.
+ * Oscillator class generates audio waveforms based on the specified
+ * waveform type and frequency.
+ *
  * It supports sine, sawtooth, square, and triangle waveforms.
  */
 Oscillator::Oscillator()
@@ -18,36 +24,44 @@ Oscillator::Oscillator()
 
 void Oscillator::prepare(double sampleRate)
 {
-    /*sample rate Eg 48kHz sample rate at 440Hz frequency
-    A sample is an audio data point like a pixel is to an image
-    48kHz sample rate means 48000 samples per second
-    440Hz frequency means 440 cycles per second
-    48kHz sample rate at 440Hz frequency means 48000 samples per second and 440 cycles per second
-    48000 samples per second / 440 cycles per second = 109.09 samples per cycle
-    =>109 data points per cycle of the waveform
-    */
-    m_sampleRate = sampleRate;
+    /*
+     * Sample rate determines how many audio samples are generated
+     * per second.
+     *
+     * Example:
+     *
+     * 48000 Hz sample rate
+     * 440 Hz oscillator frequency
+     *
+     * 48000 / 440 = approximately 109 samples per cycle.
+     */
+    setSampleRate(sampleRate);
 }
 
 void Oscillator::reset()
 {
-    m_phase = 0.0; // resets phase to 0  
+    m_phase = 0.0;
+}
+
+void Oscillator::setSampleRate(double sampleRate)
+{
+    if (sampleRate > 0.0)
+        m_sampleRate = sampleRate;
 }
 
 void Oscillator::setFrequency(float frequency)
-{    
-    /*
-     * \info frequency is in Hz :
-     * Eg f in 2πft    m_frequency = frequency;
-    */
-   m_frequency = frequency;
+{
+    if (frequency >= 0.0f)
+        m_frequency = frequency;
+}
+
+void Oscillator::setVolume(float volume)
+{
+    m_volume = std::clamp(volume,0.0f,1.0f);
 }
 
 void Oscillator::setWaveform(Waveform waveform)
 {
-    /*
-     * \info waveform is the type of audio waveform to generate
-     */
     m_waveform = waveform;
 }
 
@@ -71,7 +85,7 @@ float Oscillator::processSample()
 
         case Waveform::Square:
             output =
-                m_phase < M_PI
+                m_phase < Pi
                     ? 1.0f
                     : -1.0f;
             break;
@@ -98,12 +112,15 @@ float Oscillator::processSample()
         TwoPi *
         m_frequency /
         m_sampleRate;
-    /*
-     * \info phase increment is per sample/data point basis m_frequency with m_sampleRate can be
-     * divided into  m_sampleRate/m_frequency data points each giving a phase shift of 2π m_frequency/m_sampleRate
-     */
+
     if (m_phase >= TwoPi)
         m_phase -= TwoPi;
 
-    return output;
+    /*
+     * Oscillator volume is applied here.
+     *
+     * Voice velocity is deliberately NOT applied here.
+     * Velocity belongs to Voice because it is note-specific.
+     */
+    return output * m_volume;
 }

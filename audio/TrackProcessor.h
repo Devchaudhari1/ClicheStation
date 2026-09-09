@@ -79,7 +79,19 @@ public:
     void setPhaserDepth(float depth);
     void setPhaserFeedback(float feedback);
     void setPhaserMix(float mix);
+
+    // Oscillator and Voice
+    void setFrequency(float frequency);
+    void setVolume(float volume);
+    void setWaveform(Oscillator::Waveform waveform);
+    void setVelocity(float velocity);
     
+    // ADSR
+    void setAttack(float seconds);
+    void setDecay(float seconds);
+    void setSustain(float level);
+    void setRelease(float seconds);
+    void setPeakGain(float level);
     void setEffectEnabled(
         AudioEffectType effectType,
         bool enabled
