@@ -1,7 +1,11 @@
-#include "AudioEffect.h"
-#include <QString>
+#pragma once
 
-class Clipping : public AudioEffect
+#include "AudioEffect.h"
+
+#include <atomic>
+#include <cstddef>
+
+class Limiter : public AudioEffect
 {
 public:
     void prepare(double sampleRate,
@@ -18,7 +22,15 @@ public:
     QString effectName() const override;
 
     void setThreshold(float threshold);
+    void setRelease(float release);
+    void setCeiling(float ceiling);
 
 private:
-    std::atomic<float> m_threshold{1.0f};
+    double m_sampleRate = 48000.0;
+
+    std::atomic<float> m_threshold{-6.0f};
+    std::atomic<float> m_release{0.05f};
+    std::atomic<float> m_ceiling{-0.1f};
+
+    float m_gain = 1.0f;
 };

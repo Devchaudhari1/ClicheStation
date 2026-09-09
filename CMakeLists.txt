@@ -84,14 +84,28 @@ qt_add_executable(ClicheStation
     audio/effects/AudioEffect.h
     audio/effects/AudioEffectFactory.cpp
     audio/effects/AudioEffectFactory.h
+    audio/effects/Chorus.cpp
+    audio/effects/Chorus.h
     audio/effects/Clipping.cpp
     audio/effects/Clipping.h
+    audio/effects/Compression.cpp
+    audio/effects/Compression.h
     audio/effects/Delay.cpp
     audio/effects/Delay.h
     audio/effects/Distortion.cpp
     audio/effects/Distortion.h
     audio/effects/EffectChain.cpp
     audio/effects/EffectChain.h
+    audio/effects/EQ.cpp
+    audio/effects/EQ.h
+    audio/effects/Flanger.cpp
+    audio/effects/Flanger.h
+    audio/effects/Gate.cpp
+    audio/effects/Gate.h
+    audio/effects/Limiter.cpp
+    audio/effects/Limiter.h
+    audio/effects/Phaser.cpp
+    audio/effects/Phaser.h
     audio/effects/Reverb.cpp
     audio/effects/Reverb.h
     audio/effects/Saturation.cpp

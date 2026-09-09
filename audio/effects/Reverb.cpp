@@ -150,3 +150,23 @@ QString Reverb::effectName() const
 {
     return "Reverb";
 }
+
+void Reverb::setRoomSize(float roomSize)
+{
+    m_roomSize = roomSize;
+}
+
+void Reverb::setDamping(float damping)
+{
+    m_damping = damping;
+}
+
+void Reverb::setWet(float wet)
+{
+    m_wet = wet;
+}
+
+void Reverb::setDecay(float decay)
+{
+    m_decay = decay;
+}

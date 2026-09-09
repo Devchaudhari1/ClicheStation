@@ -10,7 +10,14 @@ enum class AudioEffectType
     Delay,
     Distortion,
     Saturation,
-    Reverb
+    Reverb,
+    Flanger,
+    Compression,
+    EQ,
+    Limiter,
+    Gate,
+    Chorus,
+    Phaser
 };
 
 class AudioEffect

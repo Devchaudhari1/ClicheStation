@@ -11,6 +11,7 @@
 #include <QGroupBox>
 #include <QFormLayout>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 
 InstrumentSettings::InstrumentSettings(QWidget *parent)
     : QWidget(parent, Qt::Window),
@@ -117,28 +118,70 @@ void InstrumentSettings::createUI()
     QGroupBox *effectsGroup =
         new QGroupBox("Audio Effects", this);
 
-    QVBoxLayout *effectsLayout =
-        new QVBoxLayout(effectsGroup);
+    QHBoxLayout *effectsLayout =
+        new QHBoxLayout(effectsGroup);
+    
+    QVBoxLayout *chainLayout = new QVBoxLayout;
+    QVBoxLayout *parameterLayout = new QVBoxLayout;
 
     m_effectChainEditor = new EffectChainEditor(this);
 
     m_effectChainEditor->addEffect(AudioEffectType::Clipping);
     m_effectChainEditor->addEffect(AudioEffectType::Delay);
     m_effectChainEditor->addEffect(AudioEffectType::Distortion);
-    m_effectChainEditor->addEffect(AudioEffectType::Reverb);
     m_effectChainEditor->addEffect(AudioEffectType::Saturation);
-    effectsLayout->addWidget(m_effectChainEditor);
+    m_effectChainEditor->addEffect(AudioEffectType::Reverb);
+    m_effectChainEditor->addEffect(AudioEffectType::Flanger);
+    m_effectChainEditor->addEffect(AudioEffectType::Compression);
+    m_effectChainEditor->addEffect(AudioEffectType::Limiter);
+    m_effectChainEditor->addEffect(AudioEffectType::Gate);
+    m_effectChainEditor->addEffect(AudioEffectType::Chorus);
+    m_effectChainEditor->addEffect(AudioEffectType::Phaser);
+    m_effectChainEditor->addEffect(AudioEffectType::EQ);
+
+    chainLayout->addWidget(m_effectChainEditor);
+    effectsLayout->addLayout(chainLayout, 1);
+
+    //Clipping
+    QGroupBox *clippingGroup = new QGroupBox("Clipping", this);
+    m_clippingThreshold = new QDoubleSpinBox(this);
+    m_clippingThreshold->setRange(0.01, 1.0);
+    m_clippingThreshold->setSingleStep(0.01);
+    m_clippingThreshold->setValue(1.0);
+    m_clippingThreshold->setSuffix("");
+
+    QFormLayout *clippingLayout = new QFormLayout(clippingGroup);
+    clippingLayout->addRow("Clipping Threshold", m_clippingThreshold);
+
+    //Distortion
 
     m_distortionDrive = new QSlider(Qt::Horizontal, this);
     m_distortionDrive->setRange(1, 20);
     m_distortionDrive->setValue(5);
 
-    m_distortionDriveLabel = new QLabel("Drive: 5", this);
-    effectsLayout->addWidget(m_reverb);
-    effectsLayout->addWidget(m_delay);
-    effectsLayout->addWidget(m_distortion);
-    effectsLayout->addWidget(m_distortionDriveLabel);
-    effectsLayout->addWidget(m_distortionDrive);
+    m_distortionDriveLabel = new QLabel("Distortion Drive: 5", this);
+    // effectsLayout->addWidget(m_reverb);
+    // effectsLayout->addWidget(m_delay);
+    // effectsLayout->addWidget(m_distortion);
+    QVBoxLayout * distortionLayout = new QVBoxLayout;
+    distortionLayout->addWidget(m_distortionDriveLabel);
+    distortionLayout->addWidget(m_distortionDrive);
+
+
+    //Saturation
+
+    m_saturationDrive =
+        new QSlider(Qt::Horizontal, this);
+
+    m_saturationDrive->setRange(1, 20);
+    m_saturationDrive->setValue(5);
+
+    m_saturationDriveLabel =new QLabel("Saturation: 5", this);
+
+    QVBoxLayout * saturationLayout = new QVBoxLayout;
+    saturationLayout->addWidget(m_saturationDriveLabel);
+
+    saturationLayout->addWidget(m_saturationDrive);
     // --------------------------------------------------
     // Delay
     // --------------------------------------------------
@@ -186,20 +229,504 @@ void InstrumentSettings::createUI()
     );
 
     // --------------------------------------------------
+    // Reverb
+    // --------------------------------------------------
+
+    QGroupBox *reverbGroup =
+        new QGroupBox("Reverb Settings", this);
+
+    QFormLayout *reverbLayout =
+        new QFormLayout(reverbGroup);
+
+    m_reverbRoomSize =
+        new QDoubleSpinBox(this);
+
+    m_reverbRoomSize->setRange(0.0, 1.0);
+    m_reverbRoomSize->setSingleStep(0.01);
+    m_reverbRoomSize->setValue(0.7);
+
+    m_reverbDamping =
+        new QDoubleSpinBox(this);
+
+    m_reverbDamping->setRange(0.0, 1.0);
+    m_reverbDamping->setSingleStep(0.01);
+    m_reverbDamping->setValue(0.4);
+
+    m_reverbWet =
+        new QDoubleSpinBox(this);
+
+    m_reverbWet->setRange(0.0, 1.0);
+    m_reverbWet->setSingleStep(0.01);
+    m_reverbWet->setValue(0.25);
+
+    m_reverbDecay =
+        new QDoubleSpinBox(this);
+
+    m_reverbDecay->setRange(0.0, 1.0);
+    m_reverbDecay->setSingleStep(0.01);
+    m_reverbDecay->setValue(0.6);
+
+    reverbLayout->addRow(
+        "Room Size:",
+        m_reverbRoomSize
+    );
+
+    reverbLayout->addRow(
+        "Damping:",
+        m_reverbDamping
+    );
+
+    reverbLayout->addRow(
+        "Wet:",
+        m_reverbWet
+    );
+
+    reverbLayout->addRow(
+        "Decay:",
+        m_reverbDecay
+    );
+
+    // --------------------------------------------------
+    // Limiter
+    // --------------------------------------------------
+
+    QGroupBox *limiterGroup =
+        new QGroupBox("Limiter", this);
+
+    QFormLayout *limiterLayout =
+        new QFormLayout(limiterGroup);
+
+    m_limiterThreshold =
+        new QDoubleSpinBox(this);
+
+    m_limiterThreshold->setRange(-60.0, 0.0);
+    m_limiterThreshold->setValue(-6.0);
+    m_limiterThreshold->setSingleStep(1.0);
+    m_limiterThreshold->setSuffix(" dB");
+
+    m_limiterRelease =
+        new QDoubleSpinBox(this);
+
+    m_limiterRelease->setRange(1.0, 1000.0);
+    m_limiterRelease->setValue(100.0);
+    m_limiterRelease->setSingleStep(1.0);
+    m_limiterRelease->setSuffix(" ms");
+
+    m_limiterCeiling =
+        new QDoubleSpinBox(this);
+
+    m_limiterCeiling->setRange(-20.0, 0.0);
+    m_limiterCeiling->setValue(-0.1);
+    m_limiterCeiling->setSingleStep(0.1);
+    m_limiterCeiling->setSuffix(" dB");
+
+    limiterLayout->addRow(
+        "Threshold",
+        m_limiterThreshold);
+
+    limiterLayout->addRow(
+        "Release",
+        m_limiterRelease);
+
+    limiterLayout->addRow(
+        "Ceiling",
+        m_limiterCeiling);
+
+
+    // --------------------------------------------------
+    // Gate
+    // --------------------------------------------------
+
+    QGroupBox *gateGroup =
+        new QGroupBox("Gate", this);
+
+    QFormLayout *gateLayout =
+        new QFormLayout(gateGroup);
+
+    m_gateThreshold =
+        new QDoubleSpinBox(this);
+
+    m_gateThreshold->setRange(-80.0, 0.0);
+    m_gateThreshold->setValue(-40.0);
+    m_gateThreshold->setSingleStep(1.0);
+    m_gateThreshold->setSuffix(" dB");
+
+    m_gateAttack =
+        new QDoubleSpinBox(this);
+
+    m_gateAttack->setRange(0.1, 1000.0);
+    m_gateAttack->setValue(5.0);
+    m_gateAttack->setSingleStep(0.1);
+    m_gateAttack->setSuffix(" ms");
+
+    m_gateRelease =
+        new QDoubleSpinBox(this);
+
+    m_gateRelease->setRange(1.0, 2000.0);
+    m_gateRelease->setValue(100.0);
+    m_gateRelease->setSingleStep(1.0);
+    m_gateRelease->setSuffix(" ms");
+
+    m_gateRange =
+        new QDoubleSpinBox(this);
+
+    m_gateRange->setRange(-80.0, 0.0);
+    m_gateRange->setValue(-60.0);
+    m_gateRange->setSingleStep(1.0);
+    m_gateRange->setSuffix(" dB");
+
+    gateLayout->addRow(
+        "Threshold",
+        m_gateThreshold);
+
+    gateLayout->addRow(
+        "Attack",
+        m_gateAttack);
+
+    gateLayout->addRow(
+        "Release",
+        m_gateRelease);
+
+    gateLayout->addRow(
+        "Range",
+        m_gateRange);
+
+
+    // --------------------------------------------------
+    // Chorus
+    // --------------------------------------------------
+
+    QGroupBox *chorusGroup =
+        new QGroupBox("Chorus", this);
+
+    QFormLayout *chorusLayout =
+        new QFormLayout(chorusGroup);
+
+    m_chorusRate =
+        new QDoubleSpinBox(this);
+
+    m_chorusRate->setRange(0.01, 10.0);
+    m_chorusRate->setValue(0.8);
+    m_chorusRate->setSingleStep(0.01);
+    m_chorusRate->setSuffix(" Hz");
+
+    m_chorusDepth =
+        new QDoubleSpinBox(this);
+
+    m_chorusDepth->setRange(0.0, 20.0);
+    m_chorusDepth->setValue(15.0);
+    m_chorusDepth->setSingleStep(0.1);
+    m_chorusDepth->setSuffix(" ms");
+
+    m_chorusMix =
+        new QDoubleSpinBox(this);
+
+    m_chorusMix->setRange(0.0, 1.0);
+    m_chorusMix->setValue(0.5);
+    m_chorusMix->setSingleStep(0.05);
+
+    chorusLayout->addRow(
+        "Rate",
+        m_chorusRate);
+
+    chorusLayout->addRow(
+        "Depth",
+        m_chorusDepth);
+
+    chorusLayout->addRow(
+        "Mix",
+        m_chorusMix);
+
+
+    // --------------------------------------------------
+    // Phaser
+    // --------------------------------------------------
+
+    QGroupBox *phaserGroup =
+        new QGroupBox("Phaser", this);
+
+    QFormLayout *phaserLayout =
+        new QFormLayout(phaserGroup);
+
+    m_phaserRate =
+        new QDoubleSpinBox(this);
+
+    m_phaserRate->setRange(0.01, 10.0);
+    m_phaserRate->setValue(0.5);
+    m_phaserRate->setSingleStep(0.01);
+    m_phaserRate->setSuffix(" Hz");
+
+    m_phaserDepth =
+        new QDoubleSpinBox(this);
+
+    m_phaserDepth->setRange(0.0, 1.0);
+    m_phaserDepth->setValue(0.7);
+    m_phaserDepth->setSingleStep(0.05);
+
+    m_phaserFeedback =
+        new QDoubleSpinBox(this);
+
+    m_phaserFeedback->setRange(-0.95, 0.95);
+    m_phaserFeedback->setValue(0.2);
+    m_phaserFeedback->setSingleStep(0.05);
+
+    m_phaserMix =
+        new QDoubleSpinBox(this);
+
+    m_phaserMix->setRange(0.0, 1.0);
+    m_phaserMix->setValue(0.5);
+    m_phaserMix->setSingleStep(0.05);
+
+    phaserLayout->addRow(
+        "Rate",
+        m_phaserRate);
+
+    phaserLayout->addRow(
+        "Depth",
+        m_phaserDepth);
+
+    phaserLayout->addRow(
+        "Feedback",
+        m_phaserFeedback);
+
+    phaserLayout->addRow(
+        "Mix",
+        m_phaserMix);
+
+    //Flanger
+
+    QGroupBox *flangerGroup =
+        new QGroupBox("Flanger", this);
+
+    QFormLayout *flangerLayout =
+        new QFormLayout(flangerGroup);
+
+    m_flangerRate =
+        new QDoubleSpinBox(flangerGroup);
+
+    m_flangerRate->setRange(0.01, 10.0);
+    m_flangerRate->setValue(0.25);
+    m_flangerRate->setSingleStep(0.01);
+    m_flangerRate->setSuffix(" Hz");
+
+    m_flangerDepth =
+        new QDoubleSpinBox(flangerGroup);
+
+    m_flangerDepth->setRange(0.0, 0.004);
+    m_flangerDepth->setValue(0.002);
+    m_flangerDepth->setSingleStep(0.0001);
+    m_flangerDepth->setDecimals(4);
+    m_flangerDepth->setSuffix(" s");
+
+    m_flangerFeedback =
+        new QDoubleSpinBox(flangerGroup);
+
+    m_flangerFeedback->setRange(-0.95, 0.95);
+    m_flangerFeedback->setValue(0.2);
+    m_flangerFeedback->setSingleStep(0.05);
+
+    m_flangerMix =
+        new QDoubleSpinBox(flangerGroup);
+
+    m_flangerMix->setRange(0.0, 1.0);
+    m_flangerMix->setValue(0.5);
+    m_flangerMix->setSingleStep(0.05);
+
+    flangerLayout->addRow(
+        "Rate",
+        m_flangerRate);
+
+    flangerLayout->addRow(
+        "Depth",
+        m_flangerDepth);
+
+    flangerLayout->addRow(
+        "Feedback",
+        m_flangerFeedback);
+
+    flangerLayout->addRow(
+        "Mix",
+        m_flangerMix);
+
+    // Compression
+    QGroupBox *compressionGroup =
+        new QGroupBox("Compression", this);
+
+    QFormLayout *compressionLayout =
+        new QFormLayout(compressionGroup);
+
+    m_compressionThreshold =
+        new QDoubleSpinBox(compressionGroup);
+
+    m_compressionThreshold->setRange(-60.0, 0.0);
+    m_compressionThreshold->setValue(-18.0);
+    m_compressionThreshold->setSingleStep(1.0);
+    m_compressionThreshold->setSuffix(" dB");
+
+    m_compressionRatio =
+        new QDoubleSpinBox(compressionGroup);
+
+    m_compressionRatio->setRange(1.0, 20.0);
+    m_compressionRatio->setValue(4.0);
+    m_compressionRatio->setSingleStep(0.5);
+    m_compressionRatio->setSuffix(":1");
+
+    m_compressionAttack =
+        new QDoubleSpinBox(compressionGroup);
+
+    m_compressionAttack->setRange(0.0001, 1.0);
+    m_compressionAttack->setValue(0.01);
+    m_compressionAttack->setSingleStep(0.001);
+    m_compressionAttack->setDecimals(4);
+    m_compressionAttack->setSuffix(" s");
+
+    m_compressionRelease =
+        new QDoubleSpinBox(compressionGroup);
+
+    m_compressionRelease->setRange(0.001, 1.0);
+    m_compressionRelease->setValue(0.1);
+    m_compressionRelease->setSingleStep(0.01);
+    m_compressionRelease->setDecimals(3);
+    m_compressionRelease->setSuffix(" s");
+
+    m_compressionMakeupGain =
+        new QDoubleSpinBox(compressionGroup);
+
+    m_compressionMakeupGain->setRange(0.0, 10.0);
+    m_compressionMakeupGain->setValue(1.0);
+    m_compressionMakeupGain->setSingleStep(0.1);
+
+    compressionLayout->addRow(
+        "Threshold",
+        m_compressionThreshold);
+
+    compressionLayout->addRow(
+        "Ratio",
+        m_compressionRatio);
+
+    compressionLayout->addRow(
+        "Attack",
+        m_compressionAttack);
+
+    compressionLayout->addRow(
+        "Release",
+        m_compressionRelease);
+
+    compressionLayout->addRow(
+        "Makeup Gain",
+        m_compressionMakeupGain);
+
+    //EQ
+
+    QGroupBox *eqGroup = new QGroupBox("EQ", this);
+    QFormLayout *eqLayout = new QFormLayout(eqGroup);
+
+    m_eqLowFrequency = new QDoubleSpinBox(this);
+    m_eqLowFrequency->setRange(20.0, 20000.0);
+    m_eqLowFrequency->setValue(100.0);
+    m_eqLowFrequency->setSuffix(" Hz");
+
+    m_eqLowGain = new QDoubleSpinBox(this);
+    m_eqLowGain->setRange(-24.0, 24.0);
+    m_eqLowGain->setValue(0.0);
+    m_eqLowGain->setSuffix(" dB");
+
+    m_eqMidFrequency = new QDoubleSpinBox(this);
+    m_eqMidFrequency->setRange(20.0, 20000.0);
+    m_eqMidFrequency->setValue(1000.0);
+    m_eqMidFrequency->setSuffix(" Hz");
+
+    m_eqMidGain = new QDoubleSpinBox(this);
+    m_eqMidGain->setRange(-24.0, 24.0);
+    m_eqMidGain->setValue(0.0);
+    m_eqMidGain->setSuffix(" dB");
+
+    m_eqMidQ = new QDoubleSpinBox(this);
+    m_eqMidQ->setRange(0.1, 10.0);
+    m_eqMidQ->setValue(1.0);
+
+    m_eqHighFrequency = new QDoubleSpinBox(this);
+    m_eqHighFrequency->setRange(20.0, 20000.0);
+    m_eqHighFrequency->setValue(8000.0);
+    m_eqHighFrequency->setSuffix(" Hz");
+
+    m_eqHighGain = new QDoubleSpinBox(this);
+    m_eqHighGain->setRange(-24.0, 24.0);
+    m_eqHighGain->setValue(0.0);
+    m_eqHighGain->setSuffix(" dB");
+
+    eqLayout->addRow("Low Frequency", m_eqLowFrequency);
+    eqLayout->addRow("Low Gain", m_eqLowGain);
+
+    eqLayout->addRow("Mid Frequency", m_eqMidFrequency);
+    eqLayout->addRow("Mid Gain", m_eqMidGain);
+    eqLayout->addRow("Mid Q", m_eqMidQ);
+
+    eqLayout->addRow("High Frequency", m_eqHighFrequency);
+    eqLayout->addRow("High Gain", m_eqHighGain);
+    
+    // --------------------------------------------------
     // Add everything
     // --------------------------------------------------
 
-    mainLayout->addWidget(oscillatorGroup);
-    mainLayout->addWidget(audioGroup);
-    mainLayout->addWidget(effectsGroup);
-    mainLayout->addWidget(delayGroup);
+    QHBoxLayout *topLayout = new QHBoxLayout;
+    QHBoxLayout *midLayout = new QHBoxLayout;
+    QHBoxLayout *bottomLayout = new QHBoxLayout;
+    QHBoxLayout *driveLayout = new QHBoxLayout;
+    QHBoxLayout *dynamicsLayout = new QHBoxLayout;
 
-    mainLayout->addStretch();
+    // Row 1
+    topLayout->addWidget(oscillatorGroup);
+    topLayout->addWidget(delayGroup);
+    topLayout->addWidget(reverbGroup);
+    topLayout->addStretch();
+
+    // Row 2
+    midLayout->addWidget(eqGroup);
+    midLayout->addWidget(clippingGroup);
+    midLayout->addStretch();
+
+    // Row 3
+    bottomLayout->addWidget(flangerGroup);
+    bottomLayout->addWidget(compressionGroup);
+    bottomLayout->addStretch();
+
+    // Row 4
+    dynamicsLayout->addWidget(limiterGroup);
+    dynamicsLayout->addWidget(gateGroup);
+    dynamicsLayout->addWidget(chorusGroup);
+    dynamicsLayout->addWidget(phaserGroup);
+    dynamicsLayout->addStretch();
+
+    //Row 5
+    driveLayout->addLayout(distortionLayout);
+    driveLayout->addLayout(saturationLayout);
+
+    // Put parameter rows on the right
+    parameterLayout->addLayout(topLayout);
+    parameterLayout->addLayout(midLayout);
+    parameterLayout->addLayout(bottomLayout);
+    parameterLayout->addLayout(dynamicsLayout);
+    parameterLayout->addLayout(driveLayout);
+
+    parameterLayout->addStretch();
+
+    // Add the right-hand parameter area
+    effectsLayout->addLayout(parameterLayout, 3);
+
+    // Audio belongs to the main window, not the effects layout
+    mainLayout->addWidget(audioGroup);
+
+    // Audio Effects
+    mainLayout->addWidget(effectsGroup);
+
+    // Preview keyboard
     m_previewKeyboard = new PianoKeyboard(this);
     m_previewKeyboard->setFixedHeight(160);
     m_previewKeyboard->setStyleSheet(
-    "background: red;"
-);
+        "background: red;"
+    );
+
     mainLayout->addWidget(m_previewKeyboard);
     // --------------------------------------------------
     // Signals
@@ -282,7 +809,7 @@ void InstrumentSettings::createUI()
         this,
         &InstrumentSettings::effectOrderChanged
     );
-
+    //  Distortion Signals
     connect(
         m_distortionDrive,
         &QSlider::valueChanged,
@@ -296,7 +823,23 @@ void InstrumentSettings::createUI()
             emit distortionDriveChanged(static_cast<float>(value));
         }
     );
+    //  Saturation Signals
+    connect(
+        m_saturationDrive,
+        &QSlider::valueChanged,
+        this,
+        [this](int value)
+        {
+            m_saturationDriveLabel->setText(
+                QString("Drive: %1").arg(value)
+            );
 
+            emit saturationDriveChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+    // Delay signals
     connect(
         m_delayTime,
         &QDoubleSpinBox::valueChanged,
@@ -317,7 +860,408 @@ void InstrumentSettings::createUI()
         this,
         &InstrumentSettings::delayMixChanged
     );
-    
+    //Reverb signals
+    connect(
+        m_reverbRoomSize,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit reverbRoomSizeChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_reverbDamping,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit reverbDampingChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_reverbWet,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit reverbWetChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_reverbDecay,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit reverbDecayChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+    // Flanger
+
+    connect(
+        m_flangerRate,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit flangerRateChanged(
+                static_cast<float>(value));
+        });
+
+    connect(
+        m_flangerDepth,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit flangerDepthChanged(
+                static_cast<float>(value));
+        });
+
+    connect(
+        m_flangerFeedback,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit flangerFeedbackChanged(
+                static_cast<float>(value));
+        });
+
+    connect(
+        m_flangerMix,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit flangerMixChanged(
+                static_cast<float>(value));
+        });
+
+    // Compression
+    connect(
+        m_compressionThreshold,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit compressionThresholdChanged(
+                static_cast<float>(value));
+        });
+
+    connect(
+        m_compressionRatio,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit compressionRatioChanged(
+                static_cast<float>(value));
+        });
+
+    connect(
+        m_compressionAttack,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit compressionAttackChanged(
+                static_cast<float>(value));
+        });
+
+    connect(
+        m_compressionRelease,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit compressionReleaseChanged(
+                static_cast<float>(value));
+        });
+
+    connect(
+        m_compressionMakeupGain,
+        &QDoubleSpinBox::valueChanged,
+        this,
+        [this](double value)
+        {
+            emit compressionMakeupGainChanged(
+                static_cast<float>(value));
+        });
+    //EQ
+    connect(
+        m_eqLowFrequency,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit eqLowFrequencyChanged(static_cast<float>(value));
+        }
+    );
+
+    connect(
+        m_eqLowGain,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit eqLowGainChanged(static_cast<float>(value));
+        }
+    );
+
+    connect(
+        m_eqMidFrequency,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit eqMidFrequencyChanged(static_cast<float>(value));
+        }
+    );
+
+    connect(
+        m_eqMidGain,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit eqMidGainChanged(static_cast<float>(value));
+        }
+    );
+
+    connect(
+        m_eqMidQ,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit eqMidQChanged(static_cast<float>(value));
+        }
+    );
+
+    connect(
+        m_eqHighFrequency,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit eqHighFrequencyChanged(static_cast<float>(value));
+        }
+    );
+
+    connect(
+        m_eqHighGain,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit eqHighGainChanged(static_cast<float>(value));
+        }
+    );
+    // --------------------------------------------------
+    // Limiter
+    // --------------------------------------------------
+
+    connect(
+        m_limiterThreshold,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit limiterThresholdChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_limiterRelease,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit limiterReleaseChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_limiterCeiling,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit limiterCeilingChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+    // --------------------------------------------------
+    // Gate
+    // --------------------------------------------------
+
+    connect(
+        m_gateThreshold,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit gateThresholdChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_gateAttack,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit gateAttackChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_gateRelease,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit gateReleaseChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_gateRange,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit gateRangeChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    // --------------------------------------------------
+    // Chorus
+    // --------------------------------------------------
+
+    connect(
+        m_chorusRate,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit chorusRateChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_chorusDepth,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit chorusDepthChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_chorusMix,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit chorusMixChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+    // --------------------------------------------------
+    // Phaser
+    // --------------------------------------------------
+
+    connect(
+        m_phaserRate,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit phaserRateChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_phaserDepth,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit phaserDepthChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_phaserFeedback,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit phaserFeedbackChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+
+    connect(
+        m_phaserMix,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit phaserMixChanged(
+                static_cast<float>(value)
+            );
+        }
+    );
+    // Clipping
+    connect(
+        m_clippingThreshold,
+        qOverload<double>(&QDoubleSpinBox::valueChanged),
+        this,
+        [this](double value)
+        {
+            emit clippingThresholdChanged(static_cast<float>(value));
+        }
+    );
+    //preview Keyboard signals
     connect(
     m_previewKeyboard,
     &PianoKeyboard::notePressed,

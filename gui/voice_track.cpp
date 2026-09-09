@@ -125,7 +125,17 @@ connect(
                         m_audioEngine->noteOff(midiNote);
                 }
             );
-
+            // Clipping
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::clippingThresholdChanged,
+                this,
+                [this](float threshold)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setClippingThreshold(m_trackId, threshold);
+                }
+            );
             // Distortion
             connect(
                 m_instrumentSettings,
@@ -140,7 +150,396 @@ connect(
                         );
                 }
             );
+            // Saturation
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::saturationDriveChanged,
+                this,
+                [this](float drive)
+                {
+                    if (!m_audioEngine)
+                        return;
 
+                    m_audioEngine->setSaturationDrive(
+                        m_trackId,
+                        drive
+                    );
+                }
+            );
+            // Flanger
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::flangerRateChanged,
+                this,
+                [this](float rate)
+                {
+                    m_audioEngine->setFlangerRate(
+                        m_trackId,
+                        rate);
+                });
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::flangerDepthChanged,
+                this,
+                [this](float depth)
+                {
+                    m_audioEngine->setFlangerDepth(
+                        m_trackId,
+                        depth);
+                });
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::flangerFeedbackChanged,
+                this,
+                [this](float feedback)
+                {
+                    m_audioEngine->setFlangerFeedback(
+                        m_trackId,
+                        feedback);
+                });
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::flangerMixChanged,
+                this,
+                [this](float mix)
+                {
+                    m_audioEngine->setFlangerMix(
+                        m_trackId,
+                        mix);
+                });
+            //Limiter
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::limiterThresholdChanged,
+                this,
+                [this](float threshold)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setLimiterThreshold(
+                            m_trackId,
+                            threshold
+                        );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::limiterReleaseChanged,
+                this,
+                [this](float release)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setLimiterRelease(
+                            m_trackId,
+                            release
+                        );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::limiterCeilingChanged,
+                this,
+                [this](float ceiling)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setLimiterCeiling(
+                            m_trackId,
+                            ceiling
+                        );
+                }
+            );
+
+            // Gate
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::gateThresholdChanged,
+                this,
+                [this](float threshold)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setGateThreshold(
+                            m_trackId,
+                            threshold
+                        );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::gateAttackChanged,
+                this,
+                [this](float attack)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setGateAttack(
+                            m_trackId,
+                            attack
+                        );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::gateReleaseChanged,
+                this,
+                [this](float release)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setGateRelease(
+                            m_trackId,
+                            release
+                        );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::gateRangeChanged,
+                this,
+                [this](float range)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setGateRange(
+                            m_trackId,
+                            range
+                        );
+                }
+            );
+            // Chorus
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::chorusRateChanged,
+                this,
+                [this](float rate)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setChorusRate(
+                            m_trackId,
+                            rate
+                        );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::chorusDepthChanged,
+                this,
+                [this](float depth)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setChorusDepth(
+                            m_trackId,
+                            depth
+                        );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::chorusMixChanged,
+                this,
+                [this](float mix)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setChorusMix(
+                            m_trackId,
+                            mix
+                        );
+                }
+            );
+            //Phaser
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::phaserRateChanged,
+                this,
+                [this](float rate)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setPhaserRate(
+                            m_trackId,
+                            rate
+                        );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::phaserDepthChanged,
+                this,
+                [this](float depth)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setPhaserDepth(
+                            m_trackId,
+                            depth
+                        );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::phaserFeedbackChanged,
+                this,
+                [this](float feedback)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setPhaserFeedback(
+                            m_trackId,
+                            feedback
+                        );
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::phaserMixChanged,
+                this,
+                [this](float mix)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setPhaserMix(
+                            m_trackId,
+                            mix
+                        );
+                }
+            );
+            // Compression
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::compressionThresholdChanged,
+                this,
+                [this](float threshold)
+                {
+                    m_audioEngine->setCompressionThreshold(
+                        m_trackId,
+                        threshold);
+                });
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::compressionRatioChanged,
+                this,
+                [this](float ratio)
+                {
+                    m_audioEngine->setCompressionRatio(
+                        m_trackId,
+                        ratio);
+                });
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::compressionAttackChanged,
+                this,
+                [this](float attack)
+                {
+                    m_audioEngine->setCompressionAttack(
+                        m_trackId,
+                        attack);
+                });
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::compressionReleaseChanged,
+                this,
+                [this](float release)
+                {
+                    m_audioEngine->setCompressionRelease(
+                        m_trackId,
+                        release);
+                });
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::compressionMakeupGainChanged,
+                this,
+                [this](float gain)
+                {
+                    m_audioEngine->setCompressionMakeupGain(
+                        m_trackId,
+                        gain);
+                });
+            
+            // EQ
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::eqLowFrequencyChanged,
+                this,
+                [this](float frequency)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setEQLowFrequency(m_trackId, frequency);
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::eqLowGainChanged,
+                this,
+                [this](float gain)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setEQLowGain(m_trackId, gain);
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::eqMidFrequencyChanged,
+                this,
+                [this](float frequency)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setEQMidFrequency(m_trackId, frequency);
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::eqMidGainChanged,
+                this,
+                [this](float gain)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setEQMidGain(m_trackId, gain);
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::eqMidQChanged,
+                this,
+                [this](float q)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setEQMidQ(m_trackId, q);
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::eqHighFrequencyChanged,
+                this,
+                [this](float frequency)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setEQHighFrequency(m_trackId, frequency);
+                }
+            );
+
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::eqHighGainChanged,
+                this,
+                [this](float gain)
+                {
+                    if (m_audioEngine)
+                        m_audioEngine->setEQHighGain(m_trackId, gain);
+                }
+            );
             // Effect enabled / bypass
             connect(
                 m_instrumentSettings,
@@ -179,6 +578,118 @@ connect(
                     m_audioEngine->setEffectOrder(
                         m_trackId,
                         order
+                    );
+                }
+            );
+            // delayTime Changed
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::delayTimeChanged,
+                this,
+                [this](double time)
+                {
+                    if (!m_audioEngine)
+                        return;
+
+                    m_audioEngine->setDelayTime(
+                        m_trackId,
+                        time
+                    );
+                }
+            );
+            // delayfeedback Changed
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::delayFeedbackChanged,
+                this,
+                [this](double feedback)
+                {
+                    if (!m_audioEngine)
+                        return;
+
+                    m_audioEngine->setDelayFeedback(
+                        m_trackId,
+                        feedback
+                    );
+                }
+            );
+            //delayMixChanged
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::delayMixChanged,
+                this,
+                [this](double mix)
+                {
+                    if (!m_audioEngine)
+                        return;
+
+                    m_audioEngine->setDelayMix(
+                        m_trackId,
+                        mix
+                    );
+                }
+            );
+            //reverbRoomSizeChanged
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::reverbRoomSizeChanged,
+                this,
+                [this](float roomSize)
+                {
+                    if (!m_audioEngine)
+                        return;
+
+                    m_audioEngine->setReverbRoomSize(
+                        m_trackId,
+                        roomSize
+                    );
+                }
+            );
+            //reverbDampingChanged
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::reverbDampingChanged,
+                this,
+                [this](float damping)
+                {
+                    if (!m_audioEngine)
+                        return;
+
+                    m_audioEngine->setReverbDamping(
+                        m_trackId,
+                        damping
+                    );
+                }
+            );
+            //reverbWetChanged
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::reverbWetChanged,
+                this,
+                [this](float wet)
+                {
+                    if (!m_audioEngine)
+                        return;
+
+                    m_audioEngine->setReverbWet(
+                        m_trackId,
+                        wet
+                    );
+                }
+            );
+            //reverbDecayChanged
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::reverbDecayChanged,
+                this,
+                [this](float decay)
+                {
+                    if (!m_audioEngine)
+                        return;
+
+                    m_audioEngine->setReverbDecay(
+                        m_trackId,
+                        decay
                     );
                 }
             );

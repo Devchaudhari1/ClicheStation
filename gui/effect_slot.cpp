@@ -54,17 +54,38 @@ QString EffectSlot::effectTypeName(AudioEffectType type)
     case AudioEffectType::Clipping:
         return "Clipping";
 
+    case AudioEffectType::Compression:
+        return "Compression";
+
     case AudioEffectType::Delay:
         return "Delay";
 
     case AudioEffectType::Distortion:
         return "Distortion";
 
+    case AudioEffectType::Flanger:
+        return "Flanger";
+
     case AudioEffectType::Saturation:
         return "Saturation";
 
     case AudioEffectType::Reverb:
         return "Reverb";
+
+    case AudioEffectType::EQ:
+        return "EQ";
+
+    case AudioEffectType::Limiter:
+        return "Limiter";
+
+    case AudioEffectType::Gate:
+        return "Gate";
+
+    case AudioEffectType::Chorus:
+        return "Chorus";
+
+    case AudioEffectType::Phaser:
+        return "Phaser";
     }
 
     return "Unknown";

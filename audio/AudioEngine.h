@@ -44,7 +44,79 @@ public:
     void noteOn(int trackId, int midiNote, int velocity);
     void noteOff(int trackId, int midiNote);
 
+    void setClippingThreshold(int trackId, float threshold);
+    
     void setDistortionDrive(int trackId, float drive);
+
+    void setDelayTime(int trackId, double time);
+
+    void setDelayFeedback(int trackId, double feedback);
+
+    void setDelayMix(int trackId, double mix);
+
+    void setEQLowFrequency(int trackId, float frequency);
+
+    void setEQLowGain(int trackId, float gain);
+
+    void setEQMidFrequency(int trackId, float frequency);
+
+    void setEQMidGain(int trackId, float gain);
+
+    void setEQMidQ(int trackId, float q);
+
+    void setEQHighFrequency(int trackId, float frequency);
+    
+    void setEQHighGain(int trackId, float gain);
+    
+    void setReverbRoomSize(int trackId, float roomSize);
+
+    void setReverbDamping(int trackId, float damping);
+
+    void setReverbWet(int trackId, float wet);
+
+    void setReverbDecay(int trackId, float decay);
+
+    void setSaturationDrive(int trackId, float drive);
+
+    void setFlangerRate(int trackId, float rate);
+
+    void setFlangerDepth(int trackId, float depth);
+
+    void setFlangerFeedback(int trackId, float feedback);
+
+    void setFlangerMix(int trackId, float mix);
+
+    void setCompressionThreshold(int trackId, float threshold);
+
+    void setCompressionRatio(int trackId, float ratio);
+
+    void setCompressionAttack(int trackId, float attack);
+
+    void setCompressionRelease(int trackId, float release);
+
+    void setCompressionMakeupGain(int trackId, float gain);
+
+    // Limiter
+    void setLimiterThreshold(int trackId, float threshold);
+    void setLimiterRelease(int trackId, float release);
+    void setLimiterCeiling(int trackId, float ceiling);
+
+    // Gate
+    void setGateThreshold(int trackId, float threshold);
+    void setGateAttack(int trackId, float attack);
+    void setGateRelease(int trackId, float release);
+    void setGateRange(int trackId, float range);
+
+    // Chorus
+    void setChorusRate(int trackId, float rate);
+    void setChorusDepth(int trackId, float depth);
+    void setChorusMix(int trackId, float mix);
+
+    // Phaser
+    void setPhaserRate(int trackId, float rate);
+    void setPhaserDepth(int trackId, float depth);
+    void setPhaserFeedback(int trackId, float feedback);
+    void setPhaserMix(int trackId, float mix);
     
     void pitchBend(int channel, int value);
 

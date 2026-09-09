@@ -1,10 +1,17 @@
 #include "AudioEffectFactory.h"
 
+#include "Chorus.h"
 #include "Clipping.h"
+#include "Compression.h"
 #include "Delay.h"
 #include "Distortion.h"
-#include "Saturation.h"
+#include "EQ.h"
+#include "Flanger.h"
+#include "Gate.h"
+#include "Limiter.h"
+#include "Phaser.h"
 #include "Reverb.h"
+#include "Saturation.h"
 
 std::unique_ptr<AudioEffect>
 AudioEffectFactory::create(AudioEffectType type)
@@ -25,7 +32,29 @@ AudioEffectFactory::create(AudioEffectType type)
 
     case AudioEffectType::Reverb:
         return std::make_unique<Reverb>();
-    }
 
-    return nullptr;
+    case AudioEffectType::Flanger:
+        return std::make_unique<Flanger>();
+
+    case AudioEffectType::Compression:
+        return std::make_unique<Compression>();
+
+    case AudioEffectType::Limiter:
+        return std::make_unique<Limiter>();
+
+    case AudioEffectType::EQ:
+        return std::make_unique<EQ>();
+        
+    case AudioEffectType::Gate:
+        return std::make_unique<Gate>();
+
+    case AudioEffectType::Chorus:
+        return std::make_unique<Chorus>();
+
+    case AudioEffectType::Phaser:
+        return std::make_unique<Phaser>();
+    }
+    
+
+return nullptr;
 }

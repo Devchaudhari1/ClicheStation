@@ -1,8 +1,12 @@
+#pragma once
 
 #include "AudioEffect.h"
-#include <QString>
 
-class Reverb : public AudioEffect
+#include <atomic>
+#include <cstddef>
+#include <vector>
+
+class Chorus : public AudioEffect
 {
 public:
     void prepare(double sampleRate,
@@ -14,26 +18,28 @@ public:
                  std::size_t numSamples) override;
 
     void reset() override;
-    
-    void setRoomSize(float roomSize);
-    void setDamping(float damping);
-    void setWet(float wet);
-    void setDecay(float decay);
+
     AudioEffectType effectType() const override;
-    
     QString effectName() const override;
 
-private:
-    // Preset parameters for the first implementation.
-    float m_roomSize = 0.7f;
-    float m_damping = 0.4f;
-    float m_wet = 0.25f;
-    float m_decay = 0.6f;
+    void setRate(float rate);
+    void setDepth(float depth);
+    void setMix(float mix);
 
-    // Internal state.
+private:
+    double m_sampleRate = 48000.0;
+
     std::vector<float> m_leftBuffer;
     std::vector<float> m_rightBuffer;
 
     std::size_t m_writePosition = 0;
-    double m_sampleRate = 48000.0;
+
+    float m_lfoPhase = 0.0f;
+
+    std::atomic<float> m_rate{0.8f};
+    std::atomic<float> m_depth{0.015f};
+    std::atomic<float> m_mix{0.5f};
+
+    static constexpr float m_minDelay = 0.010f;
+    static constexpr float m_maxDelay = 0.030f;
 };
