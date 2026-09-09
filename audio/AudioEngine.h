@@ -8,6 +8,7 @@
 #include <memory>
 #include <QString>
 #include <QVector>
+#include <QHash>
 #include "TrackProcessor.h"
 
 class AudioEngine;
@@ -43,6 +44,14 @@ public:
     void noteOff(int midiNote);
     void noteOn(int trackId, int midiNote, int velocity);
     void noteOff(int trackId, int midiNote);
+
+    bool shouldTrackParticipate(int trackId) const;
+
+    void setTrackMuted(int trackId, bool muted);
+    bool isTrackMuted(int trackId) const;
+
+    void setTrackSoloed(int trackId, bool soloed);
+    bool isTrackSoloed(int trackId) const;
 
     void setClippingThreshold(int trackId, float threshold);
     
@@ -154,12 +163,20 @@ public:
     );
     TrackProcessor* createTrack(int trackId);
     TrackProcessor* findTrackProcessor(int trackId);
+    const TrackProcessor* findTrackProcessor(int trackId) const;
     double sampleRate() const;
     int blockSize() const;
 
 private:
     double m_sampleRate = 48000.0;
     int m_blockSize = 256;
+    struct TrackRoutingState
+    {
+        bool muted = false;
+        bool soloed = false;
+    };
+
+    QHash<int, TrackRoutingState> m_trackRoutingStates;
 
     QAudioFormat m_format;
     QAudioSink *m_audioSink = nullptr;

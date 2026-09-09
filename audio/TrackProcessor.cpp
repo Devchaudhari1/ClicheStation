@@ -36,18 +36,14 @@ TrackProcessor::TrackProcessor(int trackId)
     m_effectChain.addEffect(AudioEffectType::EQ);
 }
 
-void TrackProcessor::setDistortionDrive(float drive)
+void TrackProcessor::setState(TrackState state)
 {
-    auto *effect = m_effectChain.findEffect(
-        AudioEffectType::Distortion
-    );
+    m_state = state;
+}
 
-    auto *distortion = dynamic_cast<Distortion *>(effect);
-
-    if (!distortion)
-        return;
-
-    distortion->setDrive(drive);
+TrackState TrackProcessor::state() const
+{
+    return m_state;
 }
 
 int TrackProcessor::trackId() const
@@ -84,13 +80,8 @@ void TrackProcessor::render(float *left,
                             std::size_t numSamples)
 {
     m_synth.render(left, right, numSamples);
-        // qDebug() << "Before effects:"
-        //      << left[0]
-        //      << left[numSamples / 2];
+
     m_effectChain.process(left, right, numSamples);
-        // qDebug() << "After effects:"
-        //      << left[0]
-        //      << left[numSamples / 2];
 }
 
 void TrackProcessor::setEffectEnabled(
@@ -373,6 +364,20 @@ void TrackProcessor::setCompressionMakeupGain(float gain)
         return;
 
     compression->setMakeupGain(gain);
+}
+
+void TrackProcessor::setDistortionDrive(float drive)
+{
+    auto *effect = m_effectChain.findEffect(
+        AudioEffectType::Distortion
+    );
+
+    auto *distortion = dynamic_cast<Distortion *>(effect);
+
+    if (!distortion)
+        return;
+
+    distortion->setDrive(drive);
 }
 
 void TrackProcessor::setEQLowFrequency(float frequency)

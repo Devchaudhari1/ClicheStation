@@ -5,6 +5,13 @@
 #include <QString>
 #include <QVector>
 
+
+enum class TrackState
+{
+    Active,
+    Inactive
+};
+
 class TrackProcessor
 {
 public:
@@ -21,6 +28,11 @@ public:
                 std::size_t numSamples);
 
     int trackId() const;
+
+    void setState(TrackState state);
+
+    TrackState state() const;
+
 
     void setClippingThreshold(float threshold);
     
@@ -102,7 +114,8 @@ public:
     );
 private:
     int m_trackId;
-
+    TrackState m_state = TrackState::Active;
+    
     SynthEngine m_synth;
     EffectChain m_effectChain;
 };
