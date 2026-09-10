@@ -1,7 +1,9 @@
-#include "sequence.h"
-#include "layer.h"
-#include "clip.h"
-
+#include "Sequence.h"
+#include "Layer.h"
+#include "Clip.h"
+#include "../voice_track.h"
+#include "../track_list.h"
+#include "../../audio/AudioEngine.h"
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -10,15 +12,18 @@
 
 Sequence::Sequence(
     int sequenceId,
+    AudioEngine *audioEngine,
     QWidget *parent
 )
     : QWidget(parent),
-    
       m_sequenceId(sequenceId),
+      m_audioEngine(audioEngine),
+      m_trackList(nullptr),
       m_header(nullptr),
       m_expandButton(nullptr),
       m_sequenceLabel(nullptr),
-      m_addLayerButton(nullptr)
+      m_addLayerButton(nullptr),
+      m_playButton(nullptr)
 {
     // -------------------------------------------------
     // Sequence header
@@ -66,7 +71,20 @@ Sequence::Sequence(
     );
 
     headerLayout->addStretch();
+    m_playButton =
+        new QPushButton("▶", m_header);
 
+    m_playButton->setFixedWidth(32);
+
+    m_playButton->setStyleSheet(
+        "background: #4a4a4a;"
+        "color: #e0e0e0;"
+        "border: 1px solid #666666;"
+    );
+
+    headerLayout->addWidget(
+        m_playButton
+    );
     m_addLayerButton =
         new QPushButton(
             "+ Add Layer",
@@ -108,6 +126,15 @@ Sequence::Sequence(
         }
     );
 
+    connect(
+        m_playButton,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            play();
+        }
+    );
     // Start with one layer
     addLayer();
 }
@@ -126,6 +153,73 @@ void Sequence::toggleExpanded()
     );
 
     emit expandedChanged(m_expanded);
+}
+
+QVector<AudioEngine::SequenceClipPlayback>
+Sequence::buildPlaybackClips() const
+{
+    QVector<AudioEngine::SequenceClipPlayback> result;
+
+    const double sampleRate =
+        m_audioEngine->sampleRate();
+
+    for (Layer* layer : m_layers)
+    {
+        if (!layer)
+            continue;
+
+        for (Clip* clip : layer->clips())
+        {
+            if (!clip)
+                continue;
+
+            AudioEngine::SequenceClipPlayback playback;
+
+            playback.samples =
+                &clip->samples();
+
+            playback.startSample =
+                static_cast<std::int64_t>(
+                    clip->startTime() * sampleRate
+                );
+
+            playback.sourceStartSample =
+                static_cast<std::int64_t>(
+                    clip->sourceStart() * sampleRate
+                );
+
+            playback.sourceEndSample =
+                static_cast<std::int64_t>(
+                    clip->sourceEnd() * sampleRate
+                );
+
+            result.append(playback);
+        }
+    }
+
+    return result;
+}
+
+void Sequence::play()
+{
+    if (!m_audioEngine)
+        return;
+
+    const auto clips =
+        buildPlaybackClips();
+
+    if (clips.isEmpty())
+        return;
+
+    m_audioEngine->startSequence(clips);
+}
+
+void Sequence::stop()
+{
+    if (!m_audioEngine)
+        return;
+
+    m_audioEngine->stopSequence();
 }
 
 Layer *Sequence::addLayer()
@@ -165,14 +259,20 @@ Layer *Sequence::addLayer()
             if (!selected)
                 return;
 
-            int trackId =
-                selected->data().toInt();
+            int trackId = selected->data().toInt();
+            QString trackName = selected->text();
 
-            QString trackName =
-                selected->text();
+            VoiceTrack *voiceTrack =
+                m_trackList->findVoiceTrack(trackId);
 
-            double startTime = 0.0;
-            double duration = 4.0;
+            if (!voiceTrack)
+                return;
+
+            const QVector<PlacedNote>& notes =
+                voiceTrack->notes();
+            double startTime=0.0;
+            double duration =
+                voiceTrack->trackDuration();
 
             const auto &clips =
                 layer->clips();
@@ -186,12 +286,22 @@ Layer *Sequence::addLayer()
                     lastClip->startTime()
                     + lastClip->duration();
             }
+            // Render the PianoRoll notes into audio samples.
+            QVector<float> samples =
+                m_audioEngine->renderClip(
+                    trackId,
+                    notes
+                );
+
+            if (samples.isEmpty())
+                return;
 
             layer->addClip(
                 trackId,
                 trackName,
                 startTime,
-                duration
+                duration,
+                samples
             );
         }
     );
@@ -205,29 +315,60 @@ Layer *Sequence::addLayer()
             double startTime
         )
         {
-            QString trackName;
+            qDebug() << "TRACK DROPPED:" << trackId;
+            qDebug() << "AudioEngine:" << m_audioEngine;
+            qDebug() << "TrackList:" << m_trackList;
 
-            for (const auto &track : m_availableTracks)
+            if (!m_audioEngine)
             {
-                if (track.first == trackId)
-                {
-                    trackName =
-                        track.second;
-
-                    break;
-                }
+                qDebug() << "ERROR: m_audioEngine is null";
+                return;
             }
 
-            if (trackName.isEmpty())
+            if (!m_trackList)
+            {
+                qDebug() << "ERROR: m_trackList is null";
                 return;
+            }
 
-            double duration = 1.0;
+            VoiceTrack *voiceTrack =
+                m_trackList->findVoiceTrack(trackId);
+
+            qDebug() << "VoiceTrack:" << voiceTrack;
+
+            if (!voiceTrack)
+            {
+                qDebug() << "ERROR: VoiceTrack not found";
+                return;
+            }
+
+            const QVector<PlacedNote>& notes =
+                voiceTrack->notes();
+
+            qDebug() << "Notes:" << notes.size();
+
+            double duration =
+                voiceTrack->trackDuration();
+
+            qDebug() << "Duration:" << duration;
+
+            QVector<float> samples =
+                m_audioEngine->renderClip(
+                    trackId,
+                    notes
+                );
+
+            qDebug() << "Samples:" << samples.size();
+
+            if (samples.isEmpty())
+                return;
 
             layer->addClip(
                 trackId,
-                trackName,
+                voiceTrack->trackName(),
                 startTime,
-                duration
+                duration,
+                samples
             );
         }
     );
@@ -237,6 +378,11 @@ Layer *Sequence::addLayer()
     emit layerAdded();
 
     return layer;
+}
+
+void Sequence::setTrackList(TrackList *trackList)
+{
+    m_trackList = trackList;
 }
 
 void Sequence::setAvailableTracks(

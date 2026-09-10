@@ -25,7 +25,8 @@ class PianoRoll : public QWidget
 
 public:
     explicit PianoRoll(QWidget *parent = nullptr);
-
+    const QVector<PlacedNote>& notes() const;
+    
 protected:
     void paintEvent(QPaintEvent *event) override;
 

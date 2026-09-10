@@ -17,6 +17,11 @@ PianoRoll::PianoRoll(QWidget *parent)
     setFocusPolicy(Qt::StrongFocus);
 }
 
+const QVector<PlacedNote>& PianoRoll::notes() const
+{
+    return pressedNotes;
+}
+
 int PianoRoll::keyFromX(double x) const
 {
     double keyWidth =

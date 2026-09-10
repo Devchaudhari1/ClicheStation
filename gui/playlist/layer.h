@@ -2,7 +2,7 @@
 
 #include <QWidget>
 #include <QVector>
-
+#include "../pianoRoll.h"
 class QPushButton;
 class Clip;
 class ClipArea;
@@ -15,11 +15,13 @@ public:
     explicit Layer(QWidget *parent = nullptr);
 
     Clip *addClip(
-        int trackId,
-        const QString &trackName,
-        double startTime,
-        double duration
+    int trackId,
+    const QString &trackName,
+    double startTime,
+    double duration,
+    const QVector<float>& samples
     );
+
 
     bool canAddClip(double startTime, double duration) const;
     bool canMoveClip(const Clip *clip, double newStartTime) const;

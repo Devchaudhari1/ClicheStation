@@ -9,6 +9,7 @@ class QHBoxLayout;
 class QPushButton;
 class AudioEngine;
 class QMouseEvent;
+class VoiceTrack;
 
 class TrackListHandle : public QWidget
 {
@@ -39,6 +40,7 @@ public:
 
     void addVoiceTrack();
     QVector<QPair<int, QString>> availableTracks() const;
+    VoiceTrack *findVoiceTrack(int trackId) const;
     TrackListHandle *m_handle;
 
 signals:

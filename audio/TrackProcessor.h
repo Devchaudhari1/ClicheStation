@@ -4,6 +4,13 @@
 #include "effects/EffectChain.h"
 #include <QString>
 #include <QVector>
+#include "../gui/pianoRoll.h"
+
+enum class TrackState
+{
+    Active,
+    Inactive
+};
 
 class TrackProcessor
 {
@@ -20,7 +27,14 @@ public:
                 float *right,
                 std::size_t numSamples);
 
+    QVector<float> renderClip(
+    const QVector<PlacedNote>& notes);
     int trackId() const;
+
+    void setState(TrackState state);
+
+    TrackState state() const;
+
 
     void setClippingThreshold(float threshold);
     
@@ -102,7 +116,8 @@ public:
     );
 private:
     int m_trackId;
-
+    TrackState m_state = TrackState::Active;
+    
     SynthEngine m_synth;
     EffectChain m_effectChain;
 };

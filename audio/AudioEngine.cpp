@@ -76,17 +76,152 @@ AudioEngine::~AudioEngine()
     stop();
 }
 
+void AudioEngine::startSequence(
+    const QVector<SequenceClipPlayback>& clips)
+{
+    m_sequenceClips = clips;
+
+    m_sequencePlaybackPosition.store(
+        0,
+        std::memory_order_relaxed
+    );
+
+    m_sequencePlaying.store(
+        true,
+        std::memory_order_release
+    );
+}
+
+void AudioEngine::stopSequence()
+{
+    m_sequencePlaying.store(
+        false,
+        std::memory_order_release
+    );
+
+    m_sequencePlaybackPosition.store(
+        0,
+        std::memory_order_relaxed
+    );
+}
+
+bool AudioEngine::isSequencePlaying() const
+{
+    return m_sequencePlaying.load(
+        std::memory_order_acquire
+    );
+}
+
+std::int64_t AudioEngine::sequencePlaybackPosition() const
+{
+    return m_sequencePlaybackPosition.load(
+        std::memory_order_relaxed
+    );
+}
+
+void AudioEngine::renderSequence(
+    float* left,
+    float* right,
+    std::size_t numSamples)
+{
+    if (!m_sequencePlaying.load(
+            std::memory_order_acquire))
+    {
+        return;
+    }
+
+    const std::int64_t sequencePosition =
+        m_sequencePlaybackPosition.load(
+            std::memory_order_relaxed);
+
+    const std::int64_t blockStart =
+        sequencePosition;
+
+    const std::int64_t blockEnd =
+        blockStart +
+        static_cast<std::int64_t>(numSamples);
+
+    for (const SequenceClipPlayback& clip :
+         m_sequenceClips)
+    {
+        if (!clip.samples)
+            continue;
+
+        const std::int64_t clipStart =
+            clip.startSample;
+
+        const std::int64_t clipEnd =
+            clip.startSample +
+            (clip.sourceEndSample -
+             clip.sourceStartSample);
+
+        // No overlap with this audio block.
+        if (blockEnd <= clipStart ||
+            blockStart >= clipEnd)
+        {
+            continue;
+        }
+
+        const std::int64_t overlapStart =
+            std::max(
+                blockStart,
+                clipStart
+            );
+
+        const std::int64_t overlapEnd =
+            std::min(
+                blockEnd,
+                clipEnd
+            );
+
+        const std::int64_t sourceOffset =
+            clip.sourceStartSample +
+            (overlapStart - clipStart);
+
+        const std::int64_t outputOffset =
+            overlapStart - blockStart;
+
+        const std::int64_t count =
+            overlapEnd - overlapStart;
+
+        for (std::int64_t i = 0; i < count; ++i)
+        {
+            const std::int64_t sourceIndex =
+                sourceOffset + i;
+
+            const std::int64_t outputIndex =
+                outputOffset + i;
+
+            if (sourceIndex < 0 ||
+                sourceIndex >= clip.samples->size())
+            {
+                continue;
+            }
+
+            const float sample =
+                (*clip.samples)[sourceIndex];
+
+            left[outputIndex] += sample;
+            right[outputIndex] += sample;
+        }
+    }
+
+    m_sequencePlaybackPosition.store(
+        blockEnd,
+        std::memory_order_relaxed
+    );
+}
 
 bool AudioEngine::initialize()
 {
     QAudioDevice device =QMediaDevices::defaultAudioOutput();
-    qDebug() << "Audio device:";
-    qDebug() << "  description:" << device.description();
-    qDebug() << "  id:" << device.id();
-    qDebug() << "  isNull:" << device.isNull();
-    qDebug() << "  sample rate:" << device.preferredFormat().sampleRate();
-    qDebug() << "  channels:" << device.preferredFormat().channelCount();
-    qDebug() << "  format:" << device.preferredFormat().sampleFormat();
+    // qDebug() << "Audio device:";
+    // qDebug() << "  description:" << device.description();
+    // qDebug() << "  id:" << device.id();
+    // qDebug() << "  isNull:" << device.isNull();
+    // qDebug() << "  sample rate:" << device.preferredFormat().sampleRate();
+    // qDebug() << "  channels:" << device.preferredFormat().channelCount();
+    // qDebug() << "  format:" << device.preferredFormat().sampleFormat();
     if (device.isNull())
     {
         qWarning()
@@ -184,7 +319,6 @@ void AudioEngine::noteOn(int midiNote, int velocity)
 {
     if (m_trackProcessors.empty())
         return;
-
     m_trackProcessors[0]->noteOn(midiNote, velocity);
 }
 
@@ -196,9 +330,12 @@ void AudioEngine::noteOn(
 {
     TrackProcessor *processor =
         findTrackProcessor(trackId);
-
+        qDebug() << "noteOn:"
+            << "trackId =" << trackId
+            << "processor =" << processor;
     if (!processor)
         return;
+
 
     processor->noteOn(midiNote, velocity);
 }
@@ -225,6 +362,67 @@ void AudioEngine::noteOff(
     processor->noteOff(midiNote);
 }
 
+void AudioEngine::setTrackMuted(int trackId, bool muted)
+{
+    m_trackRoutingStates[trackId].muted = muted;
+}
+
+bool AudioEngine::isTrackMuted(int trackId) const
+{
+    auto it = m_trackRoutingStates.constFind(trackId);
+
+    if (it == m_trackRoutingStates.constEnd())
+        return false;
+
+    return it->muted;
+}
+
+void AudioEngine::setTrackSoloed(int trackId, bool soloed)
+{
+    m_trackRoutingStates[trackId].soloed = soloed;
+}
+
+bool AudioEngine::isTrackSoloed(int trackId) const
+{
+    auto it = m_trackRoutingStates.constFind(trackId);
+
+    if (it == m_trackRoutingStates.constEnd())
+        return false;
+
+    return it->soloed;
+}
+
+bool AudioEngine::shouldTrackParticipate(int trackId) const
+{
+    const TrackProcessor *processor = findTrackProcessor(trackId);
+
+    if (!processor)
+        return false;
+
+    if (processor->state() == TrackState::Inactive)
+        return false;
+
+    const bool muted = isTrackMuted(trackId);
+
+    bool anySolo = false;
+
+    for (const auto& processorPtr : m_trackProcessors)
+    {
+        const int otherTrackId = processorPtr->trackId();
+
+        if (isTrackSoloed(otherTrackId))
+        {
+            anySolo = true;
+            break;
+        }
+    }
+
+    if (anySolo)
+        return isTrackSoloed(trackId) && !muted;
+
+    return !muted;
+}
+
 void AudioEngine::pitchBend(int channel, int value)
 {
     if (m_trackProcessors.empty())
@@ -237,11 +435,65 @@ void AudioEngine::render(float *left,
                          float *right,
                          std::size_t numSamples)
 {
-    if (m_trackProcessors.empty())
-        return;
+    std::fill(left, left + numSamples, 0.0f);
+    std::fill(right, right + numSamples, 0.0f);
 
-    m_trackProcessors[0]->render(left, right, numSamples);
+    std::vector<float> trackLeft(numSamples);
+    std::vector<float> trackRight(numSamples);
+
+    for (auto& processor : m_trackProcessors)
+    {
+        if (!shouldTrackParticipate(processor->trackId()))
+            continue;
+
+        std::fill(trackLeft.begin(), trackLeft.end(), 0.0f);
+        std::fill(trackRight.begin(), trackRight.end(), 0.0f);
+
+        processor->render(
+            trackLeft.data(),
+            trackRight.data(),
+            numSamples
+        );
+
+        for (std::size_t i = 0; i < numSamples; ++i)
+        {
+            left[i] += trackLeft[i];
+            right[i] += trackRight[i];
+        }
+    }
+    // --------------------------------------------
+    // Sequence playback
+    // --------------------------------------------
+
+    renderSequence(
+        left,
+        right,
+        numSamples
+    );
 }
+
+QVector<float> AudioEngine::renderClip(
+    int trackId,
+    const QVector<PlacedNote>& notes)
+{
+    TrackProcessor* processor =
+        findTrackProcessor(trackId);
+
+    if (!processor)
+        return {};
+
+    return processor->renderClip(notes);
+}
+
+// void AudioEngine::render(float *left,
+//                          float *right,
+//                          std::size_t numSamples)
+// {
+//     if (m_trackProcessors.empty())
+//         return;
+
+//     m_trackProcessors[0]->render(left, right, numSamples);
+// }
 
 
 double AudioEngine::sampleRate() const
@@ -256,12 +508,15 @@ int AudioEngine::blockSize() const
 
 TrackProcessor* AudioEngine::createTrack(int trackId)
 {
+    if (TrackProcessor *existing = findTrackProcessor(trackId))
+        return existing;
+
     auto processor =
         std::make_unique<TrackProcessor>(trackId);
 
     processor->prepare(m_sampleRate, m_blockSize);
 
-    TrackProcessor* result = processor.get();
+    TrackProcessor *result = processor.get();
 
     m_trackProcessors.push_back(std::move(processor));
 
@@ -271,6 +526,17 @@ TrackProcessor* AudioEngine::createTrack(int trackId)
 TrackProcessor* AudioEngine::findTrackProcessor(int trackId)
 {
     for (auto& processor : m_trackProcessors)
+    {
+        if (processor->trackId() == trackId)
+            return processor.get();
+    }
+
+    return nullptr;
+}
+
+const TrackProcessor* AudioEngine::findTrackProcessor(int trackId) const
+{
+    for (const auto& processor : m_trackProcessors)
     {
         if (processor->trackId() == trackId)
             return processor.get();

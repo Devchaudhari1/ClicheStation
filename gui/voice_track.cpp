@@ -36,6 +36,36 @@ VoiceTrack::instrumentParameters() const
     return m_instrumentParameters;
 }
 
+double VoiceTrack::trackDuration() const
+{
+    if (!m_piano)
+        return 0.0;
+
+    double duration = 0.0;
+
+    for (const PlacedNote &note : m_piano->notes())
+    {
+        duration =
+            qMax(
+                duration,
+                note.time + note.duration
+            );
+    }
+
+    return duration;
+}
+
+
+const QVector<PlacedNote>& VoiceTrack::notes() const
+{
+    static const QVector<PlacedNote> empty;
+
+    if (!m_piano)
+        return empty;
+
+    return m_piano->notes();
+}
+
 void VoiceTrack::createUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -56,6 +86,34 @@ void VoiceTrack::createUI()
     m_muteButton->setCheckable(true);
     m_soloButton->setCheckable(true);
 
+    m_muteButton->setStyleSheet(
+        "QPushButton {"
+        "    background-color: #2e7d32;"
+        "    color: white;"
+        "    border: 1px solid #1b5e20;"
+        "    border-radius: 4px;"
+        "    padding: 4px 10px;"
+        "}"
+        "QPushButton:checked {"
+        "    background-color: #c62828;"
+        "    border: 1px solid #8e0000;"
+        "}"
+    );
+
+    m_soloButton->setStyleSheet(
+        "QPushButton {"
+        "    background-color: #424242;"
+        "    color: white;"
+        "    border: 1px solid #616161;"
+        "    border-radius: 4px;"
+        "    padding: 4px 10px;"
+        "}"
+        "QPushButton:checked {"
+        "    background-color: #f9a825;"
+        "    color: black;"
+        "    border: 1px solid #c17900;"
+        "}"
+    );
     // Add widgets
     mainLayout->addWidget(m_nameLabel);
 
@@ -92,6 +150,26 @@ void VoiceTrack::createUI()
         m_piano->activateWindow();
     });
 
+    connect(
+        m_muteButton,
+        &QPushButton::toggled,
+        this,
+        [this](bool muted)
+        {
+            m_audioEngine->setTrackMuted(m_trackId, muted);
+        }
+    );
+
+    connect(
+        m_soloButton,
+        &QPushButton::toggled,
+        this,
+        [this](bool soloed)
+        {
+            m_audioEngine->setTrackSoloed(m_trackId, soloed);
+        }
+    );
+
 connect(
     m_instrumentButton,
     &QPushButton::clicked,
@@ -111,7 +189,7 @@ connect(
                 [this](int midiNote)
                 {
                     if (m_audioEngine)
-                        m_audioEngine->noteOn(midiNote, 100);
+                        m_audioEngine->noteOn(m_trackId, midiNote, 100);
                 }
             );
 
@@ -122,7 +200,7 @@ connect(
                 [this](int midiNote)
                 {
                     if (m_audioEngine)
-                        m_audioEngine->noteOff(midiNote);
+                        m_audioEngine->noteOff(m_trackId, midiNote);
                 }
             );
             // Oscillator and Voice

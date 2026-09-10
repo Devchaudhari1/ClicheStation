@@ -4,13 +4,14 @@
 #include <QVector>
 #include <QPair>
 #include <QString>
-
 class QVBoxLayout;
 class QHBoxLayout;
 class QScrollArea;
 class QLabel;
 class TimeRuler;
 class Sequence;
+class AudioEngine;
+class TrackList;
 
 class Playlist : public QWidget
 {
@@ -20,7 +21,9 @@ public:
     explicit Playlist(QWidget *parent = nullptr);
     void layoutSequences();
 public slots:
-    void addSequence();
+    void addSequence(
+        AudioEngine *audioEngine,
+        TrackList *trackList);
     void setAvailableTracks(
         const QVector<QPair<int, QString>> &tracks
     );

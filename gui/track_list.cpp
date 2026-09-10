@@ -98,6 +98,18 @@ void TrackList::createUI()
         }
     );
 }
+
+VoiceTrack *TrackList::findVoiceTrack(int trackId) const
+{
+    for (VoiceTrack *track : findChildren<VoiceTrack*>())
+    {
+        if (track->trackId() == trackId)
+            return track;
+    }
+
+    return nullptr;
+}
+
 void TrackList::addVoiceTrack()
 {
     int trackId = m_nextTrackId++;
@@ -105,15 +117,21 @@ void TrackList::addVoiceTrack()
     QString trackName =
         QString("Voice Track %1").arg(trackId);
 
+    // Create the corresponding audio processor
+    if (m_audioEngine)
+    {
+        m_audioEngine->createTrack(trackId);
+    }
+
     VoiceTrack *track =
-    new VoiceTrack(trackId, trackName, m_audioEngine, this);
+        new VoiceTrack(trackId, trackName, m_audioEngine, this);
 
     int insertPosition = m_trackLayout->count() - 1;
 
     m_trackLayout->insertWidget(insertPosition, track);
 
     m_tracks.append(qMakePair(trackId, trackName));
-    
+
     emit tracksChanged(m_tracks);
 }
 

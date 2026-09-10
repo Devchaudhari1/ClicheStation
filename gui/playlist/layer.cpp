@@ -1,5 +1,5 @@
-#include "layer.h"
-#include "clip.h"
+#include "Layer.h"
+#include "Clip.h"
 #include "ClipArea.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -61,7 +61,8 @@ Clip *Layer::addClip(
     int trackId,
     const QString &trackName,
     double startTime,
-    double duration
+    double duration,
+    const QVector<float>& samples
 )
 {
     if (!canAddClip(startTime, duration))
@@ -76,19 +77,7 @@ Clip *Layer::addClip(
             m_clipArea
         );
 
-    QVector<float> samples;
-
-    for (int i = 0; i < 2000; ++i)
-    {
-        double t = static_cast<double>(i) / 2000.0;
-
-        float sample =
-            0.6f * std::sin(t * 20.0 * M_PI);
-
-        samples.append(sample);
-    }
-
-    clip->setSamples(samples);
+    clip->setSamples(samples,static_cast<int>(duration * m_pixelsPerSecond));
 
     connect(
         clip,
@@ -96,18 +85,10 @@ Clip *Layer::addClip(
         this,
         [this, clip](double newStartTime)
         {
-            if (!canMoveClip(
-                    clip,
-                    newStartTime
-                ))
-            {
+            if (!canMoveClip(clip, newStartTime))
                 return;
-            }
 
-            clip->setStartTime(
-                newStartTime
-            );
-
+            clip->setStartTime(newStartTime);
             layoutClips();
         }
     );
@@ -117,10 +98,12 @@ Clip *Layer::addClip(
         &Clip::resizeRequested,
         this,
         [this, clip](
-            bool leftEdge,
-            double newStartTime,
-            double newDuration
-        )
+        bool leftEdge,
+        double newStartTime,
+        double newDuration,
+        double newSourceStart,
+        double newSourceEnd
+    )
         {
             Q_UNUSED(leftEdge);
 
@@ -133,12 +116,12 @@ Clip *Layer::addClip(
                 return;
             }
 
-            clip->setStartTime(
-                newStartTime
-            );
+            clip->setStartTime(newStartTime);
+            clip->setDuration(newDuration);
 
-            clip->setDuration(
-                newDuration
+            clip->setSourceRange(
+                newSourceStart,
+                newSourceEnd
             );
 
             layoutClips();

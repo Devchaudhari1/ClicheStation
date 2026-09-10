@@ -26,6 +26,11 @@ Piano::~Piano()
 {
 }
 
+const QVector<PlacedNote>& Piano::notes() const
+{
+    return pianoRoll->notes();
+}
+
 void Piano::createUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
