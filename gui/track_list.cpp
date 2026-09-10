@@ -132,6 +132,7 @@ void TrackList::addVoiceTrack()
         this,
         [this](PianoRoll* pianoRoll)
         {
+            qDebug() << "TrackList: PianoRoll became active:" << pianoRoll;
             emit pianoRollBecameActive(pianoRoll);
         }
     );

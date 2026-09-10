@@ -47,6 +47,9 @@ public:
     );
 signals:
     void becameActive(PianoRoll* pianoRoll);
+    void requestScrollToY(int y);
+    void requestScrollBy(int delta);
+
 protected:
     void paintEvent(QPaintEvent *event) override;
 
@@ -82,6 +85,7 @@ private:
 
     double recordingCursorY = -1;
     double m_contentHeight;
+    double m_lastContentGrowthTime = 0.0;
     double m_originY;
     QHash<int, int> m_recordingNoteIndices;
     // Copy/paste

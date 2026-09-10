@@ -151,12 +151,16 @@ void VoiceTrack::createUI()
             this,
             [this](PianoRoll* pianoRoll)
             {
+                qDebug() << "VoiceTrack: PianoRoll became active:" << pianoRoll;
+
                 emit pianoRollBecameActive(pianoRoll);
             }
         );
         m_piano->show();
         m_piano->raise();
         m_piano->activateWindow();
+
+        m_piano->activatePianoRoll();
     });
 
     connect(

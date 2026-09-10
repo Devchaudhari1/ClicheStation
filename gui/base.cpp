@@ -365,6 +365,8 @@ void Base::createUI()
         this,
         [this](PianoRoll* pianoRoll)
         {
+            qDebug() << "Base: setting active PianoRoll:"
+                 << pianoRoll;
             m_activePianoRoll = pianoRoll;
         }
     );
@@ -427,8 +429,16 @@ void Base::createUI()
         this,
         [this]()
         {
+            qDebug() << "START RECORDING BUTTON CLICKED";
+            qDebug() << "Active PianoRoll:" << m_activePianoRoll;
+
             if (!m_activePianoRoll)
+            {
+                qDebug() << "NO ACTIVE PIANO ROLL";
                 return;
+            }
+
+            qDebug() << "Calling PianoRoll::startRecording()";
 
             m_activePianoRoll->startRecording();
         }

@@ -20,6 +20,7 @@ public:
 );
     ~Piano();
     const QVector<PlacedNote>& notes() const;
+    void activatePianoRoll();
 signals:
     void pianoRollBecameActive(PianoRoll* pianoRoll);
 private:

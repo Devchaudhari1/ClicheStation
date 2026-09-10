@@ -64,14 +64,19 @@ double PianoRoll::timeFromY(double y) const
 
 void PianoRoll::ensureContentHeight(double time)
 {
-    const double requiredHeight =
-        m_originY +
-        time * pixelsPerSecond;
+    const double additionalTime =
+        time - m_lastContentGrowthTime;
 
-    if (requiredHeight <= m_contentHeight)
+    if (additionalTime <= 0.0)
         return;
 
-    m_contentHeight = requiredHeight;
+    const double growth =
+        additionalTime * pixelsPerSecond;
+
+    m_contentHeight += growth;
+    m_originY += growth;
+
+    m_lastContentGrowthTime = time;
 
     setMinimumHeight(
         static_cast<int>(m_contentHeight)
@@ -81,8 +86,11 @@ void PianoRoll::ensureContentHeight(double time)
         width(),
         static_cast<int>(m_contentHeight)
     );
-}
 
+    emit requestScrollBy(
+        static_cast<int>(growth)
+    );
+}
 
 int PianoRoll::noteAtPosition(const QPointF &position) const
 {
@@ -832,8 +840,13 @@ void PianoRoll::saveAction(
 
 void PianoRoll::startRecording()
 {
+    qDebug() << "START RECORDING CALLED";
+    m_lastContentGrowthTime=0.0;
     if (m_recording)
+    {
+        qDebug() << "Already recording";
         return;
+    }
 
     m_recording = true;
 
@@ -846,6 +859,8 @@ void PianoRoll::startRecording()
 
     if (!m_recordingTimer)
     {
+        qDebug() << "Creating recording timer";
+
         m_recordingTimer =
             new QTimer(this);
 
@@ -855,6 +870,7 @@ void PianoRoll::startRecording()
             this,
             [this]()
             {
+
                 if (!m_recording)
                     return;
 
@@ -877,13 +893,28 @@ void PianoRoll::startRecording()
                     width(),
                     1
                 );
+
+                const int scrollMargin = 100;
+
+                if (recordingCursorY < scrollMargin)
+                {
+                    emit requestScrollToY(
+                        static_cast<int>(recordingCursorY)
+                    );
+                }
             }
         );
     }
 
     m_recordingLine->show();
 
+    qDebug() << "Starting timer";
+
     m_recordingTimer->start(16);
+
+    qDebug()
+        << "Timer active:"
+        << m_recordingTimer->isActive();
 
     setFocus();
     update();
