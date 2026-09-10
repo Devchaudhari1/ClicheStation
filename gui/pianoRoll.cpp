@@ -235,6 +235,12 @@ void PianoRoll::mouseMoveEvent(QMouseEvent *event)
     update();
 }
 
+void PianoRoll::focusInEvent(QFocusEvent* event)
+{
+    QWidget::focusInEvent(event);
+    emit becameActive(this);
+}
+
 void PianoRoll::mousePressEvent(QMouseEvent *event)
 {
     QPointF pos =
@@ -571,6 +577,20 @@ void PianoRoll::paintEvent(QPaintEvent *)
         );
     }
 
+     // Recording
+    if (m_recording &&
+        recordingCursorY >= 0)
+    {
+        painter.setPen(
+            QPen(QColor("#ff4040"), 2)
+        );
+
+        painter.drawLine(
+            QPointF(0, recordingCursorY),
+            QPointF(width(), recordingCursorY)
+        );
+    }
+
     /*
      * ----------------------------------------
      * Notes
@@ -766,3 +786,165 @@ void PianoRoll::saveAction(
      */
     redoStack.clear();
 }
+
+
+// Recording
+
+void PianoRoll::startRecording()
+{
+    if (m_recording)
+        return;
+
+    m_recording = true;
+
+    m_recordingStartTime =
+        std::chrono::steady_clock::now();
+
+    m_recordingNoteIndices.clear();
+
+    recordingCursorY = 0.0;
+
+    if (!m_recordingTimer)
+    {
+        m_recordingTimer =
+            new QTimer(this);
+
+        connect(
+            m_recordingTimer,
+            &QTimer::timeout,
+            this,
+            [this]()
+            {
+                if (!m_recording)
+                    return;
+
+                const auto now =
+                    std::chrono::steady_clock::now();
+
+                const double seconds =
+                    std::chrono::duration<double>(
+                        now - m_recordingStartTime
+                    ).count();
+
+                recordingCursorY =
+                    seconds * pixelsPerSecond;
+
+                update();
+            }
+        );
+    }
+
+    m_recordingTimer->start(16);
+
+    setFocus();
+    update();
+}
+
+void PianoRoll::stopRecording()
+{
+    if (!m_recording)
+        return;
+
+    m_recording = false;
+
+    if (m_recordingTimer)
+        m_recordingTimer->stop();
+
+    recordingCursorY = -1;
+
+    m_recordingNoteIndices.clear();
+
+    update();
+}
+
+double PianoRoll::recordingTimeFromTimestamp(
+    qint64 timestampNs) const
+{
+    const auto recordingStartNs =
+        std::chrono::duration_cast<
+            std::chrono::nanoseconds
+        >(
+            m_recordingStartTime.time_since_epoch()
+        ).count();
+
+    return static_cast<double>(
+        timestampNs - recordingStartNs
+    ) / 1'000'000'000.0;
+}
+
+void PianoRoll::midiNoteOn(
+    int midiNote,
+    int velocity,
+    qint64 timestampNs)
+{
+    Q_UNUSED(velocity);
+
+    if (!m_recording)
+        return;
+
+    if (m_recordingNoteIndices.contains(midiNote))
+        return;
+
+    const double time =
+        recordingTimeFromTimestamp(timestampNs);
+
+    PlacedNote note;
+
+    note.midiNote = midiNote;
+    note.time = std::max(0.0, time);
+    note.duration = 0.0;
+
+    pressedNotes.append(note);
+
+    const int noteIndex =
+        pressedNotes.size() - 1;
+
+    m_recordingNoteIndices.insert(
+        midiNote,
+        noteIndex
+    );
+
+    selectedNote = noteIndex;
+
+    update();
+}
+
+void PianoRoll::midiNoteOff(
+    int midiNote,
+    qint64 timestampNs)
+{
+    if (!m_recording)
+        return;
+
+    auto it =
+        m_recordingNoteIndices.find(midiNote);
+
+    if (it == m_recordingNoteIndices.end())
+        return;
+
+    const int noteIndex = it.value();
+
+    if (noteIndex < 0 ||
+        noteIndex >= pressedNotes.size())
+    {
+        m_recordingNoteIndices.erase(it);
+        return;
+    }
+
+    const double endTime =
+        recordingTimeFromTimestamp(timestampNs);
+
+    PlacedNote &note =
+        pressedNotes[noteIndex];
+
+    note.duration =
+        std::max(
+            0.1,
+            endTime - note.time
+        );
+
+    m_recordingNoteIndices.erase(it);
+
+    update();
+}
+

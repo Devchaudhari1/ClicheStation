@@ -11,6 +11,7 @@ class AudioEngine;
 class Piano;
 class QMouseEvent;
 struct PlacedNote;
+class PianoRoll;
 
 class VoiceTrack : public QWidget
 {
@@ -34,7 +35,7 @@ signals:
     // Signals handled by Qt moc itself
     void instrumentRequested();
     void effectsRequested();
-
+    void pianoRollBecameActive(PianoRoll* pianoRoll);
     void muteChanged(bool muted);
     void soloChanged(bool solo);
 protected:

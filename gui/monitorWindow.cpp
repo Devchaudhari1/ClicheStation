@@ -1,6 +1,6 @@
 #include "monitorWindow.h"
 #include "../midi/MidiInput.h"
-
+#include "base.h"
 #include <QComboBox>
 #include <QPushButton>
 #include <QLabel>
@@ -12,9 +12,10 @@
 #include <QDateTime>
 #include <QMessageBox>
 
-MonitorWindow::MonitorWindow(QWidget *parent)
+MonitorWindow::MonitorWindow(Base* base, QWidget* parent)
     : QMainWindow(parent),
-      midiInput(new MidiInput(this))
+      m_base(base),
+      m_midiInput(nullptr)
 {
     setWindowTitle("MIDI Monitor");
 
@@ -112,8 +113,20 @@ MonitorWindow::MonitorWindow(QWidget *parent)
     central->setLayout(MonitorLayout);
 
     setCentralWidget(central);
+    //Handle null cases
+    if (!m_base)
+    {
+        statusLabel->setText("No Base connection");
+        return;
+    }
 
+    m_midiInput = m_base->midiInput();
 
+    if (!m_midiInput)
+    {
+        statusLabel->setText("MIDI input unavailable");
+        return;
+    }
     // --------------------------------------------------
     // Connections
     // --------------------------------------------------
@@ -133,14 +146,14 @@ MonitorWindow::MonitorWindow(QWidget *parent)
     );
 
     connect(
-        midiInput,
+        m_midiInput,
         &MidiInput::midiMessage,
         this,
         &MonitorWindow::processMidiMessage
     );
 
     connect(
-        midiInput,
+        m_midiInput,
         &MidiInput::errorMessage,
         this,
         &MonitorWindow::showError
@@ -155,7 +168,6 @@ MonitorWindow::~MonitorWindow()
 {
 }
 
-
 // ------------------------------------------------------
 // Find MIDI devices
 // ------------------------------------------------------
@@ -165,7 +177,7 @@ void MonitorWindow::refreshPorts()
     portCombo->clear();
 
     QStringList ports =
-        midiInput->availablePorts();
+        m_midiInput->availablePorts();
 
     portCombo->addItems(ports);
 
@@ -194,12 +206,14 @@ void MonitorWindow::connectMidi()
     if (portCombo->count() == 0)
         return;
 
+        MidiInput* m_midiInput = m_base->midiInput();
+
     if (!connected)
     {
         int port =
             portCombo->currentIndex();
 
-        if (midiInput->openPort(port))
+        if (m_midiInput->openPort(port))
         {
             connected = true;
 
@@ -216,7 +230,7 @@ void MonitorWindow::connectMidi()
     }
     else
     {
-        midiInput->closePort();
+        m_midiInput->closePort();
 
         connected = false;
 

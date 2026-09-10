@@ -4,8 +4,10 @@
 #include <QObject>
 #include <QStringList>
 #include <QByteArray>
-
+#include <chrono>
 #include "RtMidi.h"
+
+class Base;
 
 class MidiInput : public QObject
 {
@@ -23,10 +25,25 @@ public:
     bool isOpen() const;
 
 signals:
-    void midiMessage(double deltaTime,
-                     const QByteArray &data);
+    void midiMessage(
+        double deltaTime,
+        const QByteArray &data
+    );
 
-    void errorMessage(const QString &message);
+    void noteOn(
+        int midiNote,
+        int velocity,
+        qint64 timestampNs
+    );
+
+    void noteOff(
+        int midiNote,
+        qint64 timestampNs
+    );
+
+    void errorMessage(
+        const QString &message
+    );
 
 private:
     static void midiCallback(
@@ -34,7 +51,7 @@ private:
         std::vector<unsigned char> *message,
         void *userData
     );
-
+    Base* m_base = nullptr;
     RtMidiIn *midiIn;
 };
 

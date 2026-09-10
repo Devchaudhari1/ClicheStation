@@ -20,7 +20,8 @@ public:
 );
     ~Piano();
     const QVector<PlacedNote>& notes() const;
-
+signals:
+    void pianoRollBecameActive(PianoRoll* pianoRoll);
 private:
     void createUI();
     

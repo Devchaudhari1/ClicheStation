@@ -10,6 +10,7 @@ class QPushButton;
 class AudioEngine;
 class QMouseEvent;
 class VoiceTrack;
+class PianoRoll;
 
 class TrackListHandle : public QWidget
 {
@@ -20,7 +21,6 @@ public:
     void paintEvent(QPaintEvent*);
 signals:
     void dragDelta(int delta);
-
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -45,6 +45,7 @@ public:
 
 signals:
     void tracksChanged(const QVector<QPair<int, QString>> &tracks);
+    void pianoRollBecameActive(PianoRoll* pianoRoll);
 
 private:
     void createUI();
