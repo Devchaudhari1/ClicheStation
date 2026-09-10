@@ -10,6 +10,8 @@
 #include <QHash>
 #include <chrono>
 
+class QFrame;
+
 struct PlacedNote
 {
     int midiNote;
@@ -38,7 +40,7 @@ public:
         int velocity,
         qint64 timestampNs
     );
-
+    void ensureContentHeight(double time);
     void midiNoteOff(
         int midiNote,
         qint64 timestampNs
@@ -71,13 +73,16 @@ private:
     // Recording States
     bool m_recording = false;
 
+    QFrame *m_recordingLine = nullptr;
+
     QTimer *m_recordingTimer = nullptr;
 
     std::chrono::steady_clock::time_point
         m_recordingStartTime;
 
     double recordingCursorY = -1;
-
+    double m_contentHeight;
+    double m_originY;
     QHash<int, int> m_recordingNoteIndices;
     // Copy/paste
     QVector<PlacedNote> copiedNotes;
@@ -102,7 +107,7 @@ private:
     int keyFromX(double x) const;
 
     double timeFromY(double y) const;
-
+    double yFromTime(double time) const;
     int noteAtPosition(
         const QPointF &position
     ) const;

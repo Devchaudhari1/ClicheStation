@@ -5,17 +5,30 @@
 #include <QColor>
 #include <QDebug>
 #include <QCursor>
+#include <QFrame>
 
 PianoRoll::PianoRoll(QWidget *parent)
-    : QWidget(parent)
+    : QWidget(parent),
+      m_contentHeight(500.0),
+      m_originY(500.0),
+      m_recordingLine(nullptr)
 {
     setMinimumSize(800, 500);
 
-    // We need mouseMoveEvent even when no button is pressed.
     setMouseTracking(true);
 
     setFocusPolicy(Qt::StrongFocus);
+
+    m_recordingLine = new QFrame(this);
+
+    m_recordingLine->setFixedHeight(1);
+    m_recordingLine->setStyleSheet(
+        "background-color: red;"
+    );
+
+    m_recordingLine->hide();
 }
+
 
 const QVector<PlacedNote>& PianoRoll::notes() const
 {
@@ -39,10 +52,37 @@ int PianoRoll::keyFromX(double x) const
     return keyIndex;
 }
 
+double PianoRoll::yFromTime(double time) const
+{
+    return m_originY - time * pixelsPerSecond;
+}
+
 double PianoRoll::timeFromY(double y) const
 {
-    return y / pixelsPerSecond;
+    return (m_originY - y) / pixelsPerSecond;
 }
+
+void PianoRoll::ensureContentHeight(double time)
+{
+    const double requiredHeight =
+        m_originY +
+        time * pixelsPerSecond;
+
+    if (requiredHeight <= m_contentHeight)
+        return;
+
+    m_contentHeight = requiredHeight;
+
+    setMinimumHeight(
+        static_cast<int>(m_contentHeight)
+    );
+
+    resize(
+        width(),
+        static_cast<int>(m_contentHeight)
+    );
+}
+
 
 int PianoRoll::noteAtPosition(const QPointF &position) const
 {
@@ -66,10 +106,12 @@ int PianoRoll::noteAtPosition(const QPointF &position) const
         double x = keyIndex * keyWidth;
 
         double y =
-            note.time * pixelsPerSecond;
+            yFromTime(note.time);
 
         double noteHeight =
             note.duration * pixelsPerSecond;
+
+        y -= noteHeight;
 
         QRectF noteRect(
             x + 1,
@@ -109,10 +151,12 @@ bool PianoRoll::isResizeArea(
         keyIndex * keyWidth;
 
     double y =
-        note.time * pixelsPerSecond;
+        yFromTime(note.time);
 
     double noteHeight =
         note.duration * pixelsPerSecond;
+
+    y -= noteHeight;
 
     QRectF noteRect(
         x + 1,
@@ -155,8 +199,7 @@ void PianoRoll::mouseMoveEvent(QMouseEvent *event)
             firstMidiNote + keyIndex;
 
         double newTime =
-            (pos.y() - dragOffsetY)
-            / pixelsPerSecond;
+            timeFromY(pos.y() - dragOffsetY);
 
         if (newTime < 0)
             newTime = 0;
@@ -320,15 +363,16 @@ void PianoRoll::mousePressEvent(QMouseEvent *event)
             const PlacedNote &note =
                 pressedNotes[noteIndex];
 
-            double noteTop =
-                note.time * pixelsPerSecond;
+            // double noteTop =
+            //     note.time * pixelsPerSecond;
 
             /*
              * Remember where inside the tile
              * the mouse grabbed it.
              */
-            dragOffsetY =
-                pos.y() - noteTop;
+            double noteTop =
+                yFromTime(note.time) -
+                note.duration * pixelsPerSecond;
 
             setCursor(Qt::SizeAllCursor);
         }
@@ -414,31 +458,27 @@ void PianoRoll::drawNote(
     const double keyWidth =
         static_cast<double>(width()) / keyCount;
 
-    int keyIndex =
+    const int keyIndex =
         note.midiNote - firstMidiNote;
 
-    if (keyIndex < 0 ||
-        keyIndex >= keyCount)
-    {
+    if (keyIndex < 0 || keyIndex >= keyCount)
         return;
-    }
 
-    double x =
+    const double x =
         keyIndex * keyWidth;
 
-    double y =
-        note.time * pixelsPerSecond;
-
-    double noteHeight =
+    const double noteHeight =
         note.duration * pixelsPerSecond;
 
-    /*
-     * Keep the note inside the visible area
-     * horizontally.
-     */
+    const double bottomY =
+        yFromTime(note.time);
+
+    const double topY =
+        bottomY - noteHeight;
+
     QRectF noteRect(
         x + 1,
-        y,
+        topY,
         keyWidth - 2,
         noteHeight
     );
@@ -826,13 +866,22 @@ void PianoRoll::startRecording()
                         now - m_recordingStartTime
                     ).count();
 
-                recordingCursorY =
-                    seconds * pixelsPerSecond;
+                ensureContentHeight(seconds);
 
-                update();
+                recordingCursorY =
+                    yFromTime(seconds);
+
+                m_recordingLine->setGeometry(
+                    0,
+                    static_cast<int>(recordingCursorY),
+                    width(),
+                    1
+                );
             }
         );
     }
+
+    m_recordingLine->show();
 
     m_recordingTimer->start(16);
 
@@ -850,6 +899,8 @@ void PianoRoll::stopRecording()
     if (m_recordingTimer)
         m_recordingTimer->stop();
 
+    if (m_recordingLine)
+        m_recordingLine->hide();
     recordingCursorY = -1;
 
     m_recordingNoteIndices.clear();

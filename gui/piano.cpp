@@ -2,7 +2,7 @@
 #include "pianoRoll.h"
 #include "pianoKeyboard.h"
 #include "../audio/AudioEngine.h"
-
+#include <QScrollArea>
 #include <QVBoxLayout>
 
 Piano::Piano(
@@ -36,13 +36,28 @@ void Piano::createUI()
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
     // Piano roll
-    pianoRoll = new PianoRoll(this);
+    QScrollArea *scrollArea =
+    new QScrollArea(this);
+
+    pianoRoll = new PianoRoll;
+
+    scrollArea->setWidget(pianoRoll);
+
+    scrollArea->setWidgetResizable(false);
+
+    scrollArea->setHorizontalScrollBarPolicy(
+        Qt::ScrollBarAlwaysOff
+    );
+
+    scrollArea->setVerticalScrollBarPolicy(
+        Qt::ScrollBarAsNeeded
+    );
 
     // Physical/visual piano keyboard
     pianoKeyboard = new PianoKeyboard(this);
     pianoKeyboard->setFixedHeight(180);
 
-    mainLayout->addWidget(pianoRoll, 1);
+    mainLayout->addWidget(scrollArea, 1);
     mainLayout->addWidget(pianoKeyboard);
     connect(
     pianoKeyboard,
