@@ -67,18 +67,18 @@ root/
         ---voice_track.cpp // Voice Track card
         ---voice_track.h
         ---playlist/
-            ---clip.cpp // class defining the structure of a clip
-            ---clip.h
+            ---Clip.cpp // class defining the structure of a clip
+            ---Clip.h
             ---ClipArea.cpp // class defining the Cliparea on the right pane of Playlist
             ---ClipArea.h
             ---ClipVisualizer.cpp // Visualiser for Clip
             ---ClipVisualizer.h
-            ---layer.cpp // Several layers form a Sequence
-            ---layer.h
+            ---Layer.cpp // Several layers form a Sequence
+            ---Layer.h
             ---Playlist.cpp // Playlist is a collection of Sequence. (or a collection of song or music piece)
             ---Playlist.h
-            ---sequence.cpp // A collection of several layers whch we may call a song or single music piece
-            ---sequence.h
+            ---Sequence.cpp // A collection of several layers whch we may call a song or single music piece
+            ---Sequence.h
             ---TimelineView.cpp // Contains the timeline reference for the Clip
             ---TimelineView.h
             ---TimelineWidget.cpp // A widget that displays timeline

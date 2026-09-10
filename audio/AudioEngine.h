@@ -6,12 +6,16 @@
 #include <QIODevice>
 #include <vector>
 #include <memory>
+#include <atomic>
+#include <cstdint>
 #include <QString>
 #include <QVector>
 #include <QHash>
 #include "TrackProcessor.h"
 
 class AudioEngine;
+
+
 
 class AudioOutputDevice : public QIODevice
 {
@@ -40,6 +44,14 @@ public:
     void start();
     void stop();
 
+    struct SequenceClipPlayback
+    {
+        const QVector<float>* samples = nullptr;
+
+        std::int64_t startSample = 0;
+        std::int64_t sourceStartSample = 0;
+        std::int64_t sourceEndSample = 0;
+    };
     void noteOn(int midiNote, int velocity);
     void noteOff(int midiNote);
     void noteOn(int trackId, int midiNote, int velocity);
@@ -56,6 +68,17 @@ public:
 
     void setTrackSoloed(int trackId, bool soloed);
     bool isTrackSoloed(int trackId) const;
+
+    void startSequence(
+        const QVector<SequenceClipPlayback>& clips
+    );
+
+
+    void stopSequence();
+
+    bool isSequencePlaying() const;
+
+    std::int64_t sequencePlaybackPosition() const;
 
     void setClippingThreshold(int trackId, float threshold);
     
@@ -180,8 +203,18 @@ private:
         bool soloed = false;
     };
 
+    QVector<SequenceClipPlayback> m_sequenceClips;
+
+    std::atomic<bool> m_sequencePlaying{false};
+    std::atomic<std::int64_t> m_sequencePlaybackPosition{0};
+
     QHash<int, TrackRoutingState> m_trackRoutingStates;
 
+    void renderSequence(
+        float* left,
+        float* right,
+        std::size_t numSamples
+    );
     QAudioFormat m_format;
     QAudioSink *m_audioSink = nullptr;
     QIODevice *m_audioDevice = nullptr;

@@ -76,6 +76,141 @@ AudioEngine::~AudioEngine()
     stop();
 }
 
+void AudioEngine::startSequence(
+    const QVector<SequenceClipPlayback>& clips)
+{
+    m_sequenceClips = clips;
+
+    m_sequencePlaybackPosition.store(
+        0,
+        std::memory_order_relaxed
+    );
+
+    m_sequencePlaying.store(
+        true,
+        std::memory_order_release
+    );
+}
+
+void AudioEngine::stopSequence()
+{
+    m_sequencePlaying.store(
+        false,
+        std::memory_order_release
+    );
+
+    m_sequencePlaybackPosition.store(
+        0,
+        std::memory_order_relaxed
+    );
+}
+
+bool AudioEngine::isSequencePlaying() const
+{
+    return m_sequencePlaying.load(
+        std::memory_order_acquire
+    );
+}
+
+std::int64_t AudioEngine::sequencePlaybackPosition() const
+{
+    return m_sequencePlaybackPosition.load(
+        std::memory_order_relaxed
+    );
+}
+
+void AudioEngine::renderSequence(
+    float* left,
+    float* right,
+    std::size_t numSamples)
+{
+    if (!m_sequencePlaying.load(
+            std::memory_order_acquire))
+    {
+        return;
+    }
+
+    const std::int64_t sequencePosition =
+        m_sequencePlaybackPosition.load(
+            std::memory_order_relaxed);
+
+    const std::int64_t blockStart =
+        sequencePosition;
+
+    const std::int64_t blockEnd =
+        blockStart +
+        static_cast<std::int64_t>(numSamples);
+
+    for (const SequenceClipPlayback& clip :
+         m_sequenceClips)
+    {
+        if (!clip.samples)
+            continue;
+
+        const std::int64_t clipStart =
+            clip.startSample;
+
+        const std::int64_t clipEnd =
+            clip.startSample +
+            (clip.sourceEndSample -
+             clip.sourceStartSample);
+
+        // No overlap with this audio block.
+        if (blockEnd <= clipStart ||
+            blockStart >= clipEnd)
+        {
+            continue;
+        }
+
+        const std::int64_t overlapStart =
+            std::max(
+                blockStart,
+                clipStart
+            );
+
+        const std::int64_t overlapEnd =
+            std::min(
+                blockEnd,
+                clipEnd
+            );
+
+        const std::int64_t sourceOffset =
+            clip.sourceStartSample +
+            (overlapStart - clipStart);
+
+        const std::int64_t outputOffset =
+            overlapStart - blockStart;
+
+        const std::int64_t count =
+            overlapEnd - overlapStart;
+
+        for (std::int64_t i = 0; i < count; ++i)
+        {
+            const std::int64_t sourceIndex =
+                sourceOffset + i;
+
+            const std::int64_t outputIndex =
+                outputOffset + i;
+
+            if (sourceIndex < 0 ||
+                sourceIndex >= clip.samples->size())
+            {
+                continue;
+            }
+
+            const float sample =
+                (*clip.samples)[sourceIndex];
+
+            left[outputIndex] += sample;
+            right[outputIndex] += sample;
+        }
+    }
+
+    m_sequencePlaybackPosition.store(
+        blockEnd,
+        std::memory_order_relaxed
+    );
+}
 
 bool AudioEngine::initialize()
 {
@@ -201,6 +336,7 @@ void AudioEngine::noteOn(
     if (!processor)
         return;
 
+
     processor->noteOn(midiNote, velocity);
 }
 
@@ -325,6 +461,15 @@ void AudioEngine::render(float *left,
             right[i] += trackRight[i];
         }
     }
+    // --------------------------------------------
+    // Sequence playback
+    // --------------------------------------------
+
+    renderSequence(
+        left,
+        right,
+        numSamples
+    );
 }
 
 QVector<float> AudioEngine::renderClip(

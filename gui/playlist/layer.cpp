@@ -1,5 +1,5 @@
-#include "layer.h"
-#include "clip.h"
+#include "Layer.h"
+#include "Clip.h"
 #include "ClipArea.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>

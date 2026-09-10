@@ -4,13 +4,12 @@
 #include <QVector>
 #include <QPair>
 #include <QString>
-
+#include "../../audio/AudioEngine.h"
 class QPushButton;
 class QLabel;
 class Layer;
 class VoiceTrack;
 class TrackList;
-class AudioEngine;
 
 class Sequence : public QWidget
 {
@@ -36,6 +35,9 @@ public:
     const QVector<Layer *> &layers() const;
     void setTrackList(TrackList *trackList);
 
+    void play();
+    void stop();
+
 signals:
     void layerAdded();
     void expandedChanged(bool expanded);
@@ -51,9 +53,10 @@ private:
     QPushButton *m_expandButton;
     QLabel *m_sequenceLabel;
     QPushButton *m_addLayerButton;
-
+    QVector<AudioEngine::SequenceClipPlayback>
+        buildPlaybackClips() const;
     QVector<Layer *> m_layers;
-
+    QPushButton *m_playButton;
     QVector<VoiceTrack*> m_availableVoiceTracks;
     TrackList *m_trackList = nullptr;
     QVector<QPair<int, QString>> m_availableTracks;

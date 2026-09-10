@@ -63,7 +63,10 @@ void Clip::createUI()
     setLayout(layout);
 }
 
-
+const QVector<float>& Clip::samples() const
+{
+    return m_samples;
+}
 
 void Clip::setSourceRange(double sourceStart, double sourceEnd)
 {
@@ -84,6 +87,9 @@ void Clip::setSamples(
     int fullWidth
 )
 {
+
+    m_samples = samples;
+
     if (!m_visualizer)
         return;
 

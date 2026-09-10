@@ -43,7 +43,8 @@ public:
         const QVector<float>& samples,
         int fullWidth
     );
-
+    
+    const QVector<float>& samples() const;
 signals:
     void moveRequested(double newStartTime);
 
@@ -85,6 +86,8 @@ private:
     int m_trackId;
     QString m_trackName;
 
+    // Samples
+    QVector<float> m_samples;
     // Timeline range
     double m_startTime = 0.0;
     double m_duration = 0.0;

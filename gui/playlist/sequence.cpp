@@ -1,6 +1,6 @@
-#include "sequence.h"
-#include "layer.h"
-#include "clip.h"
+#include "Sequence.h"
+#include "Layer.h"
+#include "Clip.h"
 #include "../voice_track.h"
 #include "../track_list.h"
 #include "../../audio/AudioEngine.h"
@@ -22,7 +22,8 @@ Sequence::Sequence(
       m_header(nullptr),
       m_expandButton(nullptr),
       m_sequenceLabel(nullptr),
-      m_addLayerButton(nullptr)
+      m_addLayerButton(nullptr),
+      m_playButton(nullptr)
 {
     // -------------------------------------------------
     // Sequence header
@@ -70,7 +71,20 @@ Sequence::Sequence(
     );
 
     headerLayout->addStretch();
+    m_playButton =
+        new QPushButton("▶", m_header);
 
+    m_playButton->setFixedWidth(32);
+
+    m_playButton->setStyleSheet(
+        "background: #4a4a4a;"
+        "color: #e0e0e0;"
+        "border: 1px solid #666666;"
+    );
+
+    headerLayout->addWidget(
+        m_playButton
+    );
     m_addLayerButton =
         new QPushButton(
             "+ Add Layer",
@@ -112,6 +126,15 @@ Sequence::Sequence(
         }
     );
 
+    connect(
+        m_playButton,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            play();
+        }
+    );
     // Start with one layer
     addLayer();
 }
@@ -130,6 +153,73 @@ void Sequence::toggleExpanded()
     );
 
     emit expandedChanged(m_expanded);
+}
+
+QVector<AudioEngine::SequenceClipPlayback>
+Sequence::buildPlaybackClips() const
+{
+    QVector<AudioEngine::SequenceClipPlayback> result;
+
+    const double sampleRate =
+        m_audioEngine->sampleRate();
+
+    for (Layer* layer : m_layers)
+    {
+        if (!layer)
+            continue;
+
+        for (Clip* clip : layer->clips())
+        {
+            if (!clip)
+                continue;
+
+            AudioEngine::SequenceClipPlayback playback;
+
+            playback.samples =
+                &clip->samples();
+
+            playback.startSample =
+                static_cast<std::int64_t>(
+                    clip->startTime() * sampleRate
+                );
+
+            playback.sourceStartSample =
+                static_cast<std::int64_t>(
+                    clip->sourceStart() * sampleRate
+                );
+
+            playback.sourceEndSample =
+                static_cast<std::int64_t>(
+                    clip->sourceEnd() * sampleRate
+                );
+
+            result.append(playback);
+        }
+    }
+
+    return result;
+}
+
+void Sequence::play()
+{
+    if (!m_audioEngine)
+        return;
+
+    const auto clips =
+        buildPlaybackClips();
+
+    if (clips.isEmpty())
+        return;
+
+    m_audioEngine->startSequence(clips);
+}
+
+void Sequence::stop()
+{
+    if (!m_audioEngine)
+        return;
+
+    m_audioEngine->stopSequence();
 }
 
 Layer *Sequence::addLayer()

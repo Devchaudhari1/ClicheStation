@@ -16,22 +16,22 @@ qt_standard_project_setup()
 # adds an executable named ClicheStation which is created from the src mentioned
 qt_add_executable(ClicheStation
     # add playlist 
-    gui/playlist/clip.cpp
-    gui/playlist/clip.h
+    gui/playlist/Clip.cpp
+    gui/playlist/Clip.h
     gui/playlist/ClipArea.cpp
     gui/playlist/ClipArea.h
     gui/playlist/ClipVisualizer.cpp
     gui/playlist/ClipVisualizer.h
-    gui/playlist/layer.cpp
-    gui/playlist/layer.h
+    gui/playlist/Layer.cpp
+    gui/playlist/Layer.h
     gui/playlist/Playlist.cpp  
     gui/playlist/Playlist.h
     gui/playlist/TimelineView.cpp
     gui/playlist/TimelineView.h
     gui/playlist/TimeRuler.cpp
     gui/playlist/TimeRuler.h
-    gui/playlist/sequence.cpp
-    gui/playlist/sequence.h
+    gui/playlist/Sequence.cpp
+    gui/playlist/Sequence.h
 
     #main gui
     gui/base.cpp
