@@ -98,6 +98,18 @@ void TrackList::createUI()
         }
     );
 }
+
+VoiceTrack *TrackList::findVoiceTrack(int trackId) const
+{
+    for (VoiceTrack *track : findChildren<VoiceTrack*>())
+    {
+        if (track->trackId() == trackId)
+            return track;
+    }
+
+    return nullptr;
+}
+
 void TrackList::addVoiceTrack()
 {
     int trackId = m_nextTrackId++;

@@ -327,6 +327,19 @@ void AudioEngine::render(float *left,
     }
 }
 
+QVector<float> AudioEngine::renderClip(
+    int trackId,
+    const QVector<PlacedNote>& notes)
+{
+    TrackProcessor* processor =
+        findTrackProcessor(trackId);
+
+    if (!processor)
+        return {};
+
+    return processor->renderClip(notes);
+}
+
 // void AudioEngine::render(float *left,
 //                          float *right,
 //                          std::size_t numSamples)

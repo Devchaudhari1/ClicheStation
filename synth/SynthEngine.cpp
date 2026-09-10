@@ -1,6 +1,8 @@
 
 #include "SynthEngine.h"
 #include <QDebug>
+#include <algorithm>
+#include <cmath>
 
 void SynthEngine::noteOn(int midiNote, int velocity)
 {
@@ -23,21 +25,17 @@ void SynthEngine::noteOn(int midiNote, int velocity)
     voice->startNote(midiNote, velocity);
 }
 
-void SynthEngine::render(float* left,
-                         float* right,
-                         std::size_t numSamples)
+void SynthEngine::render(float* left, float* right, std::size_t numSamples)
 {
     std::fill(left, left + numSamples, 0.0f);
     std::fill(right, right + numSamples, 0.0f);
-
-    std::vector<float> voiceBuffer(numSamples);
 
     for (auto& voice : m_voices)
     {
         if (!voice.isActive())
             continue;
 
-        std::fill(voiceBuffer.begin(), voiceBuffer.end(), 0.0f);
+        std::vector<float> voiceBuffer(numSamples);
 
         voice.render(voiceBuffer.data(), numSamples);
 
@@ -49,6 +47,128 @@ void SynthEngine::render(float* left,
     }
 }
 
+void SynthEngine::render(
+    const QVector<PlacedNote>& notes,
+    QVector<float>& left,
+    QVector<float>& right)
+{
+    if (notes.isEmpty())
+        return ;
+
+    double duration = 0.0;
+
+    for (const auto& note : notes)
+    {
+        duration = std::max(
+            duration,
+            note.time + note.duration
+        );
+    }
+
+    const std::size_t totalSamples =
+        static_cast<std::size_t>(
+            std::ceil(duration * m_sampleRate)
+        );
+
+    if (totalSamples == 0)
+        return ;
+
+    left.resize(static_cast<qsizetype>(totalSamples));
+    right.resize(static_cast<qsizetype>(totalSamples));
+
+    std::fill(left.begin(), left.end(), 0.0f);
+    std::fill(right.begin(), right.end(), 0.0f);
+
+    struct NoteEvent
+    {
+        std::size_t sample;
+        int midiNote;
+        bool noteOn;
+    };
+
+    QVector<NoteEvent> events;
+    events.reserve(notes.size() * 2);
+
+    for (const auto& note : notes)
+    {
+        const std::size_t startSample =
+            static_cast<std::size_t>(
+                std::max(0.0, note.time) * m_sampleRate
+            );
+
+        const std::size_t endSample =
+            static_cast<std::size_t>(
+                std::max(
+                    note.time + note.duration,
+                    note.time
+                ) * m_sampleRate
+            );
+
+        events.push_back({
+            startSample,
+            note.midiNote,
+            true
+        });
+
+        events.push_back({
+            endSample,
+            note.midiNote,
+            false
+        });
+    }
+
+    std::sort(
+        events.begin(),
+        events.end(),
+        [](const NoteEvent& a, const NoteEvent& b)
+        {
+            if (a.sample != b.sample)
+                return a.sample < b.sample;
+
+            // Note-off before note-on at the same sample.
+            return a.noteOn < b.noteOn;
+        }
+    );
+
+    reset();
+
+    std::size_t currentSample = 0;
+
+    for (const auto& event : events)
+    {
+        if (event.sample > totalSamples)
+            break;
+
+        if (event.sample > currentSample)
+        {
+            const std::size_t count =
+                event.sample - currentSample;
+
+            render(
+                left.data() + currentSample,
+                right.data() + currentSample,
+                count
+            );
+
+            currentSample = event.sample;
+        }
+
+        if (event.noteOn)
+            noteOn(event.midiNote, 100);
+        else
+            noteOff(event.midiNote);
+    }
+
+    if (currentSample < totalSamples)
+    {
+        render(
+            left.data() + currentSample,
+            right.data() + currentSample,
+            totalSamples - currentSample
+        );
+    }
+
+}
 
 void SynthEngine::noteOff(
     int midiNote)

@@ -4,6 +4,8 @@
 
 #include <array>
 #include <cstddef>
+#include <QVector>
+#include "../gui/pianoRoll.h"
 
 class SynthEngine
 {
@@ -23,7 +25,12 @@ public:
         float* left,
         float* right,
         std::size_t numSamples);
-    
+
+    void render(
+        const QVector<PlacedNote>& notes,
+        QVector<float>& left,
+        QVector<float>& right);
+
     void pitchBend(int channel,int value);
     //Oscillator
     void setFrequency(float frequency);

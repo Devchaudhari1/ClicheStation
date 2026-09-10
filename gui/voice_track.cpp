@@ -36,6 +36,36 @@ VoiceTrack::instrumentParameters() const
     return m_instrumentParameters;
 }
 
+double VoiceTrack::trackDuration() const
+{
+    if (!m_piano)
+        return 0.0;
+
+    double duration = 0.0;
+
+    for (const PlacedNote &note : m_piano->notes())
+    {
+        duration =
+            qMax(
+                duration,
+                note.time + note.duration
+            );
+    }
+
+    return duration;
+}
+
+
+const QVector<PlacedNote>& VoiceTrack::notes() const
+{
+    static const QVector<PlacedNote> empty;
+
+    if (!m_piano)
+        return empty;
+
+    return m_piano->notes();
+}
+
 void VoiceTrack::createUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);

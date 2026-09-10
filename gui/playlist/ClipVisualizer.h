@@ -1,7 +1,10 @@
 #pragma once
 
 #include <QWidget>
+#include <QPixmap>
 #include <QVector>
+
+class QLabel;
 
 class ClipVisualizer : public QWidget
 {
@@ -10,15 +13,34 @@ class ClipVisualizer : public QWidget
 public:
     explicit ClipVisualizer(QWidget *parent = nullptr);
 
-    void setSamples(const QVector<float> &samples);
+    // One-time creation of the waveform.
+    void setSamples(
+        const QVector<float>& samples,
+        int fullWidth
+    );
+
+    // Full duration of the original rendered audio.
     void setDuration(double duration);
 
-    double duration() const;
+    // Changes only which part of the frozen waveform is visible.
+    void setSourceRange(double startTime, double endTime);
 
-protected:
-    void paintEvent(QPaintEvent *event) override;
+    double duration() const;
+    double sourceStart() const;
+    double sourceEnd() const;
 
 private:
-    QVector<float> m_samples;
+    void createWaveformPixmap(const QVector<float> &samples, int fullWidth);
+
+    QLabel *m_waveformLabel = nullptr;
+
+    // Frozen waveform.
+    QPixmap m_waveformPixmap;
+
     double m_duration = 0.0;
+    double m_sourceStart = 0.0;
+    double m_sourceEnd = 0.0;
+
+    // Number of miniature bars used for the waveform.
+    static constexpr int WaveformBars = 2048;
 };

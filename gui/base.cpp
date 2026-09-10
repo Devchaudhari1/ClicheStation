@@ -301,8 +301,14 @@ void Base::createUI()
     connect(
         AddSequenceButton,
         &QPushButton::clicked,
-        m_playlist,
-        &Playlist::addSequence
+        this,
+        [this]()
+        {
+            m_playlist->addSequence(
+                m_audioEngine,
+                m_trackList
+            );
+        }
     );
 
     connect(

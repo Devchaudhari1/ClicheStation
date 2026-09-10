@@ -1,29 +1,121 @@
 #include "ClipVisualizer.h"
 
-#include <QPainter>
-#include <QPaintEvent>
+#include <QLabel>
+#include <QImage>
+#include <QVBoxLayout>
 #include <QtGlobal>
-#include <QSizePolicy>
+
+#include <algorithm>
+#include <cmath>
 
 ClipVisualizer::ClipVisualizer(QWidget *parent)
-    : QWidget(parent)
+    : QWidget(parent),
+      m_waveformLabel(new QLabel(this))
 {
-    setSizePolicy(
-        QSizePolicy::Expanding,
-        QSizePolicy::Expanding
+    setContentsMargins(0, 0, 0, 0);
+
+    m_waveformLabel->setContentsMargins(0, 0, 0, 0);
+    m_waveformLabel->setAlignment(
+        Qt::AlignLeft | Qt::AlignVCenter
     );
+
+    /*
+        The label contains the complete frozen waveform.
+
+        The ClipVisualizer widget acts as the viewport.
+        Anything outside this widget is automatically clipped.
+    */
+    m_waveformLabel->move(0, 0);
 }
 
-void ClipVisualizer::setSamples(const QVector<float> &samples)
+void ClipVisualizer::setSamples(
+    const QVector<float>& samples,
+    int fullWidth
+)
 {
-    m_samples = samples;
-    update();
+    if (samples.isEmpty())
+    {
+        m_waveformPixmap = QPixmap();
+        m_waveformLabel->clear();
+        return;
+    }
+
+    /*
+        This is the ONLY waveform construction step.
+    */
+    createWaveformPixmap(
+        samples,
+        fullWidth
+    );
+
+    m_waveformLabel->setPixmap(m_waveformPixmap);
+
+    /*
+        The label is intentionally larger than the viewport.
+        The parent widget exposes only the required portion.
+    */
+    m_waveformLabel->setFixedSize(
+        m_waveformPixmap.size()
+    );
+
+    setSourceRange(
+        m_sourceStart,
+        m_sourceEnd
+    );
 }
 
 void ClipVisualizer::setDuration(double duration)
 {
-    m_duration = duration;
-    update();
+    m_duration = qMax(0.0, duration);
+
+    if (m_sourceEnd <= 0.0)
+        m_sourceEnd = m_duration;
+}
+
+void ClipVisualizer::setSourceRange(
+    double startTime,
+    double endTime)
+{
+    if (m_duration <= 0.0)
+        return;
+
+    if (m_waveformPixmap.isNull())
+        return;
+
+    m_sourceStart = qBound(
+        0.0,
+        startTime,
+        m_duration
+    );
+
+    m_sourceEnd = qBound(
+        m_sourceStart,
+        endTime,
+        m_duration
+    );
+
+    /*
+        IMPORTANT:
+
+        Nothing is rendered here.
+
+        We simply move the existing waveform image so that
+        sourceStart lines up with the left edge of the viewport.
+    */
+
+    const double startRatio =
+        m_sourceStart / m_duration;
+
+    const int startX =
+        static_cast<int>(
+            startRatio *
+            m_waveformPixmap.width()
+        );
+
+    m_waveformLabel->move(
+        -startX,
+        0
+    );
 }
 
 double ClipVisualizer::duration() const
@@ -31,82 +123,94 @@ double ClipVisualizer::duration() const
     return m_duration;
 }
 
-void ClipVisualizer::paintEvent(QPaintEvent *event)
+double ClipVisualizer::sourceStart() const
 {
-    Q_UNUSED(event);
+    return m_sourceStart;
+}
 
-    QPainter painter(this);
-
-    painter.setRenderHint(QPainter::Antialiasing, false);
-
-    if (m_samples.isEmpty())
+double ClipVisualizer::sourceEnd() const
+{
+    return m_sourceEnd;
+}
+void ClipVisualizer::createWaveformPixmap(
+    const QVector<float>& samples,
+    int fullWidth
+)
+{
+    if (samples.isEmpty() || fullWidth <= 0)
         return;
 
-    const int width = this->width();
-    const int height = this->height();
+    constexpr int height = 40;
+    constexpr int maxBars = 2048;
+
+    const int barCount =
+        qMin(maxBars, fullWidth);
+
+    QImage image(
+        fullWidth,
+        height,
+        QImage::Format_ARGB32
+    );
+
+    image.fill(Qt::transparent);
+
+    const QRgb waveformColor =
+        qRgba(255, 255, 255, 255);
 
     const int centerY = height / 2;
 
-    // Zero/amplitude axis
-    painter.drawLine(
-        0,
-        centerY,
-        width,
-        centerY
-    );
-
-    /*
-     * We don't necessarily draw every sample.
-     *
-     * If the clip contains 44100 samples and the widget
-     * is only 800 pixels wide, drawing 44100 individual
-     * bars would be wasteful.
-     *
-     * Instead, several samples can occupy one pixel column.
-     */
-    const int pixelWidth = qMax(1, width);
-
-    for (int x = 0; x < pixelWidth; ++x)
+    for (int bar = 0; bar < barCount; ++bar)
     {
-        int startSample =
-            static_cast<int>(
-                (static_cast<double>(x) / width)
-                * m_samples.size()
-            );
+        const int sampleStart =
+            (bar * samples.size()) / barCount;
 
-        int endSample =
-            static_cast<int>(
-                (static_cast<double>(x + 1) / width)
-                * m_samples.size()
-            );
+        const int sampleEnd =
+            ((bar + 1) * samples.size()) / barCount;
 
-        endSample = qMin(endSample, m_samples.size());
+        float peak = 0.0f;
 
-        if (startSample >= endSample)
-            continue;
-
-        float minValue = 1.0f;
-        float maxValue = -1.0f;
-
-        for (int i = startSample; i < endSample; ++i)
+        for (int i = sampleStart;
+             i < sampleEnd;
+             ++i)
         {
-            minValue = qMin(minValue, m_samples[i]);
-            maxValue = qMax(maxValue, m_samples[i]);
+            peak = qMax(
+                peak,
+                std::abs(samples[i])
+            );
         }
 
-        int topY =
-            centerY -
-            static_cast<int>(maxValue * centerY);
+        const int barHeight =
+            qMax(
+                1,
+                static_cast<int>(
+                    peak * (height / 2 - 2)
+                )
+            );
 
-        int bottomY =
-            centerY -
-            static_cast<int>(minValue * centerY);
+        const int xStart =
+            (bar * fullWidth) / barCount;
 
-        painter.drawLine(
-            x,
-            topY,
-            x,
-            bottomY
-        );
+        const int xEnd =
+            ((bar + 1) * fullWidth) / barCount;
+
+        for (int x = xStart;
+             x < qMax(xStart + 1, xEnd);
+             ++x)
+        {
+            for (int y = centerY - barHeight;
+                 y <= centerY + barHeight;
+                 ++y)
+            {
+                if (y >= 0 && y < height)
+                    image.setPixel(
+                        x,
+                        y,
+                        waveformColor
+                    );
+            }
+        }
     }
+
+    m_waveformPixmap =
+        QPixmap::fromImage(image);
 }

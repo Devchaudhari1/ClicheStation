@@ -84,6 +84,26 @@ void TrackProcessor::render(float *left,
     m_effectChain.process(left, right, numSamples);
 }
 
+QVector<float> TrackProcessor::renderClip(
+    const QVector<PlacedNote>& notes)
+{
+    QVector<float> left;
+    QVector<float> right;
+
+    m_synth.render(notes, left, right);
+
+    if (left.isEmpty())
+        return {};
+
+    m_effectChain.process(
+        left.data(),
+        right.data(),
+        static_cast<std::size_t>(left.size())
+    );
+
+    return left;
+}
+
 void TrackProcessor::setEffectEnabled(
     AudioEffectType effectType,
     bool enabled)

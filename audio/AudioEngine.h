@@ -45,6 +45,10 @@ public:
     void noteOn(int trackId, int midiNote, int velocity);
     void noteOff(int trackId, int midiNote);
 
+    QVector<float> renderClip(
+        int trackId,
+        const QVector<PlacedNote>& notes);
+        
     bool shouldTrackParticipate(int trackId) const;
 
     void setTrackMuted(int trackId, bool muted);

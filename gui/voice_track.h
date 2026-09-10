@@ -2,6 +2,7 @@
 
 #include <QWidget>
 #include <QPoint>
+#include <Vector>
 #include "../synth/InstrumentParameters.h"
 class QLabel;
 class QPushButton;
@@ -9,6 +10,7 @@ class InstrumentSettings;
 class AudioEngine;
 class Piano;
 class QMouseEvent;
+struct PlacedNote;
 
 class VoiceTrack : public QWidget
 {
@@ -24,6 +26,8 @@ public:
     const InstrumentParameters& instrumentParameters() const;
     int trackId() const;
     QString trackName() const;
+    const QVector<PlacedNote>& notes() const;
+    double trackDuration() const;
 
 signals:
     void pianoRollRequested();

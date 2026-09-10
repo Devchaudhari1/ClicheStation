@@ -4,7 +4,7 @@
 #include "effects/EffectChain.h"
 #include <QString>
 #include <QVector>
-
+#include "../gui/pianoRoll.h"
 
 enum class TrackState
 {
@@ -27,6 +27,8 @@ public:
                 float *right,
                 std::size_t numSamples);
 
+    QVector<float> renderClip(
+    const QVector<PlacedNote>& notes);
     int trackId() const;
 
     void setState(TrackState state);

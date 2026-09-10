@@ -4,6 +4,8 @@
 #include "ClipArea.h"
 #include "Layer.h"
 #include "../track_list.h"
+#include "../../audio/AudioEngine.h"
+
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -82,12 +84,23 @@ void Playlist::layoutSequences()
     );
 }
 
-void Playlist::addSequence()
+void Playlist::addSequence(
+    AudioEngine *audioEngine,
+    TrackList *trackList
+)
 {
     int sequenceId = m_nextSequenceId++;
 
-    Sequence *sequence = new Sequence(sequenceId, this);
+    Sequence *sequence =
+        new Sequence(
+            sequenceId,
+            audioEngine,
+            this
+        );
+
+    sequence->setTrackList(trackList);
     sequence->setAvailableTracks(m_availableTracks);
+
     m_sequences.append(sequence);
 
     // --------------------------------------------------
@@ -193,17 +206,17 @@ void Playlist::addSequence()
         layer->leftWidget()->show();
         layer->clipArea()->show();
         
-    qDebug() << "LEFT LAYER:"
-         << layer->leftWidget()
-         << "visible =" << layer->leftWidget()->isVisible()
-         << "geometry =" << layer->leftWidget()->geometry()
-         << "parent =" << layer->leftWidget()->parentWidget();
+//     qDebug() << "LEFT LAYER:"
+//          << layer->leftWidget()
+//          << "visible =" << layer->leftWidget()->isVisible()
+//          << "geometry =" << layer->leftWidget()->geometry()
+//          << "parent =" << layer->leftWidget()->parentWidget();
 
-qDebug() << "CLIP AREA:"
-         << layer->clipArea()
-         << "visible =" << layer->clipArea()->isVisible()
-         << "geometry =" << layer->clipArea()->geometry()
-         << "parent =" << layer->clipArea()->parentWidget();
+// qDebug() << "CLIP AREA:"
+//          << layer->clipArea()
+//          << "visible =" << layer->clipArea()->isVisible()
+//          << "geometry =" << layer->clipArea()->geometry()
+//          << "parent =" << layer->clipArea()->parentWidget();
     }
 
     // --------------------------------------------------

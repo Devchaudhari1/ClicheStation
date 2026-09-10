@@ -8,6 +8,9 @@
 class QPushButton;
 class QLabel;
 class Layer;
+class VoiceTrack;
+class TrackList;
+class AudioEngine;
 
 class Sequence : public QWidget
 {
@@ -16,6 +19,7 @@ class Sequence : public QWidget
 public:
     explicit Sequence(
         int sequenceId,
+        AudioEngine *m_audioEngine,
         QWidget *parent = nullptr
     );
 
@@ -30,6 +34,7 @@ public:
     QWidget *headerWidget() const;
     bool isExpanded() const;
     const QVector<Layer *> &layers() const;
+    void setTrackList(TrackList *trackList);
 
 signals:
     void layerAdded();
@@ -40,6 +45,8 @@ private:
 
     int m_sequenceId;
 
+    AudioEngine *m_audioEngine;
+    
     QWidget *m_header;
     QPushButton *m_expandButton;
     QLabel *m_sequenceLabel;
@@ -47,6 +54,8 @@ private:
 
     QVector<Layer *> m_layers;
 
+    QVector<VoiceTrack*> m_availableVoiceTracks;
+    TrackList *m_trackList = nullptr;
     QVector<QPair<int, QString>> m_availableTracks;
 
     bool m_expanded = true;
