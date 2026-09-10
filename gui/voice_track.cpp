@@ -2,6 +2,7 @@
 #include "../audio/AudioEngine.h"
 #include "instrument_settings.h"
 #include "piano.h"
+#include "pianoRoll.h"
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -144,7 +145,15 @@ void VoiceTrack::createUI()
             m_piano = new Piano(m_trackId, m_audioEngine, nullptr);
             m_piano->setWindowTitle(m_trackName + " - Piano");
         }
-
+        connect(
+            m_piano,
+            &Piano::pianoRollBecameActive,
+            this,
+            [this](PianoRoll* pianoRoll)
+            {
+                emit pianoRollBecameActive(pianoRoll);
+            }
+        );
         m_piano->show();
         m_piano->raise();
         m_piano->activateWindow();

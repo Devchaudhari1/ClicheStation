@@ -14,6 +14,8 @@
 #include <QSizePolicy>
 #include <QResizeEvent>
 #include "../audio/AudioEngine.h"
+#include "pianoRoll.h"
+#include "../midi/MidiInput.h"
 #include "voice_track.h"
 #include "track_list.h"
 
@@ -71,6 +73,48 @@ void Base::playStartupSound()
 }
 
 
+void Base::connectMidi()
+{
+    MidiInput* input = midiInput();
+
+        connect(
+            input,
+            &MidiInput::noteOn,
+            this,
+            [this](int midiNote,
+                   int velocity,
+                   qint64 timestampNs)
+            {
+                if (m_activePianoRoll)
+                {
+                    m_activePianoRoll->midiNoteOn(
+                        midiNote,
+                        velocity,
+                        timestampNs
+                    );
+                }
+            }
+        );
+
+        connect(
+            input,
+            &MidiInput::noteOff,
+            this,
+            [this](int midiNote,
+                   qint64 timestampNs)
+            {
+                if (m_activePianoRoll)
+                {
+                    m_activePianoRoll->midiNoteOff(
+                        midiNote,
+                        timestampNs
+                    );
+                }
+            }
+        );
+
+}
+
 Base::Base(QWidget *parent)
     : QMainWindow(parent),
     m_playlist(nullptr)
@@ -90,6 +134,58 @@ Base::~Base()
 
 }
 
+MidiInput* Base::midiInput()
+{
+    if (!m_midiInput)
+    {
+        m_midiInput = new MidiInput(this);
+
+        connect(
+            m_midiInput,
+            &MidiInput::noteOn,
+            this,
+            [this](int midiNote,
+                   int velocity,
+                   qint64 timestampNs)
+            {
+
+                qDebug() << "Base received Note On:"
+                    << midiNote;
+
+                qDebug() << "Active PianoRoll:"
+                        << m_activePianoRoll;
+                if (!m_activePianoRoll)
+                    return;
+
+                m_activePianoRoll->midiNoteOn(
+                    midiNote,
+                    velocity,
+                    timestampNs
+                );
+            }
+        );
+
+        connect(
+            m_midiInput,
+            &MidiInput::noteOff,
+            this,
+            [this](int midiNote,
+                   qint64 timestampNs)
+            {
+
+                if (!m_activePianoRoll)
+                    return;
+
+                m_activePianoRoll->midiNoteOff(
+                    midiNote,
+                    timestampNs
+                );
+            }
+        );
+    }
+
+    return m_midiInput;
+}
 void Base::createUI()
 {
     QWidget *window =
@@ -175,14 +271,18 @@ void Base::createUI()
     QPushButton *PianoButton =
         new QPushButton("Piano");
 
-    QPushButton *MonitorButton =
-        new QPushButton("Monitor");
-
     QPushButton *DrumPadButton =
         new QPushButton("Drum Pad");
 
     QPushButton *TrackListButton =
         new QPushButton("Track List");
+
+    QPushButton *ConnectMidiButton=
+        new QPushButton("Connect Midi");
+
+    buttonLayout->addWidget(
+        ConnectMidiButton
+    );
 
     buttonLayout->addWidget(
         StartRecording
@@ -202,10 +302,6 @@ void Base::createUI()
 
     buttonLayout->addWidget(
         PianoButton
-    );
-
-    buttonLayout->addWidget(
-        MonitorButton
     );
 
     buttonLayout->addWidget(
@@ -262,6 +358,17 @@ void Base::createUI()
             m_audioEngine,
             window
         );
+
+    connect(
+        m_trackList,
+        &TrackList::pianoRollBecameActive,
+        this,
+        [this](PianoRoll* pianoRoll)
+        {
+            m_activePianoRoll = pianoRoll;
+        }
+    );
+    
     m_trackList->hide();
     
     m_trackList->setGeometry(
@@ -299,6 +406,48 @@ void Base::createUI()
     // -------------------------------------------------
 
     connect(
+        ConnectMidiButton,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            if (!monitorWindow)
+                monitorWindow =
+                    new MonitorWindow(this);
+
+            monitorWindow->show();
+            monitorWindow->raise();
+            monitorWindow->activateWindow();
+        }
+    );
+
+    connect(
+        StartRecording,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            if (!m_activePianoRoll)
+                return;
+
+            m_activePianoRoll->startRecording();
+        }
+    );
+
+    connect(
+        StopRecording,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            if (!m_activePianoRoll)
+                return;
+
+            m_activePianoRoll->stopRecording();
+        }
+    );
+
+    connect(
         AddSequenceButton,
         &QPushButton::clicked,
         this,
@@ -319,6 +468,7 @@ void Base::createUI()
     );
 
     m_trackList->addVoiceTrack();
+
 
     // -------------------------------------------------
     // Styling
@@ -364,25 +514,7 @@ void Base::createUI()
         }
     );
 
-    // -------------------------------------------------
-    // Monitor
-    // -------------------------------------------------
 
-    connect(
-        MonitorButton,
-        &QPushButton::clicked,
-        this,
-        [this]()
-        {
-            if (!monitorWindow)
-                monitorWindow =
-                    new MonitorWindow(nullptr);
-
-            monitorWindow->show();
-            monitorWindow->raise();
-            monitorWindow->activateWindow();
-        }
-    );
 
     // -------------------------------------------------
     // Drum Pad

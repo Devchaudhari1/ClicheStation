@@ -126,6 +126,15 @@ void TrackList::addVoiceTrack()
     VoiceTrack *track =
         new VoiceTrack(trackId, trackName, m_audioEngine, this);
 
+    connect(
+        track,
+        &VoiceTrack::pianoRollBecameActive,
+        this,
+        [this](PianoRoll* pianoRoll)
+        {
+            emit pianoRollBecameActive(pianoRoll);
+        }
+    );
     int insertPosition = m_trackLayout->count() - 1;
 
     m_trackLayout->insertWidget(insertPosition, track);

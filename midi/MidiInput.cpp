@@ -129,6 +129,79 @@ void MidiInput::midiCallback(
     MidiInput *self =
         static_cast<MidiInput *>(userData);
 
+    if (message->size() < 3)
+        return;
+
+    const unsigned char status =
+        (*message)[0];
+
+    const unsigned char data1 =
+        (*message)[1];
+
+    const unsigned char data2 =
+        (*message)[2];
+
+    const unsigned char messageType =
+        status & 0xF0;
+
+    const int midiNote =
+        static_cast<int>(data1);
+
+    const int velocity =
+        static_cast<int>(data2);
+
+    const auto now =
+        std::chrono::steady_clock::now();
+
+    const qint64 timestampNs =
+        std::chrono::duration_cast<
+            std::chrono::nanoseconds
+        >(
+            now.time_since_epoch()
+        ).count();
+
+    // --------------------------------------------
+    // Note On
+    // --------------------------------------------
+
+    if (messageType == 0x90)
+    {
+        if (velocity > 0)
+        {
+            emit self->noteOn(
+                midiNote,
+                velocity,
+                timestampNs
+            );
+        }
+        else
+        {
+            // MIDI convention:
+            // Note On with velocity 0 = Note Off
+
+            emit self->noteOff(
+                midiNote,
+                timestampNs
+            );
+        }
+    }
+
+    // --------------------------------------------
+    // Note Off
+    // --------------------------------------------
+
+    else if (messageType == 0x80)
+    {
+        emit self->noteOff(
+            midiNote,
+            timestampNs
+        );
+    }
+
+    // --------------------------------------------
+    // Existing generic MIDI signal
+    // --------------------------------------------
+
     QByteArray data;
 
     for (unsigned char byte : *message)
@@ -138,10 +211,6 @@ void MidiInput::midiCallback(
         );
     }
 
-    /*
-     * Qt's signal/slot mechanism will safely transfer
-     * the event to the GUI thread when appropriate.
-     */
     emit self->midiMessage(
         deltaTime,
         data

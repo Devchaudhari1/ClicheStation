@@ -2,20 +2,19 @@
 #define MONITORWINDOW_H
 
 #include <QMainWindow>
-
 class QComboBox;
 class QPushButton;
 class QLabel;
 class QTableWidget;
 class QString;
 class QByteArray;
-
+class Base;
 class MidiInput;
 
 class MonitorWindow : public QMainWindow
 {
 public:
-    explicit MonitorWindow(QWidget *parent = nullptr);
+    explicit MonitorWindow(Base* base, QWidget* parent = nullptr);
     ~MonitorWindow();
 
 private:
@@ -42,8 +41,8 @@ private:
     QPushButton *connectButton;
     QLabel *statusLabel;
     QTableWidget *messageTable;
-
-    MidiInput *midiInput;
+    Base * m_base;
+    MidiInput *m_midiInput;
 
     bool connected = false;
 };

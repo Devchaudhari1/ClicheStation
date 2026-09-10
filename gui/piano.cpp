@@ -70,6 +70,15 @@ void Piano::createUI()
     }
     );
     
+    connect(
+        pianoRoll,
+        &PianoRoll::becameActive,
+        this,
+        [this](PianoRoll* pianoRoll)
+        {
+            emit pianoRollBecameActive(pianoRoll);
+        }
+    );
     /*
      * Later we can connect the keyboard to other systems here.
      *

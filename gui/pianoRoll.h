@@ -5,6 +5,10 @@
 #include <QPainter>
 #include <QStack>
 #include <QKeyEvent>
+#include <QFocusEvent>
+#include <QTimer>
+#include <QHash>
+#include <chrono>
 
 struct PlacedNote
 {
@@ -26,14 +30,28 @@ class PianoRoll : public QWidget
 public:
     explicit PianoRoll(QWidget *parent = nullptr);
     const QVector<PlacedNote>& notes() const;
-    
+    void startRecording();
+    void stopRecording();
+
+    void midiNoteOn(
+        int midiNote,
+        int velocity,
+        qint64 timestampNs
+    );
+
+    void midiNoteOff(
+        int midiNote,
+        qint64 timestampNs
+    );
+signals:
+    void becameActive(PianoRoll* pianoRoll);
 protected:
     void paintEvent(QPaintEvent *event) override;
 
     void mouseMoveEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
-
+    void focusInEvent(QFocusEvent* event) override;
     void keyPressEvent(QKeyEvent *event) override;
 
     void leaveEvent(QEvent *event) override;
@@ -46,8 +64,21 @@ private:
     double pixelsPerSecond = 100.0;
     double defaultDuration = 0.5;
 
+    double recordingTimeFromTimestamp(
+        qint64 timestampNs
+    ) const;
     QVector<PlacedNote> pressedNotes;
+    // Recording States
+    bool m_recording = false;
 
+    QTimer *m_recordingTimer = nullptr;
+
+    std::chrono::steady_clock::time_point
+        m_recordingStartTime;
+
+    double recordingCursorY = -1;
+
+    QHash<int, int> m_recordingNoteIndices;
     // Copy/paste
     QVector<PlacedNote> copiedNotes;
 

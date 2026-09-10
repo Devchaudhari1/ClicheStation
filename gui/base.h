@@ -2,7 +2,8 @@
 
 #include <QMainWIndow>
 #include <QVector>
-
+class MidiInput;
+class PianoRoll;
 class AudioEngine;
 class VoiceTrack;
 class Piano;
@@ -16,20 +17,20 @@ class Base : public QMainWindow
 public:
     explicit Base(QWidget *parent = nullptr);
     ~Base();
-
+    MidiInput * midiInput();
     void createUI();
     void playStartupSound();
 protected:
     void resizeEvent(QResizeEvent *event) override;
 private:
+    void connectMidi();
     Playlist *m_playlist;
-
     TrackList *m_trackList = nullptr;
-
+    MidiInput* m_midiInput = nullptr;
+    PianoRoll* m_activePianoRoll = nullptr;
     Piano *pianoWindow = nullptr;
     AudioEngine *m_audioEngine = nullptr;
     MonitorWindow *monitorWindow = nullptr;
     DrumPad *drumPadWindow = nullptr;
-
     QVector<VoiceTrack*> voiceTracks;
 };
