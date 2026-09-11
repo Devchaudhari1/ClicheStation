@@ -4,6 +4,7 @@
 #include <QPoint>
 #include <Vector>
 #include "../synth/InstrumentParameters.h"
+#include "../synth/SynthesizersSamples.h"
 class QLabel;
 class QPushButton;
 class InstrumentSettings;
@@ -41,6 +42,9 @@ signals:
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
+
+private slots:
+    void onSampleInstrumentChanged(SynthesizersSamples sample);
 
 private:
     void createUI();

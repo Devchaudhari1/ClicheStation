@@ -3,6 +3,8 @@
 #include <QWidget>
 #include "../synth/Oscillator.h"
 #include "../audio/effects/AudioEffect.h"
+#include "../synth/SynthesizersSamples.h"
+#include "../synth/DrumsetsSamples.h"
 class QComboBox;
 class QDoubleSpinBox;
 class QSpinBox;
@@ -18,10 +20,13 @@ class InstrumentSettings : public QWidget
 
 public:
     explicit InstrumentSettings(QWidget *parent = nullptr);
+    void setSampleInstrument(SynthesizersSamples sample);
+    SynthesizersSamples sampleInstrument() const;
 
 signals:
-    void oscillatorTypeChanged(Oscillator::Waveform waveform);
+    void sampleInstrumentChanged(SynthesizersSamples sample);
 
+    void oscillatorTypeChanged(Oscillator::Waveform waveform);
     void frequencyChanged(float frequency);
     void volumeChanged(float volume);
     void velocityChanged(float velocity);
@@ -100,13 +105,16 @@ signals:
     void phaserMixChanged(float mix);
 private:
     void createUI();
+    //Sample params
+    SynthesizersSamples m_sampleInstrument=SynthesizersSamples::None;
+    QComboBox *m_sampleVoiceComboBox;
+
     //Oscillator params
     QComboBox *m_oscillatorType;
-
     QDoubleSpinBox *m_frequency;
     QDoubleSpinBox *m_volume;
     QDoubleSpinBox *m_velocity;
-
+    
     QSpinBox *m_sampleRate;
     // ADSR
     QDoubleSpinBox *m_attack;

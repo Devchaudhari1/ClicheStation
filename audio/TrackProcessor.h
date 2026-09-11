@@ -35,7 +35,9 @@ public:
 
     TrackState state() const;
 
-
+    void setSampleInstrument(
+        SynthesizersSamples sample);
+        
     void setClippingThreshold(float threshold);
     
     void setDistortionDrive(float drive);

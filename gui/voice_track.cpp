@@ -216,6 +216,13 @@ connect(
                         m_audioEngine->noteOff(m_trackId, midiNote);
                 }
             );
+            // Sample Voice
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::sampleInstrumentChanged,
+                this,
+                &VoiceTrack::onSampleInstrumentChanged
+            );
             // Oscillator and Voice
             connect(
                 m_instrumentSettings,
@@ -919,6 +926,15 @@ connect(
 int VoiceTrack::trackId() const
 {
     return m_trackId;
+}
+
+void VoiceTrack::onSampleInstrumentChanged(
+    SynthesizersSamples sample)
+{
+    m_audioEngine->setSampleInstrument(
+        m_trackId,
+        sample
+    );
 }
 
 QString VoiceTrack::trackName() const

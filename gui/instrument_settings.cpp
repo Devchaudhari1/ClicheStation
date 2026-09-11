@@ -23,11 +23,64 @@ InstrumentSettings::InstrumentSettings(QWidget *parent)
     createUI();
 }
 
+// sample voice selection
+
+void InstrumentSettings::setSampleInstrument(
+    SynthesizersSamples sample)
+{
+    m_sampleInstrument = sample;
+}
+
+SynthesizersSamples InstrumentSettings::sampleInstrument() const
+{
+    return m_sampleInstrument;
+}
+
 void InstrumentSettings::createUI()
 {
     
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
+    // Sample Voice
+    QGroupBox *sampleGroup = new QGroupBox("Sample Voice", this);
+    QFormLayout * sampleLayout = new QFormLayout(sampleGroup);
+
+    m_sampleVoiceComboBox = new QComboBox( this);
+    m_sampleVoiceComboBox->addItem(
+        "None",
+        QVariant::fromValue(SynthesizersSamples::None)
+    );
+
+    for (auto it = SynthesizersSampleFiles.cbegin();
+        it != SynthesizersSampleFiles.cend();
+        ++it)
+    {
+        m_sampleVoiceComboBox->addItem(
+            it.value(),
+            QVariant::fromValue(it.key())
+        );
+    }
+
+    connect(
+        m_sampleVoiceComboBox,
+        QOverload<int>::of(&QComboBox::currentIndexChanged),
+        this,
+        [this](int index)
+        {
+            m_sampleInstrument =
+                m_sampleVoiceComboBox->itemData(index)
+                    .value<SynthesizersSamples>();
+            emit sampleInstrumentChanged(m_sampleInstrument);
+        }
+    );
+    
+    m_sampleVoiceComboBox->setCurrentIndex(
+        m_sampleVoiceComboBox->findData(
+            QVariant::fromValue(m_sampleInstrument)
+        )
+    );
+
+    sampleLayout->addRow("Sample Voice",m_sampleVoiceComboBox);
     // --------------------------------------------------
     // Oscillator
     // --------------------------------------------------
@@ -725,6 +778,7 @@ void InstrumentSettings::createUI()
     topLayout->addWidget(oscillatorGroup);
     topLayout->addWidget(delayGroup);
     topLayout->addWidget(reverbGroup);
+    topLayout->addWidget(sampleGroup);
     topLayout->addStretch();
 
     // Row 2
@@ -812,8 +866,8 @@ void InstrumentSettings::createUI()
     }
 
         emit oscillatorTypeChanged(waveform);
-    }
-);
+    });
+
     // Oscillator
     connect(
         m_frequency,
