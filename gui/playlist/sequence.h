@@ -41,6 +41,7 @@ public:
 signals:
     void layerAdded();
     void expandedChanged(bool expanded);
+    void timelineWidthRequired(double endTime);
 
 private:
     void toggleExpanded();

@@ -229,6 +229,13 @@ Layer *Sequence::addLayer()
 
     connect(
         layer,
+        &Layer::timelineWidthRequired,
+        this,
+        &Sequence::timelineWidthRequired
+    );
+    
+    connect(
+        layer,
         &Layer::clipRequested,
         this,
         [this, layer]()

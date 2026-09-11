@@ -32,6 +32,23 @@ void ClipArea::dragEnterEvent(
     }
 }
 
+void ClipArea::ensureWidthForTime(double endTime)
+{
+    const double paddingSeconds = 2.0;
+
+    const int requiredWidth =
+        static_cast<int>(
+            (endTime + paddingSeconds)
+            * m_pixelsPerSecond
+        );
+
+    if (requiredWidth <= width())
+        return;
+
+    setMinimumWidth(requiredWidth);
+    resize(requiredWidth, height());
+}
+
 void ClipArea::dropEvent(
     QDropEvent *event
 )

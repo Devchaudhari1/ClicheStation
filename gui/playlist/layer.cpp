@@ -140,6 +140,10 @@ Clip *Layer::addClip(
 
     m_clips.append(clip);
 
+    emit timelineWidthRequired(
+        startTime + duration
+    );
+    
     layoutClips();
 
     clip->show();

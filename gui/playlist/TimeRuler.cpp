@@ -18,7 +18,7 @@ void TimeRuler::paintEvent(QPaintEvent *event)
 
     // Temporary:
     // first 160 px are reserved for the Layer column.
-    const int layerColumnWidth = 160;
+    const int layerColumnWidth = 220;
 
     painter.drawLine(
         layerColumnWidth,
@@ -28,7 +28,7 @@ void TimeRuler::paintEvent(QPaintEvent *event)
     );
 
     for (int second = 0;
-         second <= 30;
+         second <= 2000;
          ++second)
     {
         int x =

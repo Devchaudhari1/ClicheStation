@@ -29,6 +29,34 @@ void Playlist::setAvailableTracks(
     }
 }
 
+void Playlist::ensureTimelineWidthForTime(
+    double endTime
+)
+{
+    const double paddingSeconds = 2.0;
+
+    const int requiredWidth =
+        static_cast<int>(
+            (endTime + paddingSeconds)
+            * 100.0
+        );
+
+    if (requiredWidth <= m_rightContent->width())
+        return;
+
+    m_rightContent->setMinimumWidth(
+        requiredWidth
+    );
+
+    m_rightContent->resize(
+        requiredWidth,
+        m_rightContent->height()
+    );
+
+    layoutSequences();
+}
+
+
 void Playlist::layoutSequences()
 {
     int y = 0;
@@ -102,7 +130,13 @@ void Playlist::addSequence(
     sequence->setAvailableTracks(m_availableTracks);
 
     m_sequences.append(sequence);
-
+    
+    connect(
+        sequence,
+        &Sequence::timelineWidthRequired,
+        this,
+        &Playlist::ensureTimelineWidthForTime
+    );
     // --------------------------------------------------
     // LEFT container for this Sequence
     // --------------------------------------------------

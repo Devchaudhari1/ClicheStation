@@ -29,6 +29,7 @@ public slots:
     );
 private:
     void createUI();
+    void ensureTimelineWidthForTime(double endTime);
     // Main components
     TimeRuler *m_timeRuler;
     QWidget *m_timelineView;

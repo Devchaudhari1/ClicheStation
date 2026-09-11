@@ -8,7 +8,7 @@ class ClipArea : public QWidget
 
 public:
     explicit ClipArea(QWidget *parent = nullptr);
-
+    void ensureWidthForTime(double endTime);
 signals:
     void trackDropped(int trackId, double startTime);
 

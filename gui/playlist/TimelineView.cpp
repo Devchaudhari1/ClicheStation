@@ -6,6 +6,28 @@
 #include <QVBoxLayout>
 #include <QLabel>
 
+void TimelineView::ensureWidthForTime(double endTime)
+{
+    const double paddingSeconds = 2.0;
+
+    const int requiredWidth =
+        static_cast<int>(
+            (endTime + paddingSeconds)
+            * 100.0
+        );
+
+    if (requiredWidth <= m_rightContent->width())
+        return;
+
+    m_rightContent->setMinimumWidth(
+        requiredWidth
+    );
+
+    m_rightContent->resize(
+        requiredWidth,
+        m_rightContent->height()
+    );
+}
 
 TimelineView::TimelineView(QWidget *parent)
     : QWidget(parent),
