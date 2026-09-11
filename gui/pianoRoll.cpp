@@ -6,6 +6,9 @@
 #include <QDebug>
 #include <QCursor>
 #include <QFrame>
+#include <QScrollArea>
+#include <QScrollBar>
+#include <cmath>
 
 PianoRoll::PianoRoll(QWidget *parent)
     : QWidget(parent),
@@ -90,6 +93,44 @@ void PianoRoll::ensureContentHeight(double time)
     emit requestScrollBy(
         static_cast<int>(growth)
     );
+}
+void PianoRoll::ensureSpaceForTime(double time)
+{
+    if (time <= 0.0)
+        return;
+
+    const double y =
+        yFromTime(time);
+
+    /*
+     * With the inverted Y-axis, larger time values
+     * move toward the top of the widget.
+     *
+     * If y becomes negative, the note would extend
+     * beyond the top of the PianoRoll.
+     */
+    if (y >= spaceBuffer)
+        return;
+
+    const int additionalSpace =
+        static_cast<int>(
+            std::ceil(spaceBuffer-y)
+        ) + 100;
+
+    const int oldHeight =
+        height();
+
+    const int newHeight =
+        oldHeight + additionalSpace;
+
+    /*
+     * Move the origin downward by the same amount
+     * that we add above the existing content.
+     */
+    m_originY += additionalSpace;
+
+    setMinimumHeight(newHeight);
+    resize(width(), newHeight);
 }
 
 int PianoRoll::noteAtPosition(const QPointF &position) const
@@ -405,6 +446,10 @@ void PianoRoll::mousePressEvent(QMouseEvent *event)
 
     double time =
         timeFromY(pos.y());
+
+    ensureSpaceForTime(
+        time + defaultDuration
+    );
 
     PlacedNote newNote;
 

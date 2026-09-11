@@ -62,6 +62,7 @@ protected:
     void leaveEvent(QEvent *event) override;
 
 private:
+    void ensureSpaceForTime(double time);
     static constexpr int firstMidiNote = 21;
     static constexpr int lastMidiNote = 108;
     static constexpr int keyCount = 88;
@@ -87,6 +88,7 @@ private:
     double m_contentHeight;
     double m_lastContentGrowthTime = 0.0;
     double m_originY;
+    const double spaceBuffer=100.0;
     QHash<int, int> m_recordingNoteIndices;
     // Copy/paste
     QVector<PlacedNote> copiedNotes;

@@ -5,6 +5,7 @@
 #include <QScrollArea>
 #include <QVBoxLayout>
 #include <QScrollBar>
+
 Piano::Piano(
     int trackId,
     AudioEngine *audioEngine,
