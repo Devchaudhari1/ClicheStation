@@ -29,6 +29,7 @@ public slots:
     );
 private:
     void createUI();
+    void ensureTimelineWidthForTime(double endTime);
     // Main components
     TimeRuler *m_timeRuler;
     QWidget *m_timelineView;
@@ -44,8 +45,8 @@ private:
     // Sequences
     QVector<Sequence *> m_sequences;
     int m_nextSequenceId = 1;
-    const int sequenceHeaderHeight = 40;
-    const int layerHeight = 80;
+    const int sequenceHeaderHeight = 60;
+    const int layerHeight = 120;
     QVector<QWidget*> m_leftSequenceContainers;
     QVector<QWidget*> m_rightSequenceContainers;
 

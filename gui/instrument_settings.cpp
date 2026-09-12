@@ -9,6 +9,7 @@
 #include <QCheckBox>
 #include <QLabel>
 #include <QGroupBox>
+#include <QGridLayout>
 #include <QFormLayout>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -19,8 +20,21 @@ InstrumentSettings::InstrumentSettings(QWidget *parent)
 {
     setWindowTitle("Instrument Settings");
     resize(450, 650);
-
+    setObjectName("instrumentSettings");
     createUI();
+}
+
+// sample voice selection
+
+void InstrumentSettings::setSampleInstrument(
+    SynthesizersSamples sample)
+{
+    m_sampleInstrument = sample;
+}
+
+SynthesizersSamples InstrumentSettings::sampleInstrument() const
+{
+    return m_sampleInstrument;
 }
 
 void InstrumentSettings::createUI()
@@ -28,6 +42,46 @@ void InstrumentSettings::createUI()
     
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
+    // Sample Voice
+    QGroupBox *sampleGroup = new QGroupBox("Sample Voice", this);
+    QFormLayout * sampleLayout = new QFormLayout(sampleGroup);
+
+    m_sampleVoiceComboBox = new QComboBox( this);
+    m_sampleVoiceComboBox->addItem(
+        "None",
+        QVariant::fromValue(SynthesizersSamples::None)
+    );
+
+    for (auto it = SynthesizersSampleFiles.cbegin();
+        it != SynthesizersSampleFiles.cend();
+        ++it)
+    {
+        m_sampleVoiceComboBox->addItem(
+            it.value(),
+            QVariant::fromValue(it.key())
+        );
+    }
+
+    connect(
+        m_sampleVoiceComboBox,
+        QOverload<int>::of(&QComboBox::currentIndexChanged),
+        this,
+        [this](int index)
+        {
+            m_sampleInstrument =
+                m_sampleVoiceComboBox->itemData(index)
+                    .value<SynthesizersSamples>();
+            emit sampleInstrumentChanged(m_sampleInstrument);
+        }
+    );
+    
+    m_sampleVoiceComboBox->setCurrentIndex(
+        m_sampleVoiceComboBox->findData(
+            QVariant::fromValue(m_sampleInstrument)
+        )
+    );
+
+    sampleLayout->addRow("Sample Voice",m_sampleVoiceComboBox);
     // --------------------------------------------------
     // Oscillator
     // --------------------------------------------------
@@ -715,54 +769,47 @@ void InstrumentSettings::createUI()
     // Add everything
     // --------------------------------------------------
 
-    QHBoxLayout *topLayout = new QHBoxLayout;
     QHBoxLayout *midLayout = new QHBoxLayout;
-    QHBoxLayout *bottomLayout = new QHBoxLayout;
     QHBoxLayout *driveLayout = new QHBoxLayout;
-    QHBoxLayout *dynamicsLayout = new QHBoxLayout;
 
-    // Row 1
-    topLayout->addWidget(oscillatorGroup);
-    topLayout->addWidget(delayGroup);
-    topLayout->addWidget(reverbGroup);
-    topLayout->addStretch();
+    QVBoxLayout* aggregator= new QVBoxLayout;
+    aggregator->addWidget(clippingGroup);
+    aggregator->addWidget(sampleGroup);
+    aggregator->addWidget(audioGroup);
 
-    // Row 2
-    midLayout->addWidget(eqGroup);
-    midLayout->addWidget(adsrGroup);
-    midLayout->addWidget(clippingGroup);
-    midLayout->addStretch();
+    QGridLayout* grid2 = new QGridLayout;
+    QGridLayout * grid3 = new QGridLayout;
+    QGridLayout * grid4 = new QGridLayout;
 
-    // Row 3
-    bottomLayout->addWidget(flangerGroup);
-    bottomLayout->addWidget(compressionGroup);
-    bottomLayout->addStretch();
+    grid3->addWidget(eqGroup,0,0);
+    grid3->addWidget(limiterGroup,1,0);
 
-    // Row 4
-    dynamicsLayout->addWidget(limiterGroup);
-    dynamicsLayout->addWidget(gateGroup);
-    dynamicsLayout->addWidget(chorusGroup);
-    dynamicsLayout->addWidget(phaserGroup);
-    dynamicsLayout->addStretch();
+    grid3->setRowStretch(0, 7);
+    grid3->setRowStretch(1, 3);
 
-    //Row 5
+    grid2->addLayout(grid3,0,0,2,1);
+    grid2->addWidget(gateGroup,0,2);
+    grid2->addWidget(oscillatorGroup,0,1);
+    grid2->addWidget(flangerGroup,2,0);
+    grid2->addWidget(adsrGroup,1,1);
+    grid2->addLayout(aggregator,1,2);
+    grid2->addWidget(reverbGroup,2,1);
+    grid2->addWidget(phaserGroup,2,2);
+    grid2->addWidget(delayGroup,0,3);
+    grid2->addWidget(compressionGroup,1,3);
+    grid2->addWidget(chorusGroup,2,3);
+
+
+    midLayout->addLayout(grid2);
     driveLayout->addLayout(distortionLayout);
     driveLayout->addLayout(saturationLayout);
 
-    // Put parameter rows on the right
-    parameterLayout->addLayout(topLayout);
     parameterLayout->addLayout(midLayout);
-    parameterLayout->addLayout(bottomLayout);
-    parameterLayout->addLayout(dynamicsLayout);
     parameterLayout->addLayout(driveLayout);
 
     parameterLayout->addStretch();
 
-    // Add the right-hand parameter area
     effectsLayout->addLayout(parameterLayout, 3);
-
-    // Audio belongs to the main window, not the effects layout
-    mainLayout->addWidget(audioGroup);
 
     // Audio Effects
     mainLayout->addWidget(effectsGroup);
@@ -770,11 +817,178 @@ void InstrumentSettings::createUI()
     // Preview keyboard
     m_previewKeyboard = new PianoKeyboard(this);
     m_previewKeyboard->setFixedHeight(160);
-    m_previewKeyboard->setStyleSheet(
-        "background: red;"
-    );
 
     mainLayout->addWidget(m_previewKeyboard);
+
+    // Styling
+
+    setStyleSheet(R"(
+        /* =================================================
+        Instrument Settings
+        ================================================= */
+
+        QWidget#instrumentSettings {
+            background-color: #101214;
+            color: #e6e6e6;
+            font-family: "Segoe UI";
+            font-size: 13px;
+        }
+
+
+        /* =================================================
+        Group boxes
+        ================================================= */
+
+        QGroupBox {
+            background-color: #181b1f;
+            border: 1px solid #2d3238;
+            border-radius: 8px;
+
+            margin-top: 12px;
+
+            color: #dfe3e8;
+            font-weight: 600;
+        }
+
+        QGroupBox::title {
+            subcontrol-origin: margin;
+            subcontrol-position: top left;
+
+            left: 10px;
+
+            color: #bfc5cc;
+            background-color: #101214;
+        }
+
+
+        /* =================================================
+        Labels
+        ================================================= */
+
+        QLabel {
+            color: #cdd2d8;
+        }
+
+
+        /* =================================================
+        Combo boxes
+        ================================================= */
+
+        QComboBox {
+            background-color: #20252b;
+            color: #e6e9ed;
+
+            border: 1px solid #383e46;
+            border-radius: 6px;
+
+        }
+
+        QComboBox:hover {
+            background-color: #272d34;
+            border-color: #4b545e;
+        }
+
+        QComboBox:focus {
+            border-color: #35a77f;
+        }
+
+        QComboBox::drop-down {
+            width: 24px;
+
+            border: none;
+            border-left: 1px solid #343a41;
+        }
+
+        QComboBox QAbstractItemView {
+            background-color: #1b1f24;
+            color: #e6e9ed;
+
+            border: 1px solid #3a4149;
+
+            selection-background-color: #176b50;
+            selection-color: #ffffff;
+        }
+
+
+        /* =================================================
+        Spin boxes
+        ================================================= */
+
+        QSpinBox,
+        QDoubleSpinBox {
+            background-color: #20252b;
+            color: #e6e9ed;
+
+            border: 1px solid #383e46;
+            border-radius: 6px;
+
+        }
+
+        QSpinBox:hover,
+        QDoubleSpinBox:hover {
+            border-color: #4b545e;
+        }
+
+        QSpinBox:focus,
+        QDoubleSpinBox:focus {
+            border-color: #35a77f;
+        }
+
+        QSpinBox::up-button,
+        QDoubleSpinBox::up-button,
+        QSpinBox::down-button,
+        QDoubleSpinBox::down-button {
+            background-color: #272d33;
+            border: none;
+            width: 18px;
+        }
+
+        QSpinBox::up-button:hover,
+        QDoubleSpinBox::up-button:hover,
+        QSpinBox::down-button:hover,
+        QDoubleSpinBox::down-button:hover {
+            background-color: #333a42;
+        }
+
+
+        /* =================================================
+        General buttons
+        ================================================= */
+
+        QPushButton {
+            background-color: #252a30;
+            color: #dce1e6;
+
+            border: 1px solid #39414a;
+            border-radius: 6px;
+
+        }
+
+        QPushButton:hover {
+            background-color: #30373f;
+            border-color: #4b555f;
+        }
+
+        QPushButton:pressed {
+            background-color: #1d2227;
+        }
+
+        QPushButton:focus {
+            border-color: #35a77f;
+        }
+
+
+        /* =================================================
+        Preview keyboard
+        ================================================= */
+
+        QWidget#previewKeyboard {
+            background-color: #14171a;
+
+            border: 1px solid #30363d;
+            border-radius: 8px;
+        }
+    )");
     // --------------------------------------------------
     // Signals
     // --------------------------------------------------
@@ -812,8 +1026,8 @@ void InstrumentSettings::createUI()
     }
 
         emit oscillatorTypeChanged(waveform);
-    }
-);
+    });
+
     // Oscillator
     connect(
         m_frequency,

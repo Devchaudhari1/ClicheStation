@@ -66,11 +66,18 @@ qt_add_executable(ClicheStation
     # Synth source
     synth/ADSREnvelope.cpp
     synth/ADSREnvelope.h
+    synth/DrumsetsSamples.h
     synth/InstrumentParameters.h
     synth/Oscillator.cpp
     synth/Oscillator.h
+    synth/SampleBank.cpp
+    synth/SampleBank.h
+    synth/SampleData.h
+    synth/SampleVoice.cpp
+    synth/SampleVoice.h
     synth/SynthEngine.cpp
     synth/SynthEngine.h
+    synth/SynthesizersSamples.h
     synth/Voice.cpp
     synth/Voice.h
 
@@ -129,6 +136,16 @@ set_target_properties(ClicheStation PROPERTIES
     MACOSX_BUNDLE ON
 )
 
+# ====== SAMPLE LIBRARY ======
+
+set(SAMPLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/wav")
+
+add_custom_command(TARGET ClicheStation POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${SAMPLE_DIR}"
+            "$<TARGET_FILE_DIR:ClicheStation>/wav"
+    COMMENT "Copying sample library"
+)
 
 # ====== PLATFORM-SPECIFIC RTMIDI CONFIGURATION ======
 

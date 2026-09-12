@@ -213,6 +213,30 @@ void Base::createUI()
         "Header"
     );
 
+    Header->setFixedHeight(144);
+
+    QHBoxLayout *hLayout =
+        new QHBoxLayout(Header);
+
+    hLayout->setContentsMargins(
+        18, 10, 18, 10
+    );
+
+    hLayout->setSpacing(12);
+
+    // -------------------------------------------------
+    // Application title
+    // -------------------------------------------------
+
+    QLabel *heading =
+        new QLabel("ClicheStation", Header);
+
+    heading->setObjectName("appTitle");
+
+    hLayout->addWidget(
+        heading
+    );
+
     // -------------------------------------------------
     // Content Area
     // -------------------------------------------------
@@ -237,11 +261,6 @@ void Base::createUI()
     // Header UI
     // -------------------------------------------------
 
-    QLabel *heading =
-        new QLabel("Heading", Header);
-
-    QHBoxLayout *hLayout =
-        new QHBoxLayout(Header);
 
     QWidget *buttonContainer =
         new QWidget(Header);
@@ -257,28 +276,37 @@ void Base::createUI()
         "buttonContainer"
     );
 
-    buttonContainer->setFixedHeight(40);
+    buttonLayout->setContentsMargins(
+        8, 6, 8, 6
+    );
 
-    QPushButton *AddSequenceButton =
-        new QPushButton("+ Add Sequence");
+    buttonLayout->setSpacing(6);
+
+    // -------------------------------------------------
+    // Buttons
+    // -------------------------------------------------
+
+    QPushButton *ConnectMidiButton =
+        new QPushButton("MIDI");
 
     QPushButton *StartRecording =
-        new QPushButton("Start Recording");
+        new QPushButton("● Record");
 
     QPushButton *StopRecording =
-        new QPushButton("Stop Recording");
+        new QPushButton("■ Stop");
+
+    QPushButton *AddSequenceButton =
+        new QPushButton("+ Sequence");
+
+    QPushButton *TrackListButton =
+        new QPushButton("Tracks");
 
     QPushButton *PianoButton =
         new QPushButton("Piano");
 
     QPushButton *DrumPadButton =
-        new QPushButton("Drum Pad");
+        new QPushButton("Drums");
 
-    QPushButton *TrackListButton =
-        new QPushButton("Track List");
-
-    QPushButton *ConnectMidiButton=
-        new QPushButton("Connect Midi");
 
     buttonLayout->addWidget(
         ConnectMidiButton
@@ -365,6 +393,8 @@ void Base::createUI()
         this,
         [this](PianoRoll* pianoRoll)
         {
+            qDebug() << "Base: setting active PianoRoll:"
+                 << pianoRoll;
             m_activePianoRoll = pianoRoll;
         }
     );
@@ -380,27 +410,28 @@ void Base::createUI()
 
     m_trackList->setStyleSheet(R"(
         QWidget {
-            background-color: #171717;
-            color: white;
+            background-color: #171a1e;
+            color: #e6e6e6;
         }
 
         QPushButton {
-            background-color: #2b2b2b;
-            color: white;
-            border: 1px solid #444444;
+            background-color: #252a30;
+            color: #dfe3e8;
+
+            border: 1px solid #363c44;
             border-radius: 6px;
+
             padding: 6px 12px;
         }
 
         QPushButton:hover {
-            background-color: #3a3a3a;
+            background-color: #30363d;
         }
 
         QPushButton:pressed {
-            background-color: #222222;
+            background-color: #1d2126;
         }
     )");
-
     // -------------------------------------------------
     // Connections
     // -------------------------------------------------
@@ -427,8 +458,16 @@ void Base::createUI()
         this,
         [this]()
         {
+            qDebug() << "START RECORDING BUTTON CLICKED";
+            qDebug() << "Active PianoRoll:" << m_activePianoRoll;
+
             if (!m_activePianoRoll)
+            {
+                qDebug() << "NO ACTIVE PIANO ROLL";
                 return;
+            }
+
+            qDebug() << "Calling PianoRoll::startRecording()";
 
             m_activePianoRoll->startRecording();
         }
@@ -475,18 +514,179 @@ void Base::createUI()
     // -------------------------------------------------
 
     window->setStyleSheet(R"(
-        QWidget#Header {
-            background-color: #230c0c;
-            border-color: #918c8c;
-            color: white;
+        /* -----------------------------------------
+        Main application
+        ----------------------------------------- */
+
+        QWidget {
+            background-color: #101214;
+            color: #e6e6e6;
+            font-family: "Segoe UI";
+            font-size: 13px;
         }
 
+
+        /* -----------------------------------------
+        Header
+        ----------------------------------------- */
+
+        QWidget#Header {
+            background-color: #181b1f;
+            border-bottom: 1px solid #2a2e34;
+        }
+
+
+        QLabel#appTitle {
+            color: #f2f2f2;
+            font-size: 20px;
+            font-weight: 600;
+            padding-left: 4px;
+        }
+
+
+        /* -----------------------------------------
+        Toolbar
+        ----------------------------------------- */
+
         QWidget#buttonContainer {
-            background-color: #297731;
-            border-radius: 20px;
-            border-color: #918c8c;
-            border: 1px solid;
-            color: white;
+            background-color: #20242a;
+
+            border: 1px solid #30353c;
+            border-radius: 8px;
+        }
+
+
+        /* -----------------------------------------
+        Buttons
+        ----------------------------------------- */
+
+        QPushButton {
+            background-color: #272c32;
+            color: #d8dce1;
+
+            border: 1px solid #383e46;
+            border-radius: 6px;
+
+            padding: 7px 12px;
+
+            min-height: 28px;
+        }
+
+
+        QPushButton:hover {
+            background-color: #30363e;
+            border-color: #4a515a;
+        }
+
+
+        QPushButton:pressed {
+            background-color: #1d2126;
+        }
+
+
+        /* -----------------------------------------
+        Recording
+        ----------------------------------------- */
+
+        QPushButton[text="● Record"] {
+            background-color: #3a1f23;
+            color: #ff6b6b;
+            border-color: #713238;
+            font-weight: 600;
+        }
+
+        QPushButton[text="● Record"]:hover {
+            background-color: #4a252a;
+        }
+
+
+        /* -----------------------------------------
+        Stop
+        ----------------------------------------- */
+
+        QPushButton[text="■ Stop"] {
+            color: #ffb4b4;
+        }
+
+
+        /* -----------------------------------------
+        Main content
+        ----------------------------------------- */
+
+        QWidget#contentArea {
+            background-color: #101214;
+        }
+
+        /* =================================================
+        Sequence
+        ================================================= */
+
+        QWidget#leftSequenceContainer {
+            background-color: #15181c;
+            border: 1px solid #292e34;
+        }
+
+        QWidget#sequenceHeader {
+            background-color: #181b1f;
+            border: 1px solid #2d3238;
+            border-radius: 7px;
+        }
+
+        QLabel#sequenceLabel {
+            color: #e8eaed;
+            font-size: 14px;
+            font-weight: 600;
+            padding-left: 4px;
+        }
+
+        QPushButton#expandButton {
+            background-color: #24292f;
+            color: #b8bec6;
+            border: 1px solid #555d66;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        QPushButton#expandButton:hover {
+            background-color: #30363d;
+            color: #ffffff;
+        }
+
+        QPushButton#expandButton:pressed {
+            background-color: #1d2126;
+        }
+
+        QPushButton#playButton {
+            background-color: #167a52;
+            color: #ffffff;
+            border: 1px solid #35c79d;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        QPushButton#playButton:hover {
+            background-color: #1b8f60;
+        }
+
+        QPushButton#playButton:pressed {
+            background-color: #106341;
+        }
+
+        QPushButton#addLayerButton {
+            background-color: #0757a7;
+            color: #ffffff;
+            border: 1px solid #4d93d6;
+            border-radius: 5px;
+            padding: 4px 12px;
+        }
+
+        QPushButton#addLayerButton:hover {
+            background-color: #176cbd;
+        }
+
+        QPushButton#addLayerButton:pressed {
+            background-color: #06447f;
         }
     )");
 

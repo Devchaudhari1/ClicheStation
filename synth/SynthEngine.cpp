@@ -4,8 +4,29 @@
 #include <algorithm>
 #include <cmath>
 
+void SynthEngine::setSampleInstrument(SynthesizersSamples sample)
+{
+    m_sampleInstrument = sample;
+
+    if (sample == SynthesizersSamples::None)
+        return;
+
+    qDebug() << "Loading sample instrument:"
+             << SynthesizersSampleFiles.value(sample);
+
+    const bool loaded =
+        m_sampleBank.loadInstrument(sample);
+
+    qDebug() << "Sample instrument loaded:" << loaded;
+}
+
 void SynthEngine::noteOn(int midiNote, int velocity)
 {
+    if (m_sampleInstrument != SynthesizersSamples::None)
+    {
+        sampleNoteOn(midiNote, velocity);
+        return;
+    }
     Voice* existingVoice = findVoiceForNote(midiNote);
 
     if (existingVoice != nullptr)
@@ -23,6 +44,29 @@ void SynthEngine::noteOn(int midiNote, int velocity)
     }
 
     voice->startNote(midiNote, velocity);
+}
+
+void SynthEngine::sampleNoteOn(int midiNote, int velocity)
+{
+    const SampleData* sample =
+        m_sampleBank.sample(60);
+
+    if (sample == nullptr)
+        return;
+
+    SampleVoice* voice = findFreeSampleVoice();
+
+    if (voice == nullptr)
+    {
+        qDebug() << "No free sample voice!";
+        return;
+    }
+
+    qDebug() << "Starting sample voice:"
+             << "midi =" << midiNote
+             << "root =" << sample->rootMidiNote;
+
+    voice->start(sample, midiNote, velocity);
 }
 
 void SynthEngine::render(float* left, float* right, std::size_t numSamples)
@@ -43,6 +87,26 @@ void SynthEngine::render(float* left, float* right, std::size_t numSamples)
         {
             left[i] += voiceBuffer[i];
             right[i] += voiceBuffer[i];
+        }
+    }
+    for (auto& voice : m_sampleVoices)
+    {
+        if (!voice.isActive())
+            continue;
+
+        std::vector<float> voiceLeft(numSamples);
+        std::vector<float> voiceRight(numSamples);
+
+        voice.render(
+            voiceLeft.data(),
+            voiceRight.data(),
+            numSamples
+        );
+
+        for (std::size_t i = 0; i < numSamples; ++i)
+        {
+            left[i] += voiceLeft[i];
+            right[i] += voiceRight[i];
         }
     }
 }
@@ -73,6 +137,7 @@ void SynthEngine::render(
     if (totalSamples == 0)
         return ;
 
+        
     left.resize(static_cast<qsizetype>(totalSamples));
     right.resize(static_cast<qsizetype>(totalSamples));
 
@@ -183,11 +248,27 @@ void SynthEngine::noteOff(
     voice->stopNote();
 }
 
+void SynthEngine::sampleNoteOff(int midiNote)
+{
+    SampleVoice* voice =
+        findSampleVoiceForNote(midiNote);
+
+    if (voice == nullptr)
+        return;
+
+    voice->stop();
+}
+
 void SynthEngine::reset()
 {
     for (auto& voice : m_voices)
     {
         voice.stopNote();
+    }
+
+    for (auto& voice : m_sampleVoices)
+    {
+        voice.stop();
     }
 }
 
@@ -203,6 +284,12 @@ void SynthEngine::prepare(
         voice.prepare(
             sampleRate);
     }
+
+    for (auto& voice : m_sampleVoices)
+    {
+        voice.prepare(m_sampleRate);
+    }
+
 }
 
 Voice* SynthEngine::findFreeVoice()
@@ -223,6 +310,31 @@ Voice* SynthEngine::findVoiceForNote(
     {
         if (voice.isActive() &&
             voice.getMidiNote() == midiNote)
+        {
+            return &voice;
+        }
+    }
+
+    return nullptr;
+}
+
+SampleVoice* SynthEngine::findFreeSampleVoice()
+{
+    for (auto& voice : m_sampleVoices)
+    {
+        if (!voice.isActive())
+            return &voice;
+    }
+
+    return nullptr;
+}
+
+SampleVoice* SynthEngine::findSampleVoiceForNote(int midiNote)
+{
+    for (auto& voice : m_sampleVoices)
+    {
+        if (voice.isActive()
+            && voice.midiNote() == midiNote)
         {
             return &voice;
         }
@@ -264,6 +376,7 @@ void SynthEngine::pitchBend(
     }
 }
 
+// Oscillator Voices specific parameters only (No use for Sample Voices)
 void SynthEngine::setFrequency(float frequency)
 {
     for (auto& voice : m_voices)

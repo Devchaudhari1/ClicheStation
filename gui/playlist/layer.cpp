@@ -22,7 +22,7 @@ Layer::Layer(QWidget *parent)
     m_leftWidget =
         new QWidget(nullptr);
 
-    m_leftWidget->setFixedWidth(160);
+    m_leftWidget->setFixedWidth(220);
     m_leftWidget->setFixedHeight(80);
 
     QVBoxLayout *leftLayout =
@@ -31,18 +31,50 @@ Layer::Layer(QWidget *parent)
     leftLayout->setContentsMargins(
         8, 8, 8, 8
     );
+    leftLayout->setAlignment(Qt::AlignTop);
 
-    // Keep your existing Layer controls here.
     m_muteButton =
-        new QPushButton("M", m_leftWidget);
+        new QPushButton("Mute", m_leftWidget);
+
+    // m_muteButton->setFixedHeight(20);
+    m_muteButton->setObjectName("muteBtn");
+    m_muteButton->setCheckable(true);
 
     m_optionsButton =
         new QPushButton("...", m_leftWidget);
+    // m_optionsButton->setFixedHeight(20);
+    m_optionsButton->setObjectName("optionsBtn");
+    updateMuteButtonStyle();
+    m_optionsButton->setStyleSheet(R"(
+        QPushButton {
+            color: #ffffff;
+            background-color: #023023;
+            border: 1px solid #ffffff;
+            border-radius:5px;
+            }
+        QPushButton:hover {
+                background-color: #e05252;
+            }
 
+           QPushButton:pressed {
+                background-color: #b83b3b;
+            }
+        )");
     leftLayout->addWidget(m_muteButton);
     leftLayout->addWidget(m_optionsButton);
     leftLayout->addStretch();
 
+
+    connect(
+        m_muteButton,
+        &QPushButton::toggled,
+        this,
+        [this](bool muted)
+        {
+            Q_UNUSED(muted);
+            updateMuteButtonStyle();
+        }
+    );
     // ----------------------------------------
     // Timeline
     // ----------------------------------------
@@ -140,6 +172,10 @@ Clip *Layer::addClip(
 
     m_clips.append(clip);
 
+    emit timelineWidthRequired(
+        startTime + duration
+    );
+    
     layoutClips();
 
     clip->show();
@@ -299,4 +335,46 @@ QWidget *Layer::leftWidget() const
 ClipArea *Layer::clipArea() const
 {
     return m_clipArea;
+}
+
+void Layer::updateMuteButtonStyle()
+{
+    if (m_muteButton->isChecked())
+    {
+        m_muteButton->setStyleSheet(R"(
+            QPushButton {
+                color: #ffffff;
+                background-color: #d64545;
+                border: 1px solid #ff6b6b;
+                border-radius: 5px;
+            }
+
+            QPushButton:hover {
+                background-color: #e05252;
+            }
+
+            QPushButton:pressed {
+                background-color: #b83b3b;
+            }
+        )");
+    }
+    else
+    {
+        m_muteButton->setStyleSheet(R"(
+            QPushButton {
+                color: #ffffff;
+                background-color: #088e68;
+                border: 1px solid #35c79d;
+                border-radius: 5px;
+            }
+
+            QPushButton:hover {
+                background-color: #0aa77a;
+            }
+
+            QPushButton:pressed {
+                background-color: #067354;
+            }
+        )");
+    }
 }

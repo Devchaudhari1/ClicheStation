@@ -26,16 +26,19 @@ MonitorWindow::MonitorWindow(Base* base, QWidget* parent)
     // --------------------------------------------------
 
     portCombo = new QComboBox(this);
+    portCombo->setObjectName("midiPortCombo");
 
     refreshButton =
         new QPushButton("Refresh", this);
+    refreshButton->setObjectName("midiRefreshButton");
 
     connectButton =
         new QPushButton("Connect", this);
+    connectButton->setObjectName("midiConnectButton");
 
     statusLabel =
         new QLabel("Disconnected", this);
-
+    statusLabel->setObjectName("midiStatusLabel");
 
     // --------------------------------------------------
     // MIDI message table
@@ -43,6 +46,7 @@ MonitorWindow::MonitorWindow(Base* base, QWidget* parent)
 
     messageTable =
         new QTableWidget(this);
+    messageTable->setObjectName("midiMessageTable");
 
     messageTable->setColumnCount(6);
 
@@ -94,12 +98,16 @@ MonitorWindow::MonitorWindow(Base* base, QWidget* parent)
         statusLabel
     );
 
+    auto *topBar = new QWidget(this);
+    topBar->setObjectName("midiTopBar");
+
+    topBar->setLayout(topLayout);
 
     auto *MonitorLayout =
         new QVBoxLayout();
 
-    MonitorLayout->addLayout(
-        topLayout
+    MonitorLayout->addWidget(
+        topBar
     );
 
     MonitorLayout->addWidget(
@@ -109,7 +117,7 @@ MonitorWindow::MonitorWindow(Base* base, QWidget* parent)
 
     auto *central =
         new QWidget(this);
-
+    central->setObjectName("midiMonitor");
     central->setLayout(MonitorLayout);
 
     setCentralWidget(central);
@@ -162,6 +170,223 @@ MonitorWindow::MonitorWindow(Base* base, QWidget* parent)
 
     // Initial port scan
     refreshPorts();
+
+    //Stylesheets
+
+    setStyleSheet(R"(
+        /* --------------------------------------------------
+        Main window
+        -------------------------------------------------- */
+
+        QMainWindow {
+            background-color: #101214;
+            color: #e6e9ed;
+        }
+
+        QWidget#midiMonitor {
+            background-color: #101214;
+        }
+
+
+        /* --------------------------------------------------
+        Top control bar
+        -------------------------------------------------- */
+
+        QWidget#midiTopBar {
+            background-color: #181b1f;
+            border: 1px solid #2b3036;
+            border-radius: 8px;
+        }
+
+
+        /* --------------------------------------------------
+        Labels
+        -------------------------------------------------- */
+
+        QWidget#midiTopBar QLabel {
+            color: #aeb5bd;
+            font-size: 13px;
+        }
+
+        QLabel#midiStatusLabel {
+            color: #d0d5da;
+            font-weight: 600;
+            padding-left: 8px;
+        }
+
+
+        /* --------------------------------------------------
+        MIDI port combo
+        -------------------------------------------------- */
+
+        QComboBox#midiPortCombo {
+            background-color: #20252b;
+            color: #e6e9ed;
+            border: 1px solid #383e46;
+            border-radius: 6px;
+            padding: 3px 8px;
+        }
+
+        QComboBox#midiPortCombo:hover {
+            border-color: #4b535d;
+        }
+
+        QComboBox#midiPortCombo:focus {
+            border-color: #3978b8;
+        }
+
+        QComboBox#midiPortCombo::drop-down {
+            border: none;
+            width: 24px;
+        }
+
+        QComboBox#midiPortCombo QAbstractItemView {
+            background-color: #20252b;
+            color: #e6e9ed;
+            border: 1px solid #383e46;
+            selection-background-color: #315f8f;
+            selection-color: white;
+        }
+
+
+        /* --------------------------------------------------
+        Buttons
+        -------------------------------------------------- */
+
+        QPushButton#midiRefreshButton,
+        QPushButton#midiConnectButton {
+            background-color: #242a31;
+            color: #dce1e6;
+            border: 1px solid #3a424b;
+            border-radius: 6px;
+            padding: 4px 14px;
+            font-weight: 600;
+        }
+
+        QPushButton#midiRefreshButton:hover,
+        QPushButton#midiConnectButton:hover {
+            background-color: #2d353e;
+            border-color: #4c5661;
+        }
+
+        QPushButton#midiRefreshButton:pressed,
+        QPushButton#midiConnectButton:pressed {
+            background-color: #1c2126;
+        }
+
+        QPushButton#midiConnectButton {
+            background-color: #155f91;
+            border-color: #267ab2;
+            color: #f2f7fb;
+        }
+
+        QPushButton#midiConnectButton:hover {
+            background-color: #1d70a6;
+            border-color: #358bc1;
+        }
+
+        QPushButton#midiConnectButton:pressed {
+            background-color: #104b72;
+        }
+
+
+        /* --------------------------------------------------
+        MIDI table
+        -------------------------------------------------- */
+
+        QTableWidget#midiMessageTable {
+            background-color: #15181c;
+            alternate-background-color: #191d22;
+            color: #dce1e6;
+
+            border: 1px solid #2b3036;
+            border-radius: 8px;
+
+            gridline-color: #292e34;
+
+            selection-background-color: #294e73;
+            selection-color: #ffffff;
+        }
+
+        QTableWidget#midiMessageTable::item {
+            padding: 5px;
+            border: none;
+        }
+
+        QTableWidget#midiMessageTable::item:selected {
+            background-color: #294e73;
+            color: #ffffff;
+        }
+
+
+        /* --------------------------------------------------
+        Table header
+        -------------------------------------------------- */
+
+        QHeaderView::section {
+            background-color: #20252b;
+            color: #aeb6bf;
+
+            border: none;
+            border-right: 1px solid #30363d;
+            border-bottom: 1px solid #383e46;
+
+            padding: 6px 8px;
+
+            font-weight: 600;
+        }
+
+        QHeaderView::section:last {
+            border-right: none;
+        }
+
+
+        /* --------------------------------------------------
+        Scrollbars
+        -------------------------------------------------- */
+
+        QScrollBar:vertical {
+            background: #121518;
+            width: 10px;
+            margin: 2px;
+        }
+
+        QScrollBar::handle:vertical {
+            background: #3a4149;
+            border-radius: 5px;
+            min-height: 30px;
+        }
+
+        QScrollBar::handle:vertical:hover {
+            background: #505963;
+        }
+
+        QScrollBar::add-line:vertical,
+        QScrollBar::sub-line:vertical {
+            height: 0px;
+        }
+
+        QScrollBar:horizontal {
+            background: #121518;
+            height: 10px;
+            margin: 2px;
+        }
+
+        QScrollBar::handle:horizontal {
+            background: #3a4149;
+            border-radius: 5px;
+            min-width: 30px;
+        }
+
+        QScrollBar::handle:horizontal:hover {
+            background: #505963;
+        }
+
+        QScrollBar::add-line:horizontal,
+        QScrollBar::sub-line:horizontal {
+            width: 0px;
+        }
+    )");
 }
 
 MonitorWindow::~MonitorWindow()

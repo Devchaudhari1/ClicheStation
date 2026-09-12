@@ -10,6 +10,8 @@
 #include <QHash>
 #include <chrono>
 
+class QFrame;
+
 struct PlacedNote
 {
     int midiNote;
@@ -38,13 +40,16 @@ public:
         int velocity,
         qint64 timestampNs
     );
-
+    void ensureContentHeight(double time);
     void midiNoteOff(
         int midiNote,
         qint64 timestampNs
     );
 signals:
     void becameActive(PianoRoll* pianoRoll);
+    void requestScrollToY(int y);
+    void requestScrollBy(int delta);
+
 protected:
     void paintEvent(QPaintEvent *event) override;
 
@@ -57,6 +62,7 @@ protected:
     void leaveEvent(QEvent *event) override;
 
 private:
+    void ensureSpaceForTime(double time);
     static constexpr int firstMidiNote = 21;
     static constexpr int lastMidiNote = 108;
     static constexpr int keyCount = 88;
@@ -71,13 +77,18 @@ private:
     // Recording States
     bool m_recording = false;
 
+    QFrame *m_recordingLine = nullptr;
+
     QTimer *m_recordingTimer = nullptr;
 
     std::chrono::steady_clock::time_point
         m_recordingStartTime;
 
     double recordingCursorY = -1;
-
+    double m_contentHeight;
+    double m_lastContentGrowthTime = 0.0;
+    double m_originY;
+    const double spaceBuffer=100.0;
     QHash<int, int> m_recordingNoteIndices;
     // Copy/paste
     QVector<PlacedNote> copiedNotes;
@@ -102,7 +113,7 @@ private:
     int keyFromX(double x) const;
 
     double timeFromY(double y) const;
-
+    double yFromTime(double time) const;
     int noteAtPosition(
         const QPointF &position
     ) const;

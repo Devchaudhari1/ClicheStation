@@ -38,21 +38,43 @@ root/
         ---TrackProcessor.h
         ---effects/
             ---AudioEffect.h // Base Class of all audio effects (clipping, delay, distortion, saturation)
+            ---AudioEffectFactory.cpp // A Factory class fot creating several audio effects (now 12)
+            ---AudioEffectFactory.h
+            ---Chorus.cpp // Adds chorus effect
+            ---Chorus.h
             ---Clipping.cpp // Produces clipping effect
             ---Clipping.h
+            ---Compression.cpp // Add compression to sound
+            ---Compression.h
             ---Delay.cpp // Adds dealy effect 
             ---Delay.h
             ---Distortion.cpp // Adds distortion to the sound
             ---Distortion.h
             ---EffectChain.cpp // Chains all effects in a order
             ---EffectChain.h
-            ---Saturation.cpp // 
+            ---EQ.cpp // EQ effects
+            ---EQ.h
+            ---Flanger.cpp // Adds flanging effects
+            ---Flanger.h
+            ---Gate.cpp // Adds gate effect
+            ---Gate.h
+            ---Limiter.cpp // Limits audio 
+            ---Limiter.h
+            ---Phaser.cpp // Adds Phaser effects
+            ---Phaser.h
+            ---Reverb.cpp // Adds Reverb 
+            ---Reverb.h
+            ---Saturation.cpp // Adds saturation
             ---Saturation.h
     ---gui/
         ---base.cpp // Main Window of the application
         ---base.h
         ---drumPad.cpp // Drum Pad layout
         ---drumPad.h
+        ---effect_chain_editor.cpp // Allows Effect Reordering by Swapping
+        ---effect_chain_editor.h 
+        ---effect_slot.cpp // Contains reorderable slots
+        ---effect_slot.h
         ---instrument_settings.cpp //InstrumentSettingscard
         ---instrument_settings.h
         ---main.cpp // entry point of the program. Contains QtStyles
@@ -64,6 +86,8 @@ root/
         ---pianoKeyBoard.h
         ---pianoRoll.cpp // Synthesia or Piano Roll contains green Piano Tiles
         ---pianoRoll.h
+        ---track_list.cpp // The bottom sheet containing voice tracks
+        ---track_list.h
         ---voice_track.cpp // Voice Track card
         ---voice_track.h
         ---playlist/

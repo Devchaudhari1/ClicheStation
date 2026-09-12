@@ -1,12 +1,13 @@
 #pragma once
 
 #include "Voice.h"
-
+#include "SampleVoice.h"
+#include "SampleBank.h"
 #include <array>
 #include <cstddef>
 #include <QVector>
 #include "../gui/pianoRoll.h"
-
+#include "SynthesizersSamples.h"
 class SynthEngine
 {
 public:
@@ -21,6 +22,10 @@ public:
 
     void noteOff(int midiNote);
 
+    void sampleNoteOn(int midiNote, int velocity);
+
+    void sampleNoteOff(int midiNote);
+
     void render(
         float* left,
         float* right,
@@ -32,6 +37,9 @@ public:
         QVector<float>& right);
 
     void pitchBend(int channel,int value);
+    //Sample Voice
+    void setSampleInstrument(
+        SynthesizersSamples sample);
     //Oscillator
     void setFrequency(float frequency);
     void setVolume(float volume);
@@ -47,12 +55,20 @@ private:
 
     Voice* findFreeVoice();
 
-    Voice* findVoiceForNote(
-        int midiNote);
+    Voice* findVoiceForNote(int midiNote);
 
-private:
+    SampleVoice* findFreeSampleVoice();
+
+    SampleVoice* findSampleVoiceForNote(int midiNote);
+
+    SynthesizersSamples m_sampleInstrument =
+        SynthesizersSamples::None;
 
     std::array<Voice,MaxVoices> m_voices;
+
+    std::array<SampleVoice, MaxVoices> m_sampleVoices;
+
+    SampleBank m_sampleBank;
 
     double m_sampleRate = 44100.0;
 

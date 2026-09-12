@@ -41,9 +41,10 @@ signals:
     void trackDropped(int trackId, double startTime);
     void clipAdded();
 
+    void timelineWidthRequired(double endTime);
 private:
     void layoutClips();
-
+    void updateMuteButtonStyle();
     QWidget *m_leftWidget;
     ClipArea *m_clipArea;
 

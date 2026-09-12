@@ -267,6 +267,19 @@ bool AudioEngine::initialize()
     return true;
 }
 
+void AudioEngine::setSampleInstrument(
+    int trackId,
+    SynthesizersSamples sample)
+{
+    TrackProcessor *processor =
+        findTrackProcessor(trackId);
+
+    if (!processor)
+        return;
+
+    processor->setSampleInstrument(sample);
+}
+
 void AudioEngine::start()
 {
 

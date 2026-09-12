@@ -6,6 +6,28 @@
 #include <QVBoxLayout>
 #include <QLabel>
 
+void TimelineView::ensureWidthForTime(double endTime)
+{
+    const double paddingSeconds = 2.0;
+
+    const int requiredWidth =
+        static_cast<int>(
+            (endTime + paddingSeconds)
+            * 100.0
+        );
+
+    if (requiredWidth <= m_rightContent->width())
+        return;
+
+    m_rightContent->setMinimumWidth(
+        requiredWidth
+    );
+
+    m_rightContent->resize(
+        requiredWidth,
+        m_rightContent->height()
+    );
+}
 
 TimelineView::TimelineView(QWidget *parent)
     : QWidget(parent),
@@ -50,7 +72,7 @@ TimelineView::TimelineView(QWidget *parent)
         new QWidget;
 
     m_leftContent->setStyleSheet(
-        "background: darkblue;"
+        "background: #062f43;"
     );
 
     QVBoxLayout *leftLayout =
@@ -83,7 +105,7 @@ TimelineView::TimelineView(QWidget *parent)
         new QWidget;
 
     m_rightContent->setStyleSheet(
-        "background: darkgreen;"
+        "background: #093009;"
     );
 
     QVBoxLayout *rightLayout =
@@ -111,7 +133,7 @@ TimelineView::TimelineView(QWidget *parent)
 
         leftSequence->setFixedHeight(40);
         leftSequence->setStyleSheet(
-            "background: orange;"
+            "background: #19393f;"
             "border: 1px solid black;"
         );
 
@@ -128,7 +150,7 @@ TimelineView::TimelineView(QWidget *parent)
 
         rightSequence->setFixedHeight(40);
         rightSequence->setStyleSheet(
-            "background: orange;"
+            "background: #05270b;"
             "border: 1px solid black;"
         );
 
@@ -151,7 +173,7 @@ TimelineView::TimelineView(QWidget *parent)
 
             leftLayer->setFixedHeight(70);
             leftLayer->setStyleSheet(
-                "background: steelblue;"
+                "background: #06401c;"
                 "border: 1px solid black;"
             );
 
@@ -170,7 +192,7 @@ TimelineView::TimelineView(QWidget *parent)
             rightLayer->setMinimumWidth(3000);
 
             rightLayer->setStyleSheet(
-                "background: seagreen;"
+                "background: #091123;"
                 "border: 1px solid black;"
             );
 

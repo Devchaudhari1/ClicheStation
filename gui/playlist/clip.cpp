@@ -118,7 +118,7 @@ void Clip::paintEvent(QPaintEvent* event)
     rect.adjust(0.5, 0.5, -0.5, -0.5);
 
     painter.setPen(QPen(Qt::white, 1));
-    painter.setBrush(QColor(50, 50, 55, 220));
+    painter.setBrush(QColor("#020911"));
 
     painter.drawRoundedRect(
         rect,

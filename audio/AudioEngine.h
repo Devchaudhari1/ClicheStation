@@ -12,10 +12,9 @@
 #include <QVector>
 #include <QHash>
 #include "TrackProcessor.h"
+#include "../synth/SynthesizersSamples.h"
 
 class AudioEngine;
-
-
 
 class AudioOutputDevice : public QIODevice
 {
@@ -153,7 +152,11 @@ public:
     void setPhaserDepth(int trackId, float depth);
     void setPhaserFeedback(int trackId, float feedback);
     void setPhaserMix(int trackId, float mix);
-    
+    // Sample Voice
+    void setSampleInstrument(
+        int trackId,
+        SynthesizersSamples sample);
+        
     // Oscillator and Voice
 
     // void setOscillatorFrequency(int trackId, float frequency);

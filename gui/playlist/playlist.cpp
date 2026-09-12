@@ -29,12 +29,37 @@ void Playlist::setAvailableTracks(
     }
 }
 
+void Playlist::ensureTimelineWidthForTime(
+    double endTime
+)
+{
+    const double paddingSeconds = 2.0;
+
+    const int requiredWidth =
+        static_cast<int>(
+            (endTime + paddingSeconds)
+            * 100.0
+        );
+
+    if (requiredWidth <= m_rightContent->width())
+        return;
+
+    m_rightContent->setMinimumWidth(
+        requiredWidth
+    );
+
+    m_rightContent->resize(
+        requiredWidth,
+        m_rightContent->height()
+    );
+
+    layoutSequences();
+}
+
+
 void Playlist::layoutSequences()
 {
     int y = 0;
-
-    const int sequenceHeaderHeight = 40;
-    const int layerHeight = 80;
 
     for (int i = 0; i < m_sequences.size(); ++i)
     {
@@ -102,16 +127,23 @@ void Playlist::addSequence(
     sequence->setAvailableTracks(m_availableTracks);
 
     m_sequences.append(sequence);
-
+    
+    connect(
+        sequence,
+        &Sequence::timelineWidthRequired,
+        this,
+        &Playlist::ensureTimelineWidthForTime
+    );
     // --------------------------------------------------
     // LEFT container for this Sequence
     // --------------------------------------------------
 
     QWidget *leftSequenceContainer = new QWidget(m_leftContent);
-    leftSequenceContainer->setStyleSheet(
-            "background: #303030;"
-            "border: 1px solid red;"
-        );
+
+    leftSequenceContainer->setObjectName(
+        "leftSequenceContainer"
+    );
+
     leftSequenceContainer->show();
 
     QVBoxLayout *leftSequenceLayout =
@@ -127,8 +159,9 @@ void Playlist::addSequence(
 
     QWidget *rightSequenceContainer = new QWidget(m_rightContent);
     rightSequenceContainer->setStyleSheet(
-        "background: #303030;"
-        "border: 1px solid red;"
+        "background: #040115;"
+        "color: #ffffff"
+        "border: 1px solid #062003;"
     );
     rightSequenceContainer->show();
 
@@ -301,32 +334,6 @@ void Playlist::addSequence(
 }
 
 
-static QWidget *makeTestWidget(
-    const QString &text,
-    int height,
-    const QString &color,
-    QWidget *parent = nullptr)
-{
-    QWidget *widget = new QWidget(parent);
-
-    widget->setFixedHeight(height);
-
-    widget->setStyleSheet(
-        QString(
-            "background: %1;"
-            "border: 1px solid black;"
-        ).arg(color)
-    );
-
-    QVBoxLayout *layout = new QVBoxLayout(widget);
-    layout->setContentsMargins(4, 4, 4, 4);
-
-    QLabel *label = new QLabel(text, widget);
-    layout->addWidget(label);
-
-    return widget;
-}
-
 Playlist::Playlist(QWidget *parent)
     : QWidget(parent)
 {
@@ -389,9 +396,9 @@ void Playlist::createUI()
     m_leftContent = new QWidget;
     m_leftContent->setFixedWidth(220);
     m_leftContent->setMinimumHeight(1);
-    m_leftContent->setStyleSheet(
-        "background: #202020;"
-    );
+    // m_leftContent->setStyleSheet(
+    //     "background: #e4e3ec;"
+    // );
 
     // =========================================================
     // Right Pane
@@ -481,63 +488,5 @@ void Playlist::createUI()
     timelineLayout->addWidget(m_rightPane, 1);
 
     playlistLayout->addWidget(m_timelineView, 1);
-    // // =========================================================
-    // // TEMPORARY TEST CONTENT
-    // // =========================================================
-
-    // const int sequenceHeight = 40;
-    // const int layerHeight = 70;
-
-    // for (int sequence = 1; sequence <= 3; ++sequence)
-    // {
-    //     // Sequence header - left
-    //     m_leftLayout->addWidget(
-    //         makeTestWidget(
-    //             QString("Sequence %1").arg(sequence),
-    //             sequenceHeight,
-    //             "orange",
-    //             m_leftContent
-    //         )
-    //     );
-
-    //     // Sequence header - right
-    //     m_rightLayout->addWidget(
-    //         makeTestWidget(
-    //             QString("Sequence %1").arg(sequence),
-    //             sequenceHeight,
-    //             "orange",
-    //             m_rightContent
-    //         )
-    //     );
-
-    //     int layerCount = sequence + 2;
-
-    //     for (int layer = 1; layer <= layerCount; ++layer)
-    //     {
-    //         // Layer - left
-    //         m_leftLayout->addWidget(
-    //             makeTestWidget(
-    //                 QString("Layer %1").arg(layer),
-    //                 layerHeight,
-    //                 "steelblue",
-    //                 m_leftContent
-    //             )
-    //         );
-
-    //         // ClipArea - right
-    //         m_rightLayout->addWidget(
-    //             makeTestWidget(
-    //                 QString("Layer %1 ClipArea").arg(layer),
-    //                 layerHeight,
-    //                 "seagreen",
-    //                 m_rightContent
-    //             )
-    //         );
-    //     }
-    // }
-    // m_rightContent->setMinimumWidth(3000);
-
-    // m_leftContent->adjustSize();
-    // m_rightContent->adjustSize();
 
 }

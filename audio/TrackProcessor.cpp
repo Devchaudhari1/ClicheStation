@@ -84,6 +84,12 @@ void TrackProcessor::render(float *left,
     m_effectChain.process(left, right, numSamples);
 }
 
+void TrackProcessor::setSampleInstrument(
+    SynthesizersSamples sample)
+{
+    m_synth.setSampleInstrument(sample);
+}
+
 QVector<float> TrackProcessor::renderClip(
     const QVector<PlacedNote>& notes)
 {

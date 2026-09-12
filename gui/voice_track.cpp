@@ -151,12 +151,16 @@ void VoiceTrack::createUI()
             this,
             [this](PianoRoll* pianoRoll)
             {
+                qDebug() << "VoiceTrack: PianoRoll became active:" << pianoRoll;
+
                 emit pianoRollBecameActive(pianoRoll);
             }
         );
         m_piano->show();
         m_piano->raise();
         m_piano->activateWindow();
+
+        m_piano->activatePianoRoll();
     });
 
     connect(
@@ -211,6 +215,13 @@ connect(
                     if (m_audioEngine)
                         m_audioEngine->noteOff(m_trackId, midiNote);
                 }
+            );
+            // Sample Voice
+            connect(
+                m_instrumentSettings,
+                &InstrumentSettings::sampleInstrumentChanged,
+                this,
+                &VoiceTrack::onSampleInstrumentChanged
             );
             // Oscillator and Voice
             connect(
@@ -915,6 +926,15 @@ connect(
 int VoiceTrack::trackId() const
 {
     return m_trackId;
+}
+
+void VoiceTrack::onSampleInstrumentChanged(
+    SynthesizersSamples sample)
+{
+    m_audioEngine->setSampleInstrument(
+        m_trackId,
+        sample
+    );
 }
 
 QString VoiceTrack::trackName() const

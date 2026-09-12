@@ -11,7 +11,7 @@ class TimelineView : public QWidget
 
 public:
     explicit TimelineView(QWidget *parent = nullptr);
-
+    void ensureWidthForTime(double endTime);
 private:
     QScrollArea *m_leftPane;
     QScrollArea *m_rightPane;

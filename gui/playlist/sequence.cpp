@@ -30,31 +30,48 @@ Sequence::Sequence(
     // -------------------------------------------------
 
     m_header =
-        new QWidget(nullptr);
+        new QWidget(this);
 
-    m_header->setFixedHeight(40);
-
-    m_header->setStyleSheet(
-        "background: #3a3a3a;"
-        "border: 1px solid #555555;"
+    m_header->setObjectName(
+        "sequenceHeader"
     );
+
+    m_header->setFixedHeight(44);
+
     QHBoxLayout *headerLayout =
         new QHBoxLayout(m_header);
 
     headerLayout->setContentsMargins(
-        6, 3, 6, 3
+        10, 5, 10, 5
     );
 
-    headerLayout->setSpacing(4);
+    headerLayout->setSpacing(6);
+
+    headerLayout->setAlignment(Qt::AlignTop);
+    // -------------------------------------------------
+    // Expand / collapse
+    // -------------------------------------------------
 
     m_expandButton =
         new QPushButton("▼", m_header);
 
-    m_expandButton->setFixedWidth(28);
+    m_expandButton->setObjectName(
+        "expandButton"
+    );
+
+    m_expandButton->setFixedSize(
+        28,
+        20
+    );
 
     headerLayout->addWidget(
         m_expandButton
     );
+
+
+    // -------------------------------------------------
+    // Sequence label
+    // -------------------------------------------------
 
     m_sequenceLabel =
         new QLabel(
@@ -62,45 +79,60 @@ Sequence::Sequence(
                 .arg(m_sequenceId),
             m_header
         );
-    
-    m_sequenceLabel->setStyleSheet(
-        "color: #e0e0e0;"
+
+    m_sequenceLabel->setObjectName(
+        "sequenceLabel"
     );
+
     headerLayout->addWidget(
         m_sequenceLabel
     );
 
+
+    // -------------------------------------------------
+    // Push controls to the right
+    // -------------------------------------------------
+
     headerLayout->addStretch();
+
+
+    // -------------------------------------------------
+    // Play
+    // -------------------------------------------------
+
     m_playButton =
         new QPushButton("▶", m_header);
 
-    m_playButton->setFixedWidth(32);
+    m_playButton->setObjectName(
+        "playButton"
+    );
 
-    m_playButton->setStyleSheet(
-        "background: #4a4a4a;"
-        "color: #e0e0e0;"
-        "border: 1px solid #666666;"
+    m_playButton->setFixedSize(
+        34,
+        20
     );
 
     headerLayout->addWidget(
         m_playButton
     );
+
+
+    // -------------------------------------------------
+    // Add Layer
+    // -------------------------------------------------
+
     m_addLayerButton =
         new QPushButton(
-            "+ Add Layer",
+            "+",
             m_header
         );
-    m_expandButton->setStyleSheet(
-        "background: #4a4a4a;"
-        "color: #e0e0e0;"
-        "border: 1px solid #666666;"
+
+    m_addLayerButton->setObjectName(
+        "addLayerButton"
     );
 
-    m_addLayerButton->setStyleSheet(
-        "background: #4a4a4a;"
-        "color: #e0e0e0;"
-        "border: 1px solid #666666;"
-    );
+    m_addLayerButton->setFixedHeight(20);
+
     headerLayout->addWidget(
         m_addLayerButton
     );
@@ -135,7 +167,12 @@ Sequence::Sequence(
             play();
         }
     );
+
+
+    // -------------------------------------------------
     // Start with one layer
+    // -------------------------------------------------
+
     addLayer();
 }
 
@@ -227,6 +264,13 @@ Layer *Sequence::addLayer()
     Layer *layer =
         new Layer(nullptr);
 
+    connect(
+        layer,
+        &Layer::timelineWidthRequired,
+        this,
+        &Sequence::timelineWidthRequired
+    );
+    
     connect(
         layer,
         &Layer::clipRequested,
