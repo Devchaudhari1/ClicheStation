@@ -44,7 +44,7 @@ signals:
     void timelineWidthRequired(double endTime);
 private:
     void layoutClips();
-
+    void updateMuteButtonStyle();
     QWidget *m_leftWidget;
     ClipArea *m_clipArea;
 

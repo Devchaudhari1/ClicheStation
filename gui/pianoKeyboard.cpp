@@ -199,7 +199,7 @@ void PianoKeyboard::paintEvent(QPaintEvent *)
         painter.drawRect(keyRect);
 
         // Optional key name at the bottom.
-        painter.setPen(QColor("#444444"));
+        painter.setPen(QColor("#062a42"));
 
         painter.drawText(
             keyRect.adjusted(0, 0, 0, -8),

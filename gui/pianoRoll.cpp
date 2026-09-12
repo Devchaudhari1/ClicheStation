@@ -614,7 +614,7 @@ void PianoRoll::paintEvent(QPaintEvent *)
      */
 
     painter.setPen(
-        QPen(QColor("#303030"), 1)
+        QPen(QColor("#04022d"), 1)
     );
 
     for (int i = 0; i <= keyCount; ++i)
@@ -648,7 +648,7 @@ void PianoRoll::paintEvent(QPaintEvent *)
 
         painter.fillRect(
             highlightRect,
-            QColor(80, 180, 100, 60)
+            QColor("#062443")
         );
     }
 
@@ -675,7 +675,7 @@ void PianoRoll::paintEvent(QPaintEvent *)
         recordingCursorY >= 0)
     {
         painter.setPen(
-            QPen(QColor("#ff4040"), 2)
+            QPen(QColor("#010a4e"), 2)
         );
 
         painter.drawLine(

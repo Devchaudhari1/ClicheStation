@@ -14,6 +14,7 @@ ClipArea::ClipArea(QWidget *parent)
 
     setMinimumWidth(2000);
     setFixedHeight(80);
+    
 }
 
 void ClipArea::dragEnterEvent(
@@ -115,7 +116,7 @@ void ClipArea::paintEvent(QPaintEvent *event)
     // ---------------------------------------------
 
     QPen verticalPen;
-    verticalPen.setColor(QColor(220, 220, 220));
+    verticalPen.setColor(QColor(100, 100, 100));
     verticalPen.setStyle(Qt::DashLine);
     verticalPen.setWidth(1);
 
@@ -150,7 +151,7 @@ void ClipArea::paintEvent(QPaintEvent *event)
     // ---------------------------------------------
 
     QPen horizontalPen;
-    horizontalPen.setColor(QColor(205, 205, 205));
+    horizontalPen.setColor(QColor("#7e789e"));
     horizontalPen.setStyle(Qt::SolidLine);
     horizontalPen.setWidth(1);
 

@@ -200,7 +200,7 @@ void TrackListHandle::paintEvent(QPaintEvent *event)
 
     QPainter painter(this);
 
-    painter.setPen(QPen(QColor("#666666"), 2));
+    painter.setPen(QPen(QColor("#12072c"), 2));
 
     const int gripWidth = 60;
     const int gripHeight = 4;
