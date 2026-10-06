@@ -38,6 +38,24 @@ namespace
             readUInt16(data, offset)
         );
     }
+    std::int32_t readInt24(const QByteArray& data,int offset)
+    {
+        const auto* p =
+            reinterpret_cast<const unsigned char*>(
+                data.constData() + offset
+            );
+
+        std::int32_t value =
+            static_cast<std::int32_t>(p[0])
+            | (static_cast<std::int32_t>(p[1]) << 8)
+            | (static_cast<std::int32_t>(p[2]) << 16);
+
+        // Sign-extend 24-bit signed PCM to 32 bits.
+        if (value & 0x00800000)
+            value |= static_cast<std::int32_t>(0xFF000000);
+
+        return value;
+    }
 }
 
 bool SampleBank::loadInstrument(SynthesizersSamples instrument)
@@ -192,7 +210,7 @@ bool SampleBank::loadSample(
         return false;
     }
 
-    if (bitsPerSample != 16)
+    if (bitsPerSample != 16 && bitsPerSample != 24)
     {
         qWarning()
             << "SampleBank: Only 16-bit WAV is currently supported:"
@@ -244,24 +262,52 @@ bool SampleBank::loadSample(
         const int frameOffset =
             dataOffset + frame * frameSize;
 
-        const std::int16_t left =
-            readInt16(data, frameOffset);
+        float leftValue = 0.0f;
+        float rightValue = 0.0f;
 
-        float leftValue =
-            static_cast<float>(left) / 32768.0f;
-
-        float rightValue = leftValue;
-
-        if (numChannels == 2)
+        if (bitsPerSample == 16)
         {
-            const std::int16_t right =
-                readInt16(
-                    data,
-                    frameOffset + bytesPerSample
-                );
+            const std::int16_t left =
+                readInt16(data, frameOffset);
 
-            rightValue =
-                static_cast<float>(right) / 32768.0f;
+            leftValue =
+                static_cast<float>(left) / 32768.0f;
+
+            rightValue = leftValue;
+
+            if (numChannels == 2)
+            {
+                const std::int16_t right =
+                    readInt16(
+                        data,
+                        frameOffset + bytesPerSample
+                    );
+
+                rightValue =
+                    static_cast<float>(right) / 32768.0f;
+            }
+        }
+        else if (bitsPerSample == 24)
+        {
+            const std::int32_t left =
+                readInt24(data, frameOffset);
+
+            leftValue =
+                static_cast<float>(left) / 8388608.0f;
+
+            rightValue = leftValue;
+
+            if (numChannels == 2)
+            {
+                const std::int32_t right =
+                    readInt24(
+                        data,
+                        frameOffset + bytesPerSample
+                    );
+
+                rightValue =
+                    static_cast<float>(right) / 8388608.0f;
+            }
         }
 
         sample.left[frame] = leftValue;

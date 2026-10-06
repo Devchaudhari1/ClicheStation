@@ -20,6 +20,26 @@ void SynthEngine::setSampleInstrument(SynthesizersSamples sample)
     qDebug() << "Sample instrument loaded:" << loaded;
 }
 
+void SynthEngine::setDrumInstrument(
+    DrumsetsSamples drum, int rootMidiNote)
+{
+    m_drumInstrument = drum;
+
+    if (drum == DrumsetsSamples::None)
+        return;
+
+    qDebug()
+        << "Loading drum sample:"
+        << DrumsetsSampleFiles.value(drum);
+
+    const bool loaded =
+        m_drumSampleBank.loadInstrument(drum, rootMidiNote);
+
+    qDebug()
+        << "Drum sample loaded:"
+        << loaded;
+}
+
 void SynthEngine::noteOn(int midiNote, int velocity)
 {
     if (m_sampleInstrument != SynthesizersSamples::None)
@@ -67,6 +87,47 @@ void SynthEngine::sampleNoteOn(int midiNote, int velocity)
              << "root =" << sample->rootMidiNote;
 
     voice->start(sample, midiNote, velocity);
+}
+
+void SynthEngine::drumNoteOn(DrumsetsSamples drum,int midiNote,int velocity)
+{
+    qDebug() << "[SynthEngine]"
+            << "drumNoteOn:"
+            << "drum =" << static_cast<int>(drum)
+            << "note =" << midiNote
+            << "velocity =" << velocity;
+
+    const SampleData* sample =
+        m_drumSampleBank.sample(drum);
+
+    if (sample == nullptr)
+    {
+        qDebug() << "[SynthEngine]"
+                << "ERROR: no sample for drum";
+
+        return;
+    }
+    qDebug() << "[SynthEngine]"
+             << "sample found:"
+             << "sampleRate =" << sample->sampleRate
+             << "samples =" << sample->sampleCount()
+             << "rootNote =" << sample->rootMidiNote;
+    SampleVoice* voice =
+        findFreeSampleVoice();
+
+    if (voice == nullptr)
+    {
+        qDebug() << "[SynthEngine]"
+                 << "ERROR: no free SampleVoice";
+        return;
+    }
+    qDebug() << "[SynthEngine]"
+             << "starting SampleVoice";
+    voice->start(
+        sample,
+        midiNote,
+        velocity
+    );
 }
 
 void SynthEngine::render(float* left, float* right, std::size_t numSamples)
@@ -235,6 +296,140 @@ void SynthEngine::render(
 
 }
 
+void SynthEngine::render(
+    const QVector<DrumStepEvent>& drumSteps,
+    double secondsPerStep,
+    QVector<float>& left,
+    QVector<float>& right)
+{
+    if (drumSteps.isEmpty())
+        return;
+
+    if (secondsPerStep <= 0.0)
+        return;
+
+    // Find the last step so we know how much audio to render.
+    int lastStep = 0;
+
+    for (const auto& event : drumSteps)
+    {
+        lastStep =
+            std::max(lastStep, event.step);
+    }
+
+    const double duration =
+        (static_cast<double>(lastStep) + 1.0)
+        * secondsPerStep;
+
+    const std::size_t totalSamples =
+        static_cast<std::size_t>(
+            std::ceil(duration * m_sampleRate)
+        );
+
+    if (totalSamples == 0)
+        return;
+
+    left.resize(
+        static_cast<qsizetype>(totalSamples)
+    );
+
+    right.resize(
+        static_cast<qsizetype>(totalSamples)
+    );
+
+    std::fill(
+        left.begin(),
+        left.end(),
+        0.0f
+    );
+
+    std::fill(
+        right.begin(),
+        right.end(),
+        0.0f
+    );
+
+    struct DrumEvent
+    {
+        std::size_t sample;
+        DrumsetsSamples drum;
+        int velocity;
+    };
+
+    QVector<DrumEvent> events;
+    events.reserve(drumSteps.size());
+
+    for (const auto& event : drumSteps)
+    {
+        if (event.drum == DrumsetsSamples::None)
+            continue;
+
+        if (event.step < 0)
+            continue;
+
+        const std::size_t sample =
+            static_cast<std::size_t>(
+                static_cast<double>(event.step)
+                * secondsPerStep
+                * m_sampleRate
+            );
+
+        events.push_back({
+            sample,
+            event.drum,
+            event.velocity
+        });
+    }
+
+    std::sort(
+        events.begin(),
+        events.end(),
+        [](const DrumEvent& a, const DrumEvent& b)
+        {
+            return a.sample < b.sample;
+        }
+    );
+
+    reset();
+
+    std::size_t currentSample = 0;
+
+    for (const auto& event : events)
+    {
+        if (event.sample > totalSamples)
+            break;
+
+        if (event.sample > currentSample)
+        {
+            const std::size_t count =
+                event.sample - currentSample;
+
+            render(
+                left.data() + currentSample,
+                right.data() + currentSample,
+                count
+            );
+
+            currentSample = event.sample;
+        }
+
+        drumNoteOn(
+            event.drum,
+            60,
+            event.velocity
+        );
+    }
+
+    if (currentSample < totalSamples)
+    {
+        render(
+            left.data() + currentSample,
+            right.data() + currentSample,
+            totalSamples - currentSample
+        );
+    }
+}
+
 void SynthEngine::noteOff(
     int midiNote)
 {
@@ -290,8 +485,16 @@ void SynthEngine::prepare(
         voice.prepare(m_sampleRate);
     }
 
+    const bool drumsLoaded =
+        m_drumSampleBank.loadAll(60);
+    qDebug()
+        << "[SynthEngine]"
+        << "Drum samples loaded:"
+        << drumsLoaded;
+
 }
 
+// prevents overwriting a used voice out of 32 available voices in m_voices
 Voice* SynthEngine::findFreeVoice()
 {
     for (auto& voice : m_voices)
@@ -317,7 +520,7 @@ Voice* SynthEngine::findVoiceForNote(
 
     return nullptr;
 }
-
+// prevents overwriting a used voice out of 32 available voices in m_sampleVoices
 SampleVoice* SynthEngine::findFreeSampleVoice()
 {
     for (auto& voice : m_sampleVoices)

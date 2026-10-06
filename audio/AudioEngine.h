@@ -13,7 +13,7 @@
 #include <QHash>
 #include "TrackProcessor.h"
 #include "../synth/SynthesizersSamples.h"
-
+#include "../gui/DrumSequence.h"
 class AudioEngine;
 
 class AudioOutputDevice : public QIODevice
@@ -59,7 +59,12 @@ public:
     QVector<float> renderClip(
         int trackId,
         const QVector<PlacedNote>& notes);
-        
+    
+    QVector<float> renderClip(
+        int trackId,
+        const QVector<DrumStepEvent>& drumSteps,
+        double secondsPerStep);
+
     bool shouldTrackParticipate(int trackId) const;
 
     void setTrackMuted(int trackId, bool muted);
@@ -190,6 +195,13 @@ public:
     void setEffectOrder(
         int trackId,
         const QVector<AudioEffectType> &order
+    );
+    void drumNoteOn(int trackId,DrumsetsSamples drum,
+        int midiNote,int velocity
+    );
+
+    void setDrumInstrument(int trackId,DrumsetsSamples drum,
+        int rootMidiNote
     );
     TrackProcessor* createTrack(int trackId);
     TrackProcessor* findTrackProcessor(int trackId);

@@ -4,7 +4,9 @@
 
 followed by installation with
 
-```cmake --build build         ```
+```
+cmake --build build 
+```
 ## Remove build files with
 Remove-Item -Recurse -Force build
 
@@ -17,11 +19,30 @@ Remove-Item -Recurse -Force build
 ## Install with 
 ```cmake --build build```
 
+## Start Cliche Station with:
+
+```
+    ./build/ClicheStation.exe
+``` 
+in current directory
 
 ## About Cliche Station
 
 Cliche Station is a midi compatible sound engine that uses the midi info inputed through a Midi Keyboard or other Midi devices and processes the digital signal to produce sound suitable for EDM and digital signal processing. It offers a wide range of processing capabilities on waveform like
-changing velocity, Attack-Decay-Sustain-Release Envelope, compressing, clipping, reverb, pitchbending, distorting, flanging and modulating the signal. 
+changing velocity, Attack-Decay-Sustain-Release Envelope, compressing, clipping, reverb, pitchbending, distorting, flanging and modulating the signal. It offers upto 12 different reorderable Audio Effects -
+- Chorus
+- Clipping
+- Compression
+- Delay
+- Distortion
+- EQ
+- Flanger
+- Gate
+- Limiter
+- Phaser
+- Reverb
+- Saturation
+
 
 ## How it works
 
@@ -31,6 +52,22 @@ It has the following layout
 
 ```
 root/
+    ---assets/
+        ---drums/
+            ---china,png
+            ---hand_clap.png
+            ---crash_1.pg
+            ---hh_closed.png
+            ---hh_open.png
+            ---kick.png
+            ---snare.png
+            ---stick_click.png
+            ---ride.png
+            ---tom_1.png
+        ---icons/
+            ---cliche_station.png
+        ---app.rc
+        ---resources.qrc
     ---audio/
         ---AudioEngine.cpp // contains the Synthesized sound with AudioEffects
         ---AudioEngine.h
@@ -69,8 +106,12 @@ root/
     ---gui/
         ---base.cpp // Main Window of the application
         ---base.h
+        ---DrumGrid.cpp // Grid representing the order of drum beats
+        ---DrumGrid.h
         ---drumPad.cpp // Drum Pad layout
         ---drumPad.h
+        ---DrumSequence.cpp // Sequence of drums beaten
+        ---DrumSequence.h
         ---effect_chain_editor.cpp // Allows Effect Reordering by Swapping
         ---effect_chain_editor.h 
         ---effect_slot.cpp // Contains reorderable slots
@@ -86,6 +127,12 @@ root/
         ---pianoKeyBoard.h
         ---pianoRoll.cpp // Synthesia or Piano Roll contains green Piano Tiles
         ---pianoRoll.h
+        ---RowContainer.cpp // Contains the RowHeader and StepGrid
+        ---RowContainer.h
+        ---RowHeader.cpp // Contains the header name of the grid
+        ---RowHeader.h
+        ---StepGrid.cpp // Contains the grid steps
+        ---StepGrid.h
         ---track_list.cpp // The bottom sheet containing voice tracks
         ---track_list.h
         ---voice_track.cpp // Voice Track card
@@ -135,6 +182,35 @@ root/
             ...
             ...
             ---g1s.wav
+        ---Synthesizers/
+            ---6 String.wav
+            ---12 String.wav
+            ---Ac Bass.wav
+            ---Bellery.wav
+            ---Cellos.wav
+            ---Clarinet.wav
+            ---Club Piano.wav
+            ---Digi Piano.wav
+            ---Flute.wav
+            ---Harpsichord.wav
+            ---JazzOrgan.wav
+            ---Music Box.wav
+            ---Oboe.wav
+            ---Piano.wav
+            ---Sitar.wav
+            ---Trumpet.wav
+        ---Drumsets/
+            ---china.wav
+            ---crash.wav
+            ---hand_clap.wav
+            ---hh_close.wav
+            ---hh_open.wav
+            ---hh_open_stereo.wav
+            ---kick.wav
+            ---ride.wav
+            ---snare.wav
+            ---splash.wav
+            ---tom.wav
         //contains wavs file for several instruments  
 ```
 ```
@@ -264,6 +340,40 @@ Playlist // A QHBoxLayout
 │ ☰  Reverb         [ ON ]    │
 └─────────────────────────────┘
 The user drags and drops the Effects in some order using the ☰ icon.
+```
+###  Drum Sequence Architecture
+
+```
+    DrumSequence
+
+    │
+
+    ├── QScrollArea
+
+    │     │
+
+    │     └── DrumGrid
+
+    │           │
+
+    │           └── RowContainer
+
+    │                 │
+
+    │                 ├── RowHeaderColumn
+
+    │                 │
+
+    │                 └── HorizontalScrollArea
+
+    │                       │
+
+    │                       └── StepGrid
+
+    │
+
+    └── DrumPad   
+
 ```
 ### TrackProcessor Integral Structure
 ```mermaid
@@ -445,5 +555,61 @@ subgraph SignalProcessing[Signal Processing]
     Oscillator-->|Generated Sample of given Waveform, Sample Rate and Frequency at different datapoint Sent|Voice["Voice"]
     ADSREnvelope-->|Generated ADSR envelope gain lavel at differnet datapoint sent|Voice
     Voice-->|Computed Output Signal using Pitch Bend and Velocity Sent|SynthEngine["Synth Engine (Adds PitchBend to voices and aggregate all voices)" ]
+    wav["wav"]-->|Sends instrument .wav file for sampling voices out of it|SampleBank["SampleBank"]
+    SampleBank-->|Stores data into SampleData|SampleData["SampleData"]
+    SampleData-->|Sends sampled voice for rendering and configuring parameters|SampleVoice
+    SampleVoice["SampleVoice"]-->|Sends Rendered Sample Voice from Instruments|SynthEngine
 end
+```
+
+### Widget Structure for Playlist
+```mermaid
+    flowchart TB
+
+    subgraph PlayList["PlayList"]
+
+    end
+    subgraph TimeLineView["TimelineView"]
+        subgraph mainLayout["mainLayout"]
+
+            subgraph m_rightPane["m_rightPane (QScrollArea)"]
+                subgraph m_rightContent["m_rightContent (QWidget)"]
+                    subgraph rightLayout["rightLayout (QVBoxLayout)"]
+                    end
+                    subgraph rightSequenceContainers["rightSequenceContainers(QWidget)"]
+                        subgraph rightSequenceContainer["rightSequenceContainer(QWidget)"]
+                            subgraph rightSequenceLayout["rightSequenceLayout (QVBoxLayout)"]
+                            end
+                        end
+                    end
+                end
+            end
+            subgraph m_leftPane["m_left Pane (QScrollArea)"]
+                subgraph m_leftContent["m_leftContent (QWidget)"]
+                    subgraph leftLayout["leftLayout (QVBoxLayout)"]
+                    end
+                    subgraph leftSequenceContainers["leftSequenceContainers(QWidget)"]
+                        subgraph leftSequenceContainer["leftSequenceContainer(QWidget)"]
+                            subgraph leftSequenceLayout["leftSequenceLayout (QVBoxLayout)"]
+                                direction LR
+                                subgraph headerLayout["headerLayout (QHBoxLayout)"]
+                                    direction LR
+                                    m_expandButton["m_expandButton (QPushButton)"]
+                                    m_sequenceLabel["m_sequenceLabel"]
+                                    m_playButton["m_playButton"]
+                                    m_addLayerButton["m_playButton"]
+                                end
+                                subgraph LayerleftLayout["leftLayerlayout(QVBoxLayout)"]
+                                    m_muteButton["m_muteButton(QPushButton)"]
+                                    m_optionsButton["m_optionsButton(QPushButton)"]
+
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
 ```

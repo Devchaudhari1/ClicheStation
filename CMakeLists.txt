@@ -15,7 +15,11 @@ qt_standard_project_setup()
 
 # adds an executable named ClicheStation which is created from the src mentioned
 qt_add_executable(ClicheStation
-    # add playlist 
+
+    # resources
+    # assets/resources.qrc
+    assets/app.rc
+    # playlist 
     gui/playlist/Clip.cpp
     gui/playlist/Clip.h
     gui/playlist/ClipArea.cpp
@@ -38,6 +42,10 @@ qt_add_executable(ClicheStation
     gui/base.h
     gui/drumPad.cpp
     gui/drumPad.h
+    gui/DrumGrid.cpp
+    gui/DrumGrid.h
+    gui/DrumSequence.cpp
+    gui/DrumSequence.h
     gui/effect_chain_editor.cpp
     gui/effect_chain_editor.h
     gui/effect_slot.cpp
@@ -53,6 +61,12 @@ qt_add_executable(ClicheStation
     gui/pianoKeyboard.h
     gui/pianoRoll.cpp
     gui/pianoRoll.h
+    gui/RowContainer.cpp
+    gui/RowContainer.h
+    gui/RowHeader.cpp
+    gui/RowHeader.h
+    gui/StepGrid.cpp
+    gui/StepGrid.h
     gui/track_list.cpp
     gui/track_list.h
     gui/voice_track.cpp
@@ -66,6 +80,8 @@ qt_add_executable(ClicheStation
     # Synth source
     synth/ADSREnvelope.cpp
     synth/ADSREnvelope.h
+    synth/DrumSampleBank.cpp
+    synth/DrumSampleBank.h
     synth/DrumsetsSamples.h
     synth/InstrumentParameters.h
     synth/Oscillator.cpp
@@ -119,7 +135,44 @@ qt_add_executable(ClicheStation
     audio/effects/Saturation.h
 
 )
+qt_add_resources(ClicheStation "app_resources"
+    PREFIX "/"
+    FILES
+        assets/icons/cliche_station.png
 
+        assets/drums/kick.png
+        assets/drums/snare.png
+        assets/drums/hh_closed.png
+        assets/drums/hh_open.png
+        assets/drums/hh_foot.png
+        assets/drums/hand_clap.png
+
+        assets/drums/tom_1.png
+        assets/drums/tom_2.png
+        assets/drums/tom_3.png
+
+        assets/drums/crash_1.png
+        assets/drums/crash_2.png
+        assets/drums/crash_3.png
+
+        assets/drums/ride.png
+        assets/drums/ride_bell.png
+        assets/drums/china.png
+        assets/drums/splash.png
+
+        assets/drums/stick_click.png
+
+        assets/drums/snare_rim.png
+        assets/drums/snare_sidestick.png
+
+        assets/drums/tom_1_rim.png
+        assets/drums/tom_2_rim.png
+        assets/drums/tom_3_rim.png
+
+        assets/drums/snare_snares_off.png
+        assets/drums/snare_snares_off_rim.png
+        assets/drums/snare_snares_off_sidestick.png
+)
 # links against -lQt6Widgets 
 target_link_libraries(ClicheStation
     PRIVATE

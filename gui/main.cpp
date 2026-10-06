@@ -1,12 +1,27 @@
 #include <QApplication>
-
+#include <QFile>
+#include <QDir>
 #include "base.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-
+    app.setWindowIcon(QIcon(":/icons/cliche_station.png"));
     Base window;
+    qDebug() << "kick:"
+            << QFile(":/assets/drums/kick.png").exists();
+
+    qDebug() << "snare:"
+            << QFile(":/assets/drums/snare.png").exists();
+
+    qDebug() << "icon:"
+            << QFile(":/assets/icons/cliche_station.png").exists();
+
+    qDebug() << "assets:"
+            << QDir(":/assets").entryList();
+
+    qDebug() << "drums:"
+            << QDir(":/assets/drums").entryList();
     app.setStyleSheet(R"(
 jj
         QWidget {

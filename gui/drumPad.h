@@ -1,12 +1,21 @@
-#ifndef DRUMPAD_H
-#define DRUMPAD_H
+#pragma once
+
 #include <QWidget>
+#include "../synth/DrumsetsSamples.h"
+
 class DrumPad : public QWidget
 {
-    public:
-    explicit DrumPad(QWidget *parent = nullptr);
+    Q_OBJECT
+
+public:
+    explicit DrumPad(QWidget* parent = nullptr);
     ~DrumPad();
+
+    DrumsetsSamples sampleForPad(int padIndex) const;
+
+signals:
+    void padPressed(int padIndex);
+
+private:
     void createPad();
 };
-
-#endif // DRUMPAD_H

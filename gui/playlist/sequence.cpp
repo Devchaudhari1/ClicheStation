@@ -314,28 +314,49 @@ Layer *Sequence::addLayer()
 
             const QVector<PlacedNote>& notes =
                 voiceTrack->notes();
-            double startTime=0.0;
-            double duration =
-                voiceTrack->trackDuration();
 
-            const auto &clips =
+            const QVector<DrumStepEvent>& drumSteps =
+                voiceTrack->drumSteps();
+
+            double startTime = 0.0;
+
+            const auto& clips =
                 layer->clips();
 
             if (!clips.isEmpty())
             {
-                Clip *lastClip =
+                Clip* lastClip =
                     clips.last();
 
                 startTime =
                     lastClip->startTime()
                     + lastClip->duration();
             }
-            // Render the PianoRoll notes into audio samples.
-            QVector<float> samples =
-                m_audioEngine->renderClip(
-                    trackId,
-                    notes
-                );
+
+            double duration =
+                voiceTrack->trackDuration();
+
+            QVector<float> samples;
+
+            if (!drumSteps.isEmpty())
+            {
+                const double secondsPerStep = 0.125;
+
+                samples =
+                    m_audioEngine->renderClip(
+                        trackId,
+                        drumSteps,
+                        secondsPerStep
+                    );
+            }
+            else
+            {
+                samples =
+                    m_audioEngine->renderClip(
+                        trackId,
+                        notes
+                    );
+            }
 
             if (samples.isEmpty())
                 return;
@@ -389,18 +410,45 @@ Layer *Sequence::addLayer()
             const QVector<PlacedNote>& notes =
                 voiceTrack->notes();
 
-            qDebug() << "Notes:" << notes.size();
+            const QVector<DrumStepEvent>& drumSteps =
+                voiceTrack->drumSteps();
+
+            qDebug()
+                << "Notes:"
+                << notes.size();
+
+            qDebug()
+                << "Drum steps:"
+                << drumSteps.size();
 
             double duration =
                 voiceTrack->trackDuration();
 
-            qDebug() << "Duration:" << duration;
+            qDebug()
+                << "Duration:"
+                << duration;
 
-            QVector<float> samples =
-                m_audioEngine->renderClip(
-                    trackId,
-                    notes
-                );
+            QVector<float> samples;
+
+            if (!drumSteps.isEmpty())
+            {
+                const double secondsPerStep = 0.125;
+
+                samples =
+                    m_audioEngine->renderClip(
+                        trackId,
+                        drumSteps,
+                        secondsPerStep
+                    );
+            }
+            else
+            {
+                samples =
+                    m_audioEngine->renderClip(
+                        trackId,
+                        notes
+                    );
+            }
 
             qDebug() << "Samples:" << samples.size();
 
