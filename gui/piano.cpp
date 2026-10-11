@@ -133,16 +133,4 @@ void Piano::createUI()
             emit pianoRollBecameActive(pianoRoll);
         }
     );
-    /*
-     * Later we can connect the keyboard to other systems here.
-     *
-     * For example:
-     *
-     * connect(
-     *     pianoKeyboard,
-     *     &PianoKeyboard::notePressed,
-     *     this,
-     *     ...
-     * );
-     */
 }

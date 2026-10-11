@@ -375,6 +375,61 @@ void AudioEngine::noteOff(
     processor->noteOff(midiNote);
 }
 
+void AudioEngine::drumNoteOn(
+    int trackId,
+    DrumsetsSamples drum,
+    int midiNote,
+    int velocity)
+{
+    qDebug()
+        << "[AudioEngine]"
+        << "drumNoteOn:"
+        << "track =" << trackId
+        << "drum =" << static_cast<int>(drum)
+        << "note =" << midiNote
+        << "velocity =" << velocity;
+
+    TrackProcessor* processor =
+        findTrackProcessor(trackId);
+
+    if (!processor)
+    {
+        qDebug()
+            << "[AudioEngine]"
+            << "ERROR: no TrackProcessor for track:"
+            << trackId;
+
+        return;
+    }
+
+    qDebug()
+        << "[AudioEngine]"
+        << "forwarding to TrackProcessor";
+
+    processor->drumNoteOn(
+        drum,
+        midiNote,
+        velocity
+    );
+}
+
+void AudioEngine::setDrumInstrument(
+    int trackId,
+    DrumsetsSamples drum,
+    int rootMidiNote)
+{
+    TrackProcessor* processor =
+        findTrackProcessor(trackId);
+
+    if (!processor)
+        return;
+
+    processor->setDrumInstrument(
+        drum,
+        rootMidiNote
+    );
+}
+
 void AudioEngine::setTrackMuted(int trackId, bool muted)
 {
     m_trackRoutingStates[trackId].muted = muted;
@@ -498,16 +553,22 @@ QVector<float> AudioEngine::renderClip(
     return processor->renderClip(notes);
 }
 
-// void AudioEngine::render(float *left,
-//                          float *right,
-//                          std::size_t numSamples)
-// {
-//     if (m_trackProcessors.empty())
-//         return;
+QVector<float> AudioEngine::renderClip(
+    int trackId,
+    const QVector<DrumStepEvent>& drumSteps,
+    double secondsPerStep)
+{
+    TrackProcessor* processor =
+        findTrackProcessor(trackId);
 
-//     m_trackProcessors[0]->render(left, right, numSamples);
-// }
+    if (!processor)
+        return {};
 
+    return processor->renderClip(
+        drumSteps,
+        secondsPerStep
+    );
+}
 
 double AudioEngine::sampleRate() const
 {

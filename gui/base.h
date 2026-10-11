@@ -31,6 +31,6 @@ private:
     Piano *pianoWindow = nullptr;
     AudioEngine *m_audioEngine = nullptr;
     MonitorWindow *monitorWindow = nullptr;
-    DrumPad *drumPadWindow = nullptr;
+    DrumPad *m_drumPad = nullptr;
     QVector<VoiceTrack*> voiceTracks;
 };

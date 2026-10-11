@@ -4,7 +4,9 @@
 #include <QPoint>
 #include <Vector>
 #include "../synth/InstrumentParameters.h"
+#include "../synth/DrumsetsSamples.h"
 #include "../synth/SynthesizersSamples.h"
+#include "DrumSequence.h"
 class QLabel;
 class QPushButton;
 class InstrumentSettings;
@@ -13,7 +15,7 @@ class Piano;
 class QMouseEvent;
 struct PlacedNote;
 class PianoRoll;
-
+class DrumSequence;
 class VoiceTrack : public QWidget
 {
     Q_OBJECT
@@ -29,16 +31,21 @@ public:
     int trackId() const;
     QString trackName() const;
     const QVector<PlacedNote>& notes() const;
+    const QVector<DrumStepEvent>& drumSteps() const;
     double trackDuration() const;
-
+    void drumNoteOn(DrumsetsSamples drum,int midiNote,
+        int velocity
+    );
 signals:
     void pianoRollRequested();
     // Signals handled by Qt moc itself
     void instrumentRequested();
     void effectsRequested();
+    void drumSequenceRequested();
     void pianoRollBecameActive(PianoRoll* pianoRoll);
     void muteChanged(bool muted);
     void soloChanged(bool solo);
+
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
@@ -59,14 +66,15 @@ private:
     bool m_solo = false;
 
     QLabel *m_nameLabel;
-
+    QVector<DrumStepEvent> m_drumSteps;
     QPushButton *m_pianoRollButton;
     QPushButton *m_instrumentButton;
     QPushButton *m_effectsButton;
-
+    QPushButton *m_drumSequenceButton;
     QPushButton *m_muteButton;
     QPushButton *m_soloButton;
     InstrumentSettings *m_instrumentSettings;
     InstrumentParameters m_instrumentParameters;
     Piano *m_piano ;
+    DrumSequence *m_drumSequence;
 };

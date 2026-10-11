@@ -3,6 +3,7 @@
 #include "instrument_settings.h"
 #include "piano.h"
 #include "pianoRoll.h"
+#include "DrumSequence.h"
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -24,9 +25,10 @@ VoiceTrack::VoiceTrack(
       m_trackName(trackName),
       m_audioEngine(audioEngine),
       m_instrumentSettings(nullptr),
-      m_piano(nullptr)
+      m_piano(nullptr),
+      m_drumSequence(nullptr)
 {
-    setFixedSize(180, 220);
+    setFixedSize(180, 280);
 
     createUI();
 }
@@ -39,18 +41,36 @@ VoiceTrack::instrumentParameters() const
 
 double VoiceTrack::trackDuration() const
 {
-    if (!m_piano)
-        return 0.0;
-
     double duration = 0.0;
 
-    for (const PlacedNote &note : m_piano->notes())
+    if (m_piano)
     {
-        duration =
-            qMax(
-                duration,
-                note.time + note.duration
-            );
+        for (const PlacedNote& note : m_piano->notes())
+        {
+            duration =
+                qMax(
+                    duration,
+                    note.time + note.duration
+                );
+        }
+    }
+
+    if (!m_drumSteps.isEmpty())
+    {
+        const double secondsPerStep = 0.125;
+
+        for (const DrumStepEvent& event : m_drumSteps)
+        {
+            if (event.step < 0)
+                continue;
+
+            duration =
+                qMax(
+                    duration,
+                    (static_cast<double>(event.step) + 1.0)
+                    * secondsPerStep
+                );
+        }
     }
 
     return duration;
@@ -67,6 +87,27 @@ const QVector<PlacedNote>& VoiceTrack::notes() const
     return m_piano->notes();
 }
 
+const QVector<DrumStepEvent>& VoiceTrack::drumSteps() const
+{
+    return m_drumSteps;
+}
+
+void VoiceTrack::drumNoteOn(
+    DrumsetsSamples drum,
+    int midiNote,
+    int velocity)
+{
+    if (!m_audioEngine)
+        return;
+
+    m_audioEngine->drumNoteOn(
+        m_trackId,
+        drum,
+        midiNote,
+        velocity
+    );
+}
+
 void VoiceTrack::createUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -79,7 +120,7 @@ void VoiceTrack::createUI()
     m_pianoRollButton = new QPushButton("Piano Roll", this);
     m_instrumentButton = new QPushButton("Instrument", this);
     m_effectsButton = new QPushButton("Effects", this);
-
+    m_drumSequenceButton = new QPushButton("Drum Sequence", this);
     // Mute / Solo
     m_muteButton = new QPushButton("Mute", this);
     m_soloButton = new QPushButton("Solo", this);
@@ -123,6 +164,7 @@ void VoiceTrack::createUI()
     mainLayout->addWidget(m_pianoRollButton);
     mainLayout->addWidget(m_instrumentButton);
     mainLayout->addWidget(m_effectsButton);
+    mainLayout->addWidget(m_drumSequenceButton);
 
     mainLayout->addStretch();
 
@@ -164,6 +206,47 @@ void VoiceTrack::createUI()
     });
 
     connect(
+        m_drumSequenceButton,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            if (!m_drumSequence)
+            {
+                m_drumSequence =
+                    new DrumSequence(
+                        m_trackId,
+                        m_audioEngine,
+                        nullptr
+                    );
+
+                m_drumSequence->setWindowTitle(
+                    m_trackName + " - Drum Sequence"
+                );
+                connect(
+                    m_drumSequence,
+                    &DrumSequence::drumPatternChanged,
+                    this,
+                    [this](const QVector<DrumStepEvent>& steps)
+                    {
+                        m_drumSteps = steps;
+
+                        qDebug()
+                            << "[VoiceTrack]"
+                            << "stored drum pattern:"
+                            << m_drumSteps.size()
+                            << "events";
+                    }
+                );
+            }
+
+            m_drumSequence->show();
+            m_drumSequence->raise();
+            m_drumSequence->activateWindow();
+        }
+    );
+
+    connect(
         m_muteButton,
         &QPushButton::toggled,
         this,
@@ -183,10 +266,10 @@ void VoiceTrack::createUI()
         }
     );
 
-connect(
-    m_instrumentButton,
-    &QPushButton::clicked,
-    this,
+    connect(
+        m_instrumentButton,
+        &QPushButton::clicked,
+        this,
     [this]()
     {
         if (!m_instrumentSettings)

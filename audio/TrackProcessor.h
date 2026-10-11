@@ -1,11 +1,12 @@
 #pragma once
 
 #include "../synth/SynthEngine.h"
+#include "../synth/DrumsetsSamples.h"
 #include "effects/EffectChain.h"
 #include <QString>
 #include <QVector>
 #include "../gui/pianoRoll.h"
-
+#include "../gui/DrumSequence.h"
 enum class TrackState
 {
     Active,
@@ -28,16 +29,22 @@ public:
                 std::size_t numSamples);
 
     QVector<float> renderClip(
-    const QVector<PlacedNote>& notes);
-    int trackId() const;
+        const QVector<PlacedNote>& notes);
+        int trackId() const;
+    
+    QVector<float> renderClip(
+        const QVector<DrumStepEvent>& drumSteps,
+        double secondsPerStep);
 
     void setState(TrackState state);
 
     TrackState state() const;
 
-    void setSampleInstrument(
-        SynthesizersSamples sample);
-        
+    void setSampleInstrument(SynthesizersSamples sample);
+    
+    void drumNoteOn(DrumsetsSamples drum,int midiNote,int velocity);
+    void setDrumInstrument(DrumsetsSamples drum,int rootMidiNote);
+
     void setClippingThreshold(float threshold);
     
     void setDistortionDrive(float drive);

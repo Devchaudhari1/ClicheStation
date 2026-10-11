@@ -1,9 +1,12 @@
 #pragma once
 
 #include <QWidget>
-
+#include <QVBoxLayout>
+#include "Sequence.h"
+#include "TimeRuler.h"
 class QScrollArea;
-class QWidget;
+class QScrollBar;
+class Sequence;
 
 class TimelineView : public QWidget
 {
@@ -11,11 +14,34 @@ class TimelineView : public QWidget
 
 public:
     explicit TimelineView(QWidget *parent = nullptr);
+
     void ensureWidthForTime(double endTime);
+    void addSequence(Sequence *sequence);
+    void layoutSequences();
+
 private:
-    QScrollArea *m_leftPane;
-    QScrollArea *m_rightPane;
+    QScrollArea *m_verticalScrollArea;
+    QScrollArea *m_horizontalScrollArea;
+    QWidget *m_timelineContent;
 
     QWidget *m_leftContent;
     QWidget *m_rightContent;
+
+    QWidget *m_rightContainer;
+    QWidget *m_leftTopPadding;
+    QScrollBar *m_horizontalScrollBar;
+    QScrollBar *m_nativeHorizontalScrollBar;
+    
+    QVector<Sequence*> m_sequences;
+
+    QVector<QWidget*> m_leftSequenceContainers;
+    QVector<QWidget*> m_rightSequenceContainers;
+
+    QVector<QVBoxLayout*> m_leftSequenceLayouts;
+    QVector<QVBoxLayout*> m_rightSequenceLayouts;
+
+    TimeRuler *m_timeRuler;
+    
+    static constexpr int sequenceHeaderHeight = 60;
+    static constexpr int layerHeight = 120;
 };

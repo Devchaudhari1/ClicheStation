@@ -726,13 +726,13 @@ void Base::createUI()
         this,
         [this]()
         {
-            if (!drumPadWindow)
-                drumPadWindow =
+            if (!m_drumPad)
+                m_drumPad =
                     new DrumPad(nullptr);
 
-            drumPadWindow->show();
-            drumPadWindow->raise();
-            drumPadWindow->activateWindow();
+            m_drumPad->show();
+            m_drumPad->raise();
+            m_drumPad->activateWindow();
         }
     );
     // -------------------------------------------------

@@ -4,6 +4,7 @@
 #include <QString>
 
 enum class DrumsetsSamples {
+    None,
     china,
     china_stereo,
     crash_1,
@@ -57,6 +58,66 @@ enum class DrumsetsSamples {
     tom_3,
     tom_3_stereo,
 };
+
+inline QString drumSampleName(DrumsetsSamples sample) 
+{
+    switch (sample) 
+    { 
+    case DrumsetsSamples::china:
+        return "china";
+    case DrumsetsSamples::crash_1:
+        return "crash_1";
+    case DrumsetsSamples::crash_2:
+        return "crash_2";
+    case DrumsetsSamples::crash_3: 
+        return "crash_3"; 
+    case DrumsetsSamples::hand_clap: 
+        return "hand_clap";
+    case DrumsetsSamples::hh_close_from_open:
+        return "hh_close_from_open"; 
+    case DrumsetsSamples::hh_closed: 
+        return "hh_closed"; 
+    case DrumsetsSamples::hh_foot: 
+        return "hh_foot"; 
+    case DrumsetsSamples::hh_open: 
+        return "hh_open"; 
+    case DrumsetsSamples::kick: 
+        return "kick"; 
+    case DrumsetsSamples::ride_bell: 
+        return "ride_bell"; 
+    case DrumsetsSamples::ride: 
+        return "ride"; 
+    case DrumsetsSamples::snare_rim: 
+        return "snare_rim"; 
+    case DrumsetsSamples::snare_sidestick: 
+        return "snare_sidestick"; 
+    case DrumsetsSamples::snare_snares_off_rim: 
+        return "snare_snares_off_rim"; 
+    case DrumsetsSamples::snare_snares_off_sidestick: 
+        return "snare_snares_off_sidestick"; 
+    case DrumsetsSamples::snare_snares_off: 
+        return "snare_snares_off"; 
+    case DrumsetsSamples::snare: 
+        return "snare"; 
+    case DrumsetsSamples::splash: 
+        return "splash"; 
+    case DrumsetsSamples::stick_click: 
+        return "stick_click"; 
+    case DrumsetsSamples::tom_1_rim: 
+        return "tom_1_rim"; 
+    case DrumsetsSamples::tom_1: 
+        return "tom_1"; 
+    case DrumsetsSamples::tom_2_rim: 
+        return "tom_2_rim"; 
+    case DrumsetsSamples::tom_2: 
+        return "tom_2"; 
+    case DrumsetsSamples::tom_3_rim: 
+        return "tom_3_rim"; 
+    case DrumsetsSamples::tom_3: 
+        return "tom_3"; 
+    default: return {};
+    } 
+}
 
 inline const QHash<DrumsetsSamples, QString> DrumsetsSampleFiles = {
     { DrumsetsSamples::china, "gretschDrumset_china" },

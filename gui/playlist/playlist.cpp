@@ -5,7 +5,6 @@
 #include "Layer.h"
 #include "../track_list.h"
 #include "../../audio/AudioEngine.h"
-
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -29,86 +28,6 @@ void Playlist::setAvailableTracks(
     }
 }
 
-void Playlist::ensureTimelineWidthForTime(
-    double endTime
-)
-{
-    const double paddingSeconds = 2.0;
-
-    const int requiredWidth =
-        static_cast<int>(
-            (endTime + paddingSeconds)
-            * 100.0
-        );
-
-    if (requiredWidth <= m_rightContent->width())
-        return;
-
-    m_rightContent->setMinimumWidth(
-        requiredWidth
-    );
-
-    m_rightContent->resize(
-        requiredWidth,
-        m_rightContent->height()
-    );
-
-    layoutSequences();
-}
-
-
-void Playlist::layoutSequences()
-{
-    int y = 0;
-
-    for (int i = 0; i < m_sequences.size(); ++i)
-    {
-        Sequence *sequence = m_sequences[i];
-
-        int layerCount = sequence->layers().size();
-
-        int sequenceHeight =
-            sequenceHeaderHeight;
-
-        if (sequence->isExpanded())
-        {
-            sequenceHeight +=
-                sequence->layers().size() * layerHeight;
-        }
-
-        qDebug() << "Sequence" << i
-                 << "height =" << sequenceHeight
-                 << "left content width =" << m_leftContent->width()
-                 << "right content width =" << m_rightContent->width();
-
-        m_leftSequenceContainers[i]->setGeometry(
-            0,
-            y,
-            m_leftContent->width(),
-            sequenceHeight
-        );
-        
-        m_rightSequenceContainers[i]->setGeometry(
-            0,
-            y,
-            m_rightContent->width(),
-            sequenceHeight
-        );
-
-        y += sequenceHeight;
-    }
-
-    m_leftContent->resize(
-        m_leftContent->width(),
-        y
-    );
-
-    m_rightContent->resize(
-        m_rightContent->width(),
-        y
-    );
-}
-
 void Playlist::addSequence(
     AudioEngine *audioEngine,
     TrackList *trackList
@@ -127,210 +46,15 @@ void Playlist::addSequence(
     sequence->setAvailableTracks(m_availableTracks);
 
     m_sequences.append(sequence);
-    
+
     connect(
         sequence,
         &Sequence::timelineWidthRequired,
-        this,
-        &Playlist::ensureTimelineWidthForTime
-    );
-    // --------------------------------------------------
-    // LEFT container for this Sequence
-    // --------------------------------------------------
-
-    QWidget *leftSequenceContainer = new QWidget(m_leftContent);
-
-    leftSequenceContainer->setObjectName(
-        "leftSequenceContainer"
+        m_timelineView,
+        &TimelineView::ensureWidthForTime
     );
 
-    leftSequenceContainer->show();
-
-    QVBoxLayout *leftSequenceLayout =
-        new QVBoxLayout(leftSequenceContainer);
-
-    leftSequenceLayout->setContentsMargins(0, 0, 0, 0);
-    leftSequenceLayout->setSpacing(0);
-
-
-    // --------------------------------------------------
-    // RIGHT container for this Sequence
-    // --------------------------------------------------
-
-    QWidget *rightSequenceContainer = new QWidget(m_rightContent);
-    rightSequenceContainer->setStyleSheet(
-        "background: #040115;"
-        "color: #ffffff"
-        "border: 1px solid #062003;"
-    );
-    rightSequenceContainer->show();
-
-    QVBoxLayout *rightSequenceLayout =
-        new QVBoxLayout(rightSequenceContainer);
-
-    rightSequenceLayout->setContentsMargins(0, 0, 0, 0);
-    rightSequenceLayout->setSpacing(0);
-
-
-    // --------------------------------------------------
-    // Store the containers/layouts
-    // --------------------------------------------------
-
-    m_leftSequenceContainers.append(leftSequenceContainer);
-    m_rightSequenceContainers.append(rightSequenceContainer);
-
-    m_leftSequenceLayouts.append(leftSequenceLayout);
-    m_rightSequenceLayouts.append(rightSequenceLayout);
-
-
-    // --------------------------------------------------
-    // Sequence header
-    // --------------------------------------------------
-
-    leftSequenceLayout->addWidget(
-        sequence->headerWidget()
-    );
-    sequence->headerWidget()->setParent(leftSequenceContainer);
-    sequence->headerWidget()->setGeometry(
-        0,
-        0,
-        leftSequenceContainer->width(),
-        40
-    );
-    sequence->headerWidget()->show();
-    qDebug() << "HEADER:"
-         << sequence->headerWidget()
-         << "visible =" << sequence->headerWidget()->isVisible()
-         << "geometry =" << sequence->headerWidget()->geometry()
-         << "parent =" << sequence->headerWidget()->parentWidget();
-
-    // --------------------------------------------------
-    // Matching spacer on right side
-    // --------------------------------------------------
-
-    QWidget *spacer = new QWidget;
-    spacer->setFixedHeight(40);
-
-    rightSequenceLayout->addWidget(spacer);
-
-    spacer->show();
-
-
-    // --------------------------------------------------
-    // First Layer
-    //
-    // Sequence creates its first Layer in its constructor,
-    // before Playlist connects to layerAdded().
-    // Therefore we add this one manually.
-    // --------------------------------------------------
-
-    if (!sequence->layers().isEmpty())
-    {
-        Layer *layer = sequence->layers().first();
-
-        leftSequenceLayout->addWidget(
-            layer->leftWidget()
-        );
-
-        rightSequenceLayout->addWidget(
-            layer->clipArea()
-        );
-
-        layer->leftWidget()->show();
-        layer->clipArea()->show();
-        
-//     qDebug() << "LEFT LAYER:"
-//          << layer->leftWidget()
-//          << "visible =" << layer->leftWidget()->isVisible()
-//          << "geometry =" << layer->leftWidget()->geometry()
-//          << "parent =" << layer->leftWidget()->parentWidget();
-
-// qDebug() << "CLIP AREA:"
-//          << layer->clipArea()
-//          << "visible =" << layer->clipArea()->isVisible()
-//          << "geometry =" << layer->clipArea()->geometry()
-//          << "parent =" << layer->clipArea()->parentWidget();
-    }
-
-    // --------------------------------------------------
-    // Future Layers
-    // --------------------------------------------------
-
-    connect(
-        sequence,
-        &Sequence::layerAdded,
-        this,
-        [this,
-        sequence,
-        leftSequenceLayout,
-        rightSequenceLayout]()
-        {
-            Layer *layer = sequence->layers().last();
-
-            leftSequenceLayout->addWidget(
-                layer->leftWidget()
-            );
-
-            rightSequenceLayout->addWidget(
-                layer->clipArea()
-            );
-
-            layer->leftWidget()->setVisible(
-                sequence->isExpanded()
-            );
-
-            layer->clipArea()->setVisible(
-                sequence->isExpanded()
-            );
-
-            layoutSequences();
-        }
-    );
-
-    connect(
-        sequence,
-        &Sequence::expandedChanged,
-        this,
-        [this, sequence](bool expanded)
-        {
-            for (Layer *layer : sequence->layers())
-            {
-                layer->leftWidget()->setVisible(expanded);
-                layer->clipArea()->setVisible(expanded);
-            }
-
-            layoutSequences();
-        }
-    );
-
-
-    // --------------------------------------------------
-    // Calculate and position all Sequences
-    // --------------------------------------------------
-
-    layoutSequences();
-
-    // --------------------------------------------------
-    // Debug
-    // --------------------------------------------------
-
-    qDebug() << "Added Sequence" << sequenceId;
-
-    qDebug() << "LEFT CONTENT:"
-             << m_leftContent->size()
-             << "sizeHint:"
-             << m_leftContent->sizeHint();
-
-    qDebug() << "RIGHT CONTENT:"
-             << m_rightContent->size()
-             << "sizeHint:"
-             << m_rightContent->sizeHint();
-
-    qDebug() << "LEFT PANE:"
-             << m_leftPane->size();
-
-    qDebug() << "RIGHT PANE:"
-             << m_rightPane->size();
+    m_timelineView->addSequence(sequence);
 }
 
 
@@ -341,152 +65,22 @@ Playlist::Playlist(QWidget *parent)
    
 }
 
-
 void Playlist::createUI()
 {
-    QVBoxLayout *playlistLayout = new QVBoxLayout(this);
-    playlistLayout->setContentsMargins(0, 0, 0, 0);
+    QVBoxLayout *playlistLayout =
+        new QVBoxLayout(this);
+
+    playlistLayout->setContentsMargins(
+        0, 0, 0, 0
+    );
+
     playlistLayout->setSpacing(0);
 
-    // =========================================================
-    // Time Ruler
-    // =========================================================
+    m_timelineView =
+        new TimelineView(this);
 
-    m_timeRuler = new TimeRuler(this);
-    playlistLayout->addWidget(m_timeRuler);
-
-
-    // =========================================================
-    // Timeline View
-    // =========================================================
-
-    m_timelineView = new QWidget(this);
-    m_timelineView->setStyleSheet(
-        "background: black;"
+    playlistLayout->addWidget(
+        m_timelineView,
+        1
     );
-
-    QHBoxLayout *timelineLayout =
-        new QHBoxLayout(m_timelineView);
-
-    timelineLayout->setContentsMargins(0, 0, 0, 0);
-    timelineLayout->setSpacing(0);
-
-
-    // =========================================================
-    // Left Pane
-    // =========================================================
-
-    m_leftPane = new QScrollArea(m_timelineView);
-
-    m_leftPane->setFixedWidth(220);
-
-    m_leftPane->setHorizontalScrollBarPolicy(
-        Qt::ScrollBarAlwaysOff
-    );
-
-    m_leftPane->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-
-    m_leftPane->setWidgetResizable(false);
-
-
-    // ---------------------------------------------------------
-    // Left Content
-    // ---------------------------------------------------------
-
-    m_leftContent = new QWidget;
-    m_leftContent->setFixedWidth(220);
-    m_leftContent->setMinimumHeight(1);
-    // m_leftContent->setStyleSheet(
-    //     "background: #e4e3ec;"
-    // );
-
-    // =========================================================
-    // Right Pane
-    // =========================================================
-
-    m_rightPane = new QScrollArea(m_timelineView);
-
-    m_rightPane->setHorizontalScrollBarPolicy(
-        Qt::ScrollBarAsNeeded
-    );
-
-    m_rightPane->setVerticalScrollBarPolicy(
-        Qt::ScrollBarAsNeeded
-    );
-
-    m_rightPane->setWidgetResizable(false);
-
-    connect(
-    m_rightPane->horizontalScrollBar(),
-    &QScrollBar::valueChanged,
-    m_timeRuler,
-    [this](int value)
-    {
-        m_timeRuler->setScrollOffset(value);
-    }
-    );
-    // Two way schronization with a boolean guard connections 
-    // for synchronized vertical scrolling
-    connect(
-        m_leftPane->verticalScrollBar(),
-        &QScrollBar::valueChanged,
-        this,
-        [this](int value)
-        {
-            if (m_syncingVerticalScroll)
-                return;
-
-            m_syncingVerticalScroll = true;
-
-            m_rightPane->verticalScrollBar()->setValue(value);
-
-            m_syncingVerticalScroll = false;
-        }
-    );
-
-    connect(
-        m_rightPane->verticalScrollBar(),
-        &QScrollBar::valueChanged,
-        this,
-        [this](int value)
-        {
-            if (m_syncingVerticalScroll)
-                return;
-
-            m_syncingVerticalScroll = true;
-
-            m_leftPane->verticalScrollBar()->setValue(value);
-
-            m_syncingVerticalScroll = false;
-        }
-    );
-    // ---------------------------------------------------------
-    // Right Content
-    // ---------------------------------------------------------
-
-    m_rightContent = new QWidget;
-
-    m_rightContent->setMinimumWidth(2000);
-    m_rightContent->setMinimumHeight(1);
-    m_rightContent->setStyleSheet(
-        "background: #202020;"
-    );
-
-
-    // =========================================================
-    // Install Content
-    // =========================================================
-
-    m_leftPane->setWidget(m_leftContent);
-    m_rightPane->setWidget(m_rightContent);
-
-    // =========================================================
-    // Add Timeline View to Playlist
-    // =========================================================
-
-     timelineLayout->addWidget(m_leftPane);
-    timelineLayout->addWidget(m_rightPane, 1);
-
-    playlistLayout->addWidget(m_timelineView, 1);
-
 }

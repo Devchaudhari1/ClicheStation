@@ -90,6 +90,33 @@ void TrackProcessor::setSampleInstrument(
     m_synth.setSampleInstrument(sample);
 }
 
+void TrackProcessor::drumNoteOn(
+    DrumsetsSamples drum,
+    int midiNote,
+    int velocity)
+{
+    qDebug() << "[TrackProcessor]"
+         << "drumNoteOn:"
+         << "drum =" << static_cast<int>(drum)
+         << "note =" << midiNote
+         << "velocity =" << velocity;
+    m_synth.drumNoteOn(
+        drum,
+        midiNote,
+        velocity
+    );
+}
+
+void TrackProcessor::setDrumInstrument(
+    DrumsetsSamples drum,
+    int rootMidiNote)
+{
+    m_synth.setDrumInstrument(
+        drum,
+        rootMidiNote
+    );
+}
+
 QVector<float> TrackProcessor::renderClip(
     const QVector<PlacedNote>& notes)
 {
@@ -97,6 +124,32 @@ QVector<float> TrackProcessor::renderClip(
     QVector<float> right;
 
     m_synth.render(notes, left, right);
+
+    if (left.isEmpty())
+        return {};
+
+    m_effectChain.process(
+        left.data(),
+        right.data(),
+        static_cast<std::size_t>(left.size())
+    );
+
+    return left;
+}
+
+QVector<float> TrackProcessor::renderClip(
+    const QVector<DrumStepEvent>& drumSteps,
+    double secondsPerStep)
+{
+    QVector<float> left;
+    QVector<float> right;
+
+    m_synth.render(
+        drumSteps,
+        secondsPerStep,
+        left,
+        right
+    );
 
     if (left.isEmpty())
         return {};

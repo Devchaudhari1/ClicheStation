@@ -1,0 +1,41 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/cliche_station.png</file>
+        <file>drums/china.png</file>
+        <file>drums/clap_2.png</file>
+        <file>drums/china_2.png</file>
+        <file>drums/crash_2.png</file>
+        <file>drums/crash_3.png</file>
+        <file>drums/hh_foot.png</file>
+        <file>drums/crash_1.png</file>
+        <file>drums/hand_clap.png</file>
+        <file>drums/hh_closed.png</file>
+        <file>drums/hh_open.png</file>
+        <file>drums/ride.png</file>
+        <file>drums/kick.png</file>
+        <file>drums/hh_open_2.png</file>
+        <file>drums/snare.png</file>
+        <file>drums/ride_bell.png</file>
+        <file>drums/ride_bell_2.png</file>
+        <file>drums/snare_sidestick.png</file>
+        <file>drums/snare_rim.png</file>
+        <file>drums/snare_snares_off.png</file>
+        <file>drums/snare_snares_off_rim.png</file>
+        <file>drums/tile_4_3.png</file>
+        <file>drums/splash.png</file>
+        <file>drums/tile_4_7.png</file>
+        <file>drums/stick_click.png</file>
+        <file>drums/snare_snares_off_sidestick.png</file>
+        <file>drums/tile_5_3.png</file>
+        <file>drums/tile_5_4.png</file>
+        <file>drums/tile_5_6.png</file>
+        <file>drums/tile_5_5.png</file>
+        <file>drums/tom_1.png</file>
+        <file>drums/tom_3.png</file>
+        <file>drums/tom_2.png</file>
+        <file>drums/tom_2_rim.png</file>
+        <file>drums/tom_1_rim.png</file>
+        <file>drums/tom2_rim.png</file>
+        <file>drums/tom_3_rim.png</file>
+    </qresource>
+</RCC>
