@@ -18,10 +18,9 @@ void TimeRuler::paintEvent(QPaintEvent *event)
 
     // Temporary:
     // first 160 px are reserved for the Layer column.
-    const int layerColumnWidth = 220;
 
     painter.drawLine(
-        layerColumnWidth,
+        0,
         rulerHeight - 1,
         width(),
         rulerHeight - 1
@@ -31,12 +30,9 @@ void TimeRuler::paintEvent(QPaintEvent *event)
          second <= 2000;
          ++second)
     {
-        int x =
-        layerColumnWidth +
-        static_cast<int>(
+        int x =static_cast<int>(
             second * m_pixelsPerSecond
-        )
-        - m_scrollOffset;
+        );
 
         painter.drawLine(
             x,
@@ -51,10 +47,4 @@ void TimeRuler::paintEvent(QPaintEvent *event)
             QString("%1s").arg(second)
         );
     }
-}
-
-void TimeRuler::setScrollOffset(int offset)
-{
-    m_scrollOffset = offset;
-    update();
 }

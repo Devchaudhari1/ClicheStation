@@ -562,54 +562,35 @@ subgraph SignalProcessing[Signal Processing]
 end
 ```
 
-### Widget Structure for Playlist
-```mermaid
-    flowchart TB
-
-    subgraph PlayList["PlayList"]
-
-    end
-    subgraph TimeLineView["TimelineView"]
-        subgraph mainLayout["mainLayout"]
-
-            subgraph m_rightPane["m_rightPane (QScrollArea)"]
-                subgraph m_rightContent["m_rightContent (QWidget)"]
-                    subgraph rightLayout["rightLayout (QVBoxLayout)"]
-                    end
-                    subgraph rightSequenceContainers["rightSequenceContainers(QWidget)"]
-                        subgraph rightSequenceContainer["rightSequenceContainer(QWidget)"]
-                            subgraph rightSequenceLayout["rightSequenceLayout (QVBoxLayout)"]
-                            end
-                        end
-                    end
-                end
-            end
-            subgraph m_leftPane["m_left Pane (QScrollArea)"]
-                subgraph m_leftContent["m_leftContent (QWidget)"]
-                    subgraph leftLayout["leftLayout (QVBoxLayout)"]
-                    end
-                    subgraph leftSequenceContainers["leftSequenceContainers(QWidget)"]
-                        subgraph leftSequenceContainer["leftSequenceContainer(QWidget)"]
-                            subgraph leftSequenceLayout["leftSequenceLayout (QVBoxLayout)"]
-                                direction LR
-                                subgraph headerLayout["headerLayout (QHBoxLayout)"]
-                                    direction LR
-                                    m_expandButton["m_expandButton (QPushButton)"]
-                                    m_sequenceLabel["m_sequenceLabel"]
-                                    m_playButton["m_playButton"]
-                                    m_addLayerButton["m_playButton"]
-                                end
-                                subgraph LayerleftLayout["leftLayerlayout(QVBoxLayout)"]
-                                    m_muteButton["m_muteButton(QPushButton)"]
-                                    m_optionsButton["m_optionsButton(QPushButton)"]
-
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-
+### New Widget Structure for Playlist
+```
+    TimelineView
+    │
+    └── ONE vertical QScrollArea
+        │
+        └── timelineContent
+            │
+            ├── leftContent
+            |    |___A widget of height as horizontal QScrollArea height+TimeRuler height for padding
+            |    |___TimelineRow left part
+            |    |___TimelineRow left part
+            |    |___TimelineRow left part
+            |    |___ ...
+            |    |___TimelineRow left part
+            │
+            └── m_rightContainer
+                │
+                ├── horizontalScrollBar
+                │
+                └── m_horizontalScrollArea
+                    │
+                    └── m_rightContent
+                        │
+                        ├── TimeRuler       ← scrolls
+                        ├── Sequence 1
+                        ├── Layer 1
+                        ├── Layer 2
+                        ├── Layer 3
+                        ├── Sequence 2
+                        └── ...
 ```

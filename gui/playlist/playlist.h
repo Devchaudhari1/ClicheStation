@@ -8,18 +8,18 @@ class QVBoxLayout;
 class QHBoxLayout;
 class QScrollArea;
 class QLabel;
-class TimeRuler;
+class TimeliineView;
 class Sequence;
 class AudioEngine;
 class TrackList;
-
+#include "TimelineView.h"
 class Playlist : public QWidget
 {
     Q_OBJECT
 
 public:
     explicit Playlist(QWidget *parent = nullptr);
-    void layoutSequences();
+    // void layoutSequences();
 public slots:
     void addSequence(
         AudioEngine *audioEngine,
@@ -29,32 +29,20 @@ public slots:
     );
 private:
     void createUI();
-    void ensureTimelineWidthForTime(double endTime);
-    // Main components
-    TimeRuler *m_timeRuler;
-    QWidget *m_timelineView;
 
-    // Left side
-    QScrollArea *m_leftPane;
-    QWidget *m_leftContent;
+    TimelineView *m_timelineView;
 
-    // Right side
-    QScrollArea *m_rightPane;
-    QWidget *m_rightContent;
-
-    // Sequences
     QVector<Sequence *> m_sequences;
     int m_nextSequenceId = 1;
+
     const int sequenceHeaderHeight = 60;
     const int layerHeight = 120;
+
     QVector<QWidget*> m_leftSequenceContainers;
     QVector<QWidget*> m_rightSequenceContainers;
 
     QVector<QVBoxLayout*> m_leftSequenceLayouts;
     QVector<QVBoxLayout*> m_rightSequenceLayouts;
 
-    // Tracks
     QVector<QPair<int, QString>> m_availableTracks;
-    // Scroll synchronization
-    bool m_syncingVerticalScroll = false;
 };
