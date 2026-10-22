@@ -38,7 +38,7 @@ private:
         Stage::Idle;
 
     float m_level = 0.0f;
-
+    float m_releaseStart=0.0f;
     float m_attack = 0.01f;
     float m_decay = 0.1f;
     float m_sustain = 0.8f;

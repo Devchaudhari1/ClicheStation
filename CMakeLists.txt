@@ -38,6 +38,8 @@ qt_add_executable(ClicheStation
     gui/playlist/Sequence.h
 
     #main gui
+    gui/audio_track.cpp
+    gui/audio_track.h
     gui/base.cpp
     gui/base.h
     gui/drumPad.cpp
@@ -61,6 +63,8 @@ qt_add_executable(ClicheStation
     gui/pianoKeyboard.h
     gui/pianoRoll.cpp
     gui/pianoRoll.h
+    gui/RecordingTimeRuler.cpp
+    gui/RecordingTimeRuler.h
     gui/RowContainer.cpp
     gui/RowContainer.h
     gui/RowHeader.cpp
@@ -71,6 +75,8 @@ qt_add_executable(ClicheStation
     gui/track_list.h
     gui/voice_track.cpp
     gui/voice_track.h
+    gui/VoiceRecordingWindow.cpp
+    gui/VoiceRecordingWindow.h
     # Midi source
     midi/RtMidi.cpp
     midi/RtMidi.h
@@ -86,6 +92,8 @@ qt_add_executable(ClicheStation
     synth/InstrumentParameters.h
     synth/Oscillator.cpp
     synth/Oscillator.h
+    synth/RealTimeSampler.cpp
+    synth/RealTimeSampler.h
     synth/SampleBank.cpp
     synth/SampleBank.h
     synth/SampleData.h
@@ -113,6 +121,8 @@ qt_add_executable(ClicheStation
     audio/effects/Clipping.h
     audio/effects/Compression.cpp
     audio/effects/Compression.h
+    audio/effects/DeEsser.cpp
+    audio/effects/DeEsser.h
     audio/effects/Delay.cpp
     audio/effects/Delay.h
     audio/effects/Distortion.cpp

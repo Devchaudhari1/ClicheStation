@@ -66,6 +66,70 @@ qint64 AudioOutputDevice::writeData(
     return -1;
 }
 
+AudioInputDevice::AudioInputDevice(AudioEngine *engine)
+    : QIODevice(engine),
+      m_engine(engine)
+{
+}
+
+qint64 AudioInputDevice::bytesAvailable() const
+{
+    return QIODevice::bytesAvailable();
+}
+
+qint64 AudioInputDevice::readData(
+    char *data,
+    qint64 maxlen)
+{
+    Q_UNUSED(data);
+    Q_UNUSED(maxlen);
+
+    return 0;
+}
+
+qint64 AudioInputDevice::writeData(
+    const char *data,
+    qint64 len)
+{
+    if (!m_engine || !data || len <= 0)
+        return 0;
+
+    const int bytesPerSample = sizeof(float);
+    const int channels = 2;
+    const int bytesPerFrame =
+        bytesPerSample * channels;
+
+    if (len < bytesPerFrame)
+        return 0;
+
+    const qint64 bytesToProcess =
+        len - (len % bytesPerFrame);
+
+    const std::size_t numFrames =
+        static_cast<std::size_t>(
+            bytesToProcess / bytesPerFrame);
+
+    const float *input =
+        reinterpret_cast<const float *>(data);
+
+    std::vector<float> left(numFrames);
+    std::vector<float> right(numFrames);
+
+    for (std::size_t i = 0; i < numFrames; ++i)
+    {
+        left[i] = input[i * 2];
+        right[i] = input[i * 2 + 1];
+    }
+
+    m_engine->processInput(
+        left.data(),
+        right.data(),
+        numFrames
+    );
+
+    return bytesToProcess;
+}
+
 AudioEngine::AudioEngine(QObject* parent)
     : QObject(parent)
 {
@@ -260,10 +324,61 @@ bool AudioEngine::initialize()
             qDebug() << "AudioSink state changed:" << state;
         });
 
+    QAudioDevice inputDevice =
+        QMediaDevices::defaultAudioInput();
+
+    if (inputDevice.isNull())
+    {
+        qWarning()
+            << "No audio input device found";
+
+        return false;
+    }
+
+    QAudioFormat inputFormat;
+    inputFormat.setSampleRate(
+        static_cast<int>(m_sampleRate));
+
+    inputFormat.setChannelCount(2);
+
+    inputFormat.setSampleFormat(
+        QAudioFormat::Float);
+
+    if (!inputDevice.isFormatSupported(inputFormat))
+    {
+        qWarning()
+            << "Audio input format not supported";
+
+        return false;
+    }
+
+    m_audioSource =
+        new QAudioSource(
+            inputDevice,
+            inputFormat,
+            this);
+
+    connect(
+        m_audioSource,
+        &QAudioSource::stateChanged,
+        this,
+        [](QAudio::State state)
+        {
+            qDebug()
+                << "AudioSource state changed:"
+                << state;
+    });
+
     createTrack(1);
     createTrack(2);
     m_outputDevice =new AudioOutputDevice(this);
-
+    m_inputDevice = new AudioInputDevice(this);
+    m_realTimeSampler.prepare(
+        m_sampleRate,
+        static_cast<std::size_t>(m_blockSize),
+        2,
+        60.0
+    );
     return true;
 }
 
@@ -282,37 +397,74 @@ void AudioEngine::setSampleInstrument(
 
 void AudioEngine::start()
 {
-
-    bool opened = m_outputDevice->open(QIODevice::ReadOnly);
-    connect(
-    m_audioSink,
-    &QAudioSink::stateChanged,
-    this,
-    [](QAudio::State state)
-    {
-        qDebug() << "AudioSink state changed:" << state;
-    });
-
-    qDebug() << "output device opened:" << opened;
-    qDebug() << "output device isOpen:" << m_outputDevice->isOpen();
-    qDebug() << "output device isReadable:" << m_outputDevice->isReadable();
-
-    m_audioSink->start(m_outputDevice);
-
     if (m_audioSink == nullptr)
     {
-        qDebug() << "start(): m_audioSink is null";
+        qDebug()
+            << "start(): m_audioSink is null";
+        return;
+    }
+
+    if (m_audioSource == nullptr)
+    {
+        qDebug()
+            << "start(): m_audioSource is null";
+        return;
+    }
+
+    if (m_outputDevice == nullptr)
+    {
+        qDebug()
+            << "start(): m_outputDevice is null";
+        return;
+    }
+
+    if (m_inputDevice == nullptr)
+    {
+        qDebug()
+            << "start(): m_inputDevice is null";
         return;
     }
 
     if (m_running)
     {
-        qDebug() << "start(): already running";
+        qDebug()
+            << "start(): already running";
         return;
     }
 
+    bool opened =
+        m_outputDevice->open(QIODevice::ReadOnly);
+
+    qDebug()
+        << "output device opened:"
+        << opened;
+
+    qDebug()
+        << "output device isOpen:"
+        << m_outputDevice->isOpen();
+
+    qDebug()
+        << "output device isReadable:"
+        << m_outputDevice->isReadable();
+
+    m_audioSink->start(m_outputDevice);
+
+    bool inputOpened =
+        m_inputDevice->open(QIODevice::WriteOnly);
+
+    qDebug()
+        << "input device opened:"
+        << inputOpened;
+
+    qDebug()
+        << "input device isOpen:"
+        << m_inputDevice->isOpen();
+
+    m_audioSource->start(m_inputDevice);
+
     m_running = true;
 }
+
 void AudioEngine::stop()
 {
     if (m_audioSink == nullptr)
@@ -320,8 +472,14 @@ void AudioEngine::stop()
 
     m_audioSink->stop();
 
+    if (m_audioSource)
+        m_audioSource->stop();
+
     if (m_outputDevice)
         m_outputDevice->close();
+
+    if (m_inputDevice)
+        m_inputDevice->close();
 
     m_audioDevice = nullptr;
 
@@ -333,6 +491,105 @@ void AudioEngine::noteOn(int midiNote, int velocity)
     if (m_trackProcessors.empty())
         return;
     m_trackProcessors[0]->noteOn(midiNote, velocity);
+}
+
+void AudioEngine::processInput(
+    const float *left,
+    const float *right,
+    std::size_t numSamples)
+{
+    if (!left || !right || numSamples == 0)
+        return;
+
+    m_realTimeSampler.process(
+        left,
+        right,
+        numSamples
+    );
+}
+
+void AudioEngine::startRecording()
+{
+    m_realTimeSampler.startRecording();
+}
+
+void AudioEngine::stopRecording()
+{
+    m_realTimeSampler.stopRecording();
+
+    qDebug()
+        << "Voice recording stopped."
+        << "Samples:"
+        << m_realTimeSampler.numSamples();
+
+    qDebug()
+        << "Duration:"
+        << (m_realTimeSampler.numSamples()
+            / m_realTimeSampler.sampleRate())
+        << "seconds";
+    emit recordingStopped();
+}
+
+void AudioEngine::trimRecording(
+    std::size_t startSample,
+    std::size_t endSample)
+{
+    m_realTimeSampler.trim(
+        startSample,
+        endSample);
+}
+
+const std::vector<float>& AudioEngine::recordedLeft() const
+{
+    return m_realTimeSampler.leftBuffer();
+}
+
+const std::vector<float>& AudioEngine::recordedRight() const
+{
+    return m_realTimeSampler.rightBuffer();
+}
+
+std::size_t AudioEngine::recordedSamples() const
+{
+    return m_realTimeSampler.numSamples();
+}
+
+void AudioEngine::startRecordingPlayback(
+    std::size_t startSample)
+{
+    const std::size_t totalSamples =
+        m_realTimeSampler.numSamples();
+
+    if (totalSamples == 0)
+        return;
+
+    if (startSample >= totalSamples)
+        startSample = 0;
+
+    m_recordingPlaybackPosition.store(
+        startSample,
+        std::memory_order_relaxed
+    );
+
+    m_recordingPlayback.store(
+        true,
+        std::memory_order_release
+    );
+}
+
+void AudioEngine::stopRecordingPlayback()
+{
+    m_recordingPlayback.store(
+        false,
+        std::memory_order_release
+    );
+}
+
+bool AudioEngine::isRecordingPlayback() const
+{
+    return m_recordingPlayback.load(
+        std::memory_order_acquire
+    );
 }
 
 void AudioEngine::noteOn(
@@ -514,8 +771,17 @@ void AudioEngine::render(float *left,
         if (!shouldTrackParticipate(processor->trackId()))
             continue;
 
-        std::fill(trackLeft.begin(), trackLeft.end(), 0.0f);
-        std::fill(trackRight.begin(), trackRight.end(), 0.0f);
+        std::fill(
+            trackLeft.begin(),
+            trackLeft.end(),
+            0.0f
+        );
+
+        std::fill(
+            trackRight.begin(),
+            trackRight.end(),
+            0.0f
+        );
 
         processor->render(
             trackLeft.data(),
@@ -523,12 +789,15 @@ void AudioEngine::render(float *left,
             numSamples
         );
 
-        for (std::size_t i = 0; i < numSamples; ++i)
+        for (std::size_t i = 0;
+             i < numSamples;
+             ++i)
         {
             left[i] += trackLeft[i];
             right[i] += trackRight[i];
         }
     }
+
     // --------------------------------------------
     // Sequence playback
     // --------------------------------------------
@@ -538,6 +807,80 @@ void AudioEngine::render(float *left,
         right,
         numSamples
     );
+
+    // --------------------------------------------
+    // Recording playback
+    // --------------------------------------------
+
+    if (m_recordingPlayback.load(
+            std::memory_order_acquire))
+    {
+        const std::size_t position =
+            m_recordingPlaybackPosition.load(
+                std::memory_order_relaxed
+            );
+
+        const std::size_t totalSamples =
+            m_realTimeSampler.numSamples();
+
+        if (position < totalSamples)
+        {
+            const std::vector<float>& recordingLeft =
+                m_realTimeSampler.leftBuffer();
+
+            const std::vector<float>& recordingRight =
+                m_realTimeSampler.rightBuffer();
+
+            const std::size_t samplesToRender =
+                std::min(
+                    numSamples,
+                    totalSamples - position
+                );
+
+            for (std::size_t i = 0;
+                 i < samplesToRender;
+                 ++i)
+            {
+                left[i] += recordingLeft[position + i];
+                right[i] += recordingRight[position + i];
+            }
+
+            const std::size_t newPosition =
+                position + samplesToRender;
+
+            if (newPosition >= totalSamples)
+            {
+                m_recordingPlaybackPosition.store(
+                    0,
+                    std::memory_order_relaxed
+                );
+
+                m_recordingPlayback.store(
+                    false,
+                    std::memory_order_release
+                );
+            }
+            else
+            {
+                m_recordingPlaybackPosition.store(
+                    newPosition,
+                    std::memory_order_relaxed
+                );
+            }
+        }
+        else
+        {
+            m_recordingPlaybackPosition.store(
+                0,
+                std::memory_order_relaxed
+            );
+
+            m_recordingPlayback.store(
+                false,
+                std::memory_order_release
+            );
+        }
+    }
 }
 
 QVector<float> AudioEngine::renderClip(

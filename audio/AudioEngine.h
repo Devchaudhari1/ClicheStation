@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QAudioFormat>
+#include <QAudioSource>
 #include <QAudioSink>
 #include <QIODevice>
 #include <vector>
@@ -14,12 +15,27 @@
 #include "TrackProcessor.h"
 #include "../synth/SynthesizersSamples.h"
 #include "../gui/DrumSequence.h"
+#include "../synth/RealTimeSampler.h"
 class AudioEngine;
 
 class AudioOutputDevice : public QIODevice
 {
 public:
     explicit AudioOutputDevice(AudioEngine *engine);
+
+protected:
+    qint64 readData(char *data, qint64 maxlen) override;
+    qint64 writeData(const char *data, qint64 len) override;
+    qint64 bytesAvailable() const override;
+
+private:
+    AudioEngine *m_engine;
+};
+
+class AudioInputDevice : public QIODevice
+{
+public:
+    explicit AudioInputDevice(AudioEngine *engine);
 
 protected:
     qint64 readData(char *data, qint64 maxlen) override;
@@ -55,6 +71,8 @@ public:
     void noteOff(int midiNote);
     void noteOn(int trackId, int midiNote, int velocity);
     void noteOff(int trackId, int midiNote);
+    void startRecording();
+    void stopRecording();
 
     QVector<float> renderClip(
         int trackId,
@@ -186,6 +204,21 @@ public:
         std::size_t numSamples
     );
 
+    void processInput(
+        const float *left,
+        const float *right,
+        std::size_t numSamples
+    );
+
+    void trimRecording(
+        std::size_t startSample,
+        std::size_t endSample
+    );
+
+    void startRecordingPlayback(std::size_t startSample);
+    void stopRecordingPlayback();
+    bool isRecordingPlayback() const;
+
     void setEffectEnabled(
         int trackId,
         AudioEffectType effectType,
@@ -208,7 +241,13 @@ public:
     const TrackProcessor* findTrackProcessor(int trackId) const;
     double sampleRate() const;
     int blockSize() const;
+    const std::vector<float>& recordedLeft() const;
+    const std::vector<float>& recordedRight() const;
+    std::size_t recordedSamples() const;
 
+signals:
+    void recordingStopped();
+    
 private:
     double m_sampleRate = 48000.0;
     int m_blockSize = 256;
@@ -222,7 +261,8 @@ private:
 
     std::atomic<bool> m_sequencePlaying{false};
     std::atomic<std::int64_t> m_sequencePlaybackPosition{0};
-
+    std::atomic<bool> m_recordingPlayback{false};
+    std::atomic<std::size_t> m_recordingPlaybackPosition{0};
     QHash<int, TrackRoutingState> m_trackRoutingStates;
 
     void renderSequence(
@@ -231,11 +271,13 @@ private:
         std::size_t numSamples
     );
     QAudioFormat m_format;
+    QAudioSource *m_audioSource = nullptr;
     QAudioSink *m_audioSink = nullptr;
     QIODevice *m_audioDevice = nullptr;
 
     AudioOutputDevice *m_outputDevice = nullptr;
-
+    AudioInputDevice *m_inputDevice = nullptr;
+    RealTimeSampler m_realTimeSampler;
     std::vector<std::unique_ptr<TrackProcessor>> m_trackProcessors;
 
     bool m_running = false;

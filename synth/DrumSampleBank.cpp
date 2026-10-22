@@ -337,19 +337,19 @@ bool DrumSampleBank::loadSample(
         std::move(sample)
     );
 
-    qDebug()
-        << "DrumSampleBank: Loaded"
-        << filePath
-        << "drum:"
-        << static_cast<int>(drum)
-        << "root MIDI:"
-        << rootMidiNote
-        << "sample rate:"
-        << sampleRate
-        << "frames:"
-        << frameCount
-        << "channels:"
-        << numChannels;
+    // qDebug()
+    //     << "DrumSampleBank: Loaded"
+    //     << filePath
+    //     << "drum:"
+    //     << static_cast<int>(drum)
+    //     << "root MIDI:"
+    //     << rootMidiNote
+    //     << "sample rate:"
+    //     << sampleRate
+    //     << "frames:"
+    //     << frameCount
+    //     << "channels:"
+    //     << numChannels;
 
     return true;
 }

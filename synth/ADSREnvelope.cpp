@@ -37,6 +37,7 @@ void ADSREnvelope::noteOn()
 }
 void ADSREnvelope::noteOff()
 {
+    m_releaseStart=m_level;
     m_stage = Stage::Release;
 }
 
@@ -65,13 +66,14 @@ float ADSREnvelope::processSample()
             }
 
             const float increment =
-                1.0f / static_cast<float>(m_attack * m_sampleRate);
+                m_peakGain /
+                static_cast<float>(m_attack * m_sampleRate);
 
             m_level += increment;
 
-            if (m_level >= 1.0f)
+            if (m_level >= m_peakGain)
             {
-                m_level = 1.0f;
+                m_level = m_peakGain;
                 m_stage = Stage::Decay;
             }
 
@@ -88,9 +90,9 @@ float ADSREnvelope::processSample()
             }
 
             const float decrement =
-                (1.0f - m_sustain) /
+                (m_peakGain - m_sustain) /
                 static_cast<float>(m_decay * m_sampleRate);
-
+            
             m_level -= decrement;
 
             if (m_level <= m_sustain)
@@ -118,7 +120,7 @@ float ADSREnvelope::processSample()
             }
 
             const float decrement =
-                1.0f /
+                m_releaseStart /
                 static_cast<float>(m_release * m_sampleRate);
 
             m_level -= decrement;

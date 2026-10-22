@@ -18,7 +18,7 @@
 #include "../midi/MidiInput.h"
 #include "voice_track.h"
 #include "track_list.h"
-
+#include "VoiceRecordingWindow.h"
 
 void Base::playStartupSound()
 {
@@ -286,11 +286,17 @@ void Base::createUI()
     // Buttons
     // -------------------------------------------------
 
+    QPushButton *VoiceRecordButton =
+        new QPushButton("🎙 Voice Record");
+
+    QPushButton *VoiceStopButton =
+        new QPushButton("■ Voice Stop");
+
     QPushButton *ConnectMidiButton =
         new QPushButton("MIDI");
 
     QPushButton *StartRecording =
-        new QPushButton("● Record");
+        new QPushButton("● MIDI Record");
 
     QPushButton *StopRecording =
         new QPushButton("■ Stop");
@@ -307,6 +313,13 @@ void Base::createUI()
     QPushButton *DrumPadButton =
         new QPushButton("Drums");
 
+    buttonLayout->addWidget(
+        VoiceRecordButton
+    );
+
+    buttonLayout->addWidget(
+        VoiceStopButton
+    );
 
     buttonLayout->addWidget(
         ConnectMidiButton
@@ -435,6 +448,51 @@ void Base::createUI()
     // -------------------------------------------------
     // Connections
     // -------------------------------------------------
+    
+    connect(
+        VoiceRecordButton,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            qDebug() << "VOICE RECORDING STARTED";
+            m_audioEngine->startRecording();
+        }
+    );
+    
+    connect(
+        VoiceStopButton,
+        &QPushButton::clicked,
+        this,
+        [this]()
+        {
+            qDebug() << "VOICE RECORDING STOPPED";
+
+            m_audioEngine->stopRecording();
+        }
+    );
+
+    connect(
+        m_audioEngine,
+        &AudioEngine::recordingStopped,
+        this,
+        [this]()
+        {
+            auto* window =
+                new VoiceRecordingWindow(
+                    m_audioEngine,
+                    this
+                );
+
+            window->setAttribute(
+                Qt::WA_DeleteOnClose
+            );
+
+            window->show();
+            window->raise();
+            window->activateWindow();
+        }
+    );
 
     connect(
         ConnectMidiButton,

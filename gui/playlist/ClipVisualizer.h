@@ -28,6 +28,8 @@ public:
     double duration() const;
     double sourceStart() const;
     double sourceEnd() const;
+signals:
+    void positionClicked(double time);
 
 private:
     void createWaveformPixmap(const QVector<float> &samples, int fullWidth);

@@ -3,6 +3,7 @@
 #include "Chorus.h"
 #include "Clipping.h"
 #include "Compression.h"
+#include "DeEsser.h"
 #include "Delay.h"
 #include "Distortion.h"
 #include "EQ.h"
@@ -53,6 +54,9 @@ AudioEffectFactory::create(AudioEffectType type)
 
     case AudioEffectType::Phaser:
         return std::make_unique<Phaser>();
+
+    case AudioEffectType::DeEsser:
+        return std::make_unique<DeEsser>();
     }
     
 

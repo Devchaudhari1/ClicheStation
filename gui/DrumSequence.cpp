@@ -20,10 +20,61 @@ DrumSequence::DrumSequence(int trackId,AudioEngine* audioEngine,QWidget* parent
 
 void DrumSequence::createUi()
 {
+    setStyleSheet(R"(
+        DrumSequence {
+            background: #18191c;
+            border: 1px solid #2c2f34;
+            border-radius: 6px;
+        }
+
+        QScrollArea {
+            background: #18191c;
+            border: none;
+        }
+
+        QScrollArea > QWidget > QWidget {
+            background: #18191c;
+        }
+
+        QScrollBar:vertical {
+            background: #202226;
+            width: 10px;
+            margin: 2px 2px 2px 2px;
+            border-radius: 5px;
+        }
+
+        QScrollBar::handle:vertical {
+            background: #4a4e57;
+            min-height: 30px;
+            border-radius: 5px;
+        }
+
+        QScrollBar::handle:vertical:hover {
+            background: #626873;
+        }
+
+        QScrollBar::add-line:vertical,
+        QScrollBar::sub-line:vertical {
+            height: 0px;
+        }
+
+        QScrollBar::add-page:vertical,
+        QScrollBar::sub-page:vertical {
+            background: transparent;
+        }
+    )");
+    
     m_drumGrid = new DrumGrid;
     m_stepGrid = m_drumGrid->stepGrid();
-    m_verticalScrollArea = new QScrollArea(this);
 
+    m_stepGrid->setStyleSheet(R"(
+        StepGrid {
+            background: #16171a;
+            border: none;
+        }
+    )");
+    m_verticalScrollArea = new QScrollArea(this);
+    
     m_verticalScrollArea->setWidget(m_drumGrid);
     m_verticalScrollArea->setWidgetResizable(false);
 

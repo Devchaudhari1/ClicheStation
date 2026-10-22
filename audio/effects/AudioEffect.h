@@ -17,7 +17,8 @@ enum class AudioEffectType
     Limiter,
     Gate,
     Chorus,
-    Phaser
+    Phaser,
+    DeEsser
 };
 
 class AudioEffect

@@ -85,6 +85,8 @@ root/
             ---Compression.h
             ---Delay.cpp // Adds dealy effect 
             ---Delay.h
+            ---DeEsser.cpp // Removes excessive sibilance (ch, sh, t sound)
+            ---DeEsser.h
             ---Distortion.cpp // Adds distortion to the sound
             ---Distortion.h
             ---EffectChain.cpp // Chains all effects in a order
@@ -127,6 +129,8 @@ root/
         ---pianoKeyBoard.h
         ---pianoRoll.cpp // Synthesia or Piano Roll contains green Piano Tiles
         ---pianoRoll.h
+        ---RecordingTimeRuler.cpp // Provides a Time reference for the audio clip to play
+        ---RecordingTimeRuler.h
         ---RowContainer.cpp // Contains the RowHeader and StepGrid
         ---RowContainer.h
         ---RowHeader.cpp // Contains the header name of the grid
@@ -137,6 +141,8 @@ root/
         ---track_list.h
         ---voice_track.cpp // Voice Track card
         ---voice_track.h
+        ---VoiceRecordingWindow.cpp // window used for editing recorded audio clips
+        ---VoiceRecordingWindow.h
         ---playlist/
             ---Clip.cpp // class defining the structure of a clip
             ---Clip.h
@@ -166,10 +172,19 @@ root/
     ---synth/
         ---ADSREnvelope.cpp // Manages ADSR Envelope
         ---ADSREnvelope.h
+        ---DrumSampleBank.cpp // Provides input mechanism for the wav files correspoding to Drum Samples
+        ---DrumSampleBank.h
+        ---DrumsetsSamples.h // Maps drum samples to their wav files
         ---Oscillator.cpp //capable of generating classical Sine, Saw, Triangle, Square and other waves
         ---Oscillator.h
+        ---RealTimeSampler.cpp // Contains logic for sampling audios recorded through mic 
+        ---RealTimeSampler.h
+        ---SampleBank.cpp // Provides input mechanism for the wav files corresponding to instrument samples 
+        ---SampleBank.h
+        ---SampleData.h // Contains samples rendered from the wav files
         ---SynthEngine.cpp // renders wave profile as described in a Voice object
         ---SynthEngine.h
+        ---SynthesizersSamples.h // Maps instrument samples to their wav files
         ---Voice.cpp // object representing a voice as a function of keys pressed frequency, wave velocity, ADSR envelope, oscillator type(Sine, Triangle, Saw) and pitchbend set
         ---Voice.h
     ---wav/
@@ -265,66 +280,6 @@ VoiceTrack
 │            [M] │                                              │
 └────────────────┴──────────────────────────────────────────────┘
       ↕ vertical scrolling
-```
-
-```
-Proposed Plan for Playlist
-
-
-Playlist // A QHBoxLayout  
-
-│
-
-├── TimeRuler  
-
- |           |-------a spacer of length = length of left Pane
-
- |           |--------actual ruler running to the right
-
-│
-
-└── TimelineView // a vertically  scrolling pane like QListView or QScrollBar with only Vertical Scroll enabled
-
-    │
-
-    ├── LeftPane // a fixed 160Hz Widget 
-
-    │   └── LeftContent   // I think we dont even need this
-
-    │       ├── Sequence 1 header // A fixed Size Widget
-
-    │       ├── Layer 1// Fixed Widget
-
-    │       ├── Layer 2// Fixed Widget
-
-    │       ├── Layer 3// Fixed Widget
-
-    │       ├── Sequence 2 header // Fixed Widget
-
-    │       ├── Layer 1// Fixed Widget
-
-    │       └── Layer 2// Fixed Widget
-
-    │
-
-    └── RightPane // A QScrollBar with only Horizontal SCroll possible
-
-        └── RightContent // Again I dont think we need this
-
-            ├── Sequence 1 header// Fixed Widget
-
-            ├── Layer 1 ClipArea// Fixed Widget
-
-            ├── Layer 2 ClipArea// Fixed Widget
-
-            ├── Layer 3 ClipArea// Fixed Widget
-
-            ├── Sequence 2 header// Fixed Widget
-
-            ├── Layer 1 ClipArea// Fixed Widget
-
-            └── Layer 2 ClipArea// Fixed Widget
-
 ```
 
 ### Reorderable Effects Layout Plan
@@ -594,3 +549,287 @@ end
                         ├── Sequence 2
                         └── ...
 ```
+
+## Digital Signal Processing Equations
+
+The equations used for the calculation of output signal and envelope are as follows:
+$$
+\begin{array}{ll}
+x[n] : \text{Input signal (mono)} \\
+y[n] : \text{Output signal (mono)} \\
+x_L[n] : \text{Left input signal (stereo)} \\
+x_R[n] : \text{Right input signal (stereo)} \\
+y_L[n] : \text{Left output signal (stereo)} \\
+y_R[n] : \text{Right output signal (stereo)} \\
+f_S : \text{Sample Rate (rate at which samples arrive per sec)} \\
+T_A : \text{Duration of Attack stage of signal in sec} \\
+T_R : \text{Duration of Release stage of signal in sec} \\
+
+
+\end{array}
+$$
+- ADSR Envelope Calculation:
+$$
+\begin{array}{ll}
+    
+    T_A : \text{Attack in sec (default 0.8s)} \\ 
+    T_D : \text{Decay in sec (default 0.1s)} \\
+    G_S : \text{Sustain gain factor (default 0.8)} \\
+    T_R : \text{Release in sec (default 0.2s)} \\
+    R_{level} : \text{Gain level at which release start} \\
+    G_{max} : \text{Peak gain factor (default 1.0)} \\
+    g[n] : \text{Gain factor for nth sample} \\ \\
+    
+    g[0]=0 \\ \\
+    g[n] = 
+    \begin{cases}
+        g[n-1] + \frac{G_{max}}{T_A f_S} &, stage = Attack \\
+        g[n-1] - \frac{G_{max}-G_S}{T_D f_S} &, stage = Decay \\
+        G_{S} &, stage = Sustain \\
+        g[n-1] - \frac{R_{level}}{T_R f_S} &, stage =Release\\
+    \end{cases} \\ \\
+    y[n]=g[n] \times{} x[n] \\ 
+
+\end{array}
+$$
+
+```mermaid
+
+    flowchart LR
+    subgraph Stages["Stages of ADSR"]
+        NoteOn["NoteOn"]-->|Pressed|Attack["Attack"]
+        Attack-->|g>=1.0|Decay["Decay"]
+        Decay-->|g<=$$G_S$$|Sustain["Sustain"]
+        Sustain-->|Note Released|Release["Release"]
+        Release-->|g<=0|Idle["Idle"]
+    end
+
+```
+
+- Chorus:
+
+$$ 
+\begin{array}{ll}
+f_L : \text{Low frequency oscillator frequency or rate} \\
+M : \text{modulation depth} \\
+D : \text{base delay}\\
+\alpha{} : \text{mix (ranging from 0.0f (only dry) to 1.0f (only wet))}\\
+\phi{}_L : \text{low frequency oscillator phase} \\ \\
+d[n] : \text{modulated delay} \\ \\
+d[n] = D + M \sin{( 2 \pi{}n\frac{ f_L}{f_S}+\phi_{L})} \\ \\
+y[n] = (1-\alpha{})x[n] + \alpha{}x[n-d[n]]
+\end{array}
+
+$$
+
+- Clipping:
+$$
+\begin{array}{ll}
+    T : \text{Clipping Threshold (between 0.01 to 1.0)} \\ \\
+    y[n] = 
+    \begin{cases} 
+        -T &, x[n]<-T \\
+        x[n] &, -T < x[n] < T \\
+        T &, T<x[n] \\
+    \end{cases} \\
+
+\end{array}
+$$
+
+- Compression:
+$$
+\begin{array}{ll}
+T : \text{Threshold in dB} \\
+r : \text{Compression ratio (ratio of signal above T which is reduced)} \\
+T_A : \text{Attack in sec} \\
+T_R : \text{Release in sec} \\
+G_{m} : \text{Make up Gain} \\
+d[n] : \text{instantaneous detected level} \\ 
+e[n] : \text{envelope (uses EWMA)} \\
+L[n] : \text{input level  in dB} \\
+G_{dB} : \text{Gain reduction} \\
+g[n] : \text{Compression gain} \\ \\
+d[n] = max(|x_L[n]| , |x_R[n]|)  \\ \\
+e[n] = 
+\begin{cases}
+\exp{}^{-\frac{1}{T_A f_S}}e[n-1]+(1-\exp{}^{-\frac{1}{T_A f_S}})d[n] &, d[n]>e[n]\\
+\exp{}^{-\frac{1}{T_R f_S}}e[n-1]+(1-\exp{}^{-\frac{1}{T_R f_S}})d[n] &, d[n]<e[n]\\
+\end{cases} \\ \\
+L[n] = 20 \log_{10} {e[n]} \\ \\
+G_{dB} = \frac{L[n]-T}{r} - (L[n]-T) \\ \\
+g[n] = 10^{\frac{G_{dB}}{20}}\\ \\
+y_L[n] = x_L[n]g[n]G_{m} \\
+y_R[n] = x_R[n]g[n]G_{m} \\
+\end{array} \\
+$$
+
+- Delay:
+$$
+\begin{array}{ll}
+D : \text{Delay time in sec (Spacing between echo)} \\
+f : \text{Feedback (attenuation of each successive echo)} \\
+m : \text{mix} \\
+b[n] : \text{Buffered feedback} \\ \\
+b[n] = x[n] + f b[n-D] \\ \\
+y[n] = x[n](1-m)+mb[n-D] \\ 
+
+\end{array} \\
+$$
+
+- Distortion:
+$$
+\begin{array}{ll}
+d : \text{Distortion drive} \\ \\
+y[n] =tanh(x[n] d)\\
+
+\end{array}
+$$
+
+- EQ:
+$$
+\begin{array}{ll}
+    f_{low} : \text{Low frequency} \\
+    f_{mid} : \text{Mid frequency} \\
+    f_{high} : \text{High frequency} \\
+    Q : \text{Q factor} \\
+    G_{low} : \text{Low Gain} \\
+    G_{mid} : \text{Middle Gain} \\
+    G_{high} : \text{High Gain} \\
+    A : \text{Gain parameter in RBJ equation} =  10^{\frac{G}{40}} \\
+    \omega{} = 2 \pi{} \frac{f}{f_SR} \\
+    \alpha{} = \frac{sin( \omega{})}{\sqrt{2}} \\
+    b_0 = \frac{A ((A+1)-(A-1) cos(\omega{}) + 2 \sqrt{A} \alpha{} )}{A ((A+1)+(A-1) cos(\omega{}) + 2 \sqrt{A} \alpha{} )} \\ 
+    b_1 = \frac{2 A ((A-1)-(A+1) cos(\omega{}))}{- 2 A ((A-1)+(A+1) cos(\omega{}))} \\ 
+    b_2 = \frac{A ((A+1) - (A-1) cos(\omega{}) - 2 \sqrt{A} \alpha{})}{A ((A+1) + (A-1) cos(\omega{}) - 2 \sqrt{A} \alpha{})} \\
+    y[n] = b_0 +z_1[n-1] \\ \\
+    z_1[n] = b_1 x[n] - a_1 y[n] +z_2[n-1] \\ \\
+    z_2[n] = b_2 x[n] - a_2 y[n] \\ \\
+
+\end{array}
+$$
+
+- Flanger:
+$$
+\begin{array}{ll}
+f_R : \text{Oscillation frequency of LFO} \\
+d : \text{Modulation depth} \\
+m : \text{mix} \\
+f[n] : \text{feedback} \\
+D[n] :\text{Delay} \\
+D_s[n] :\text{Delay in samples} \\
+D_{min} = \text{ Min Delay} \\
+D_{max} = \text{ Max Delay} \\
+D_s[n] = (D_{min} + \frac{sin(2 \pi{} n \frac{f_R}{f_S})+1}{2} d) f_S \\ \\
+\mu{} = \text{Interpolation fraction} = D_s[n] - \lfloor{} D_s[n] \rfloor{} \\ \\
+d[n]= b[n-\lfloor{}D_s[n]\rfloor{}] \mu{} + (1-\mu{}) b[n- \lfloor{} D_s[n] \rfloor{}+1] \\ \\
+b[n] : \text{Feedback}= x[n]+f_F d[n] \\ \\
+y[n]= x[n] (1-m) +(x[n]+f[n-1] D[n] )m \\ \\
+
+\end{array}
+$$
+
+- Gate: 
+$$
+\begin{array}{ll}
+T : Threshold \\
+range : \text{Range in dB}\\
+G_{closed} : \text{Closed gain} \\
+G_{target} : \text{Target Gain} \\
+g[n] : Gain \\ \\
+G_{closed} = 10^{\frac{range}{20}} \\ 
+G_{target} = 
+\begin{cases}
+1 &,\text{ x[n]>T} \\
+G_{closed} &, \text{ x[n]< T} \\
+\end{cases} \\ \\
+
+g[n] =
+\begin{cases}
+G_{target}+ (g[n-1] - G_{target}) e^{-\frac{1}{T_A f_S}} &,  G_{target} > g[n-1] \\
+G_{target}+ (g[n-1] - G_{target}) e^{-\frac{1}{T_R f_S}} &,  G_{target} < g[n-1] \\
+
+\end{cases}\\ \\
+
+y[n]=g[n]*x[n] \\
+\end{array}
+$$
+
+- Limiter:
+$$
+\begin{array}{ll}
+T : \text{Threshold} \\
+T_R : \text{Release in sec} \\
+C : \text{Ceiling} \\ 
+x_p[n] : \text{Input peak} = max(|x_L[n]|, |x_R[n]|) \\ 
+g_{target} : \text{Target gain} = min(1, \frac{T}{x_p[n]}) \\
+g[n] : \text{ Gain } \\
+g[n] = g_{target} + (g[n-1] - g_{target}) e^{-\frac{1}{T_R f_S}} \\ \\
+y_L[n]= 
+\begin{cases}
+    -C &, x_L[n]g[n] < -C \\
+    x_L[n]g[n] &, -C < x_L[n]g[n]<C \\
+    C &, C < x_L[n]g[n] \\
+\end{cases} \\ \\
+y_R[n]= 
+\begin{cases}
+    -C &, x_R[n]g[n] < -C \\
+    x_R[n]g[n] &, -C < x_R[n]g[n]<C \\
+    C &, C < x_R[n]g[n] \\
+\end{cases} \\
+\end{array}
+$$
+
+- Phaser:
+
+$$
+\begin{array}{ll}
+f_{R} : \text{Oscillation Frequency of LFO} \\
+d : \text{Modulation depth} \\
+f : \text{Feedback} \\
+f_{min} : \text{Min all-pass frequency} \\
+f_{max} : \text{Max all-pass frequency} \\
+m : \text{Mix} \\
+v_0[n], v_1[n],...,v_k[n] : \text{Input to k stages for nth sample} \\
+s_0[n], s_1[n],...,s_k[n] : \text{State of k stages for nth sample} \\
+y_0[n], y_1[n],...,y_k[n] : \text{Output of k stages for nth sample} \\
+\omega{} : sin(2 \pi{} \frac{f_R}{f_S}) \\
+
+a[n] : \text{All-pass coefficient} = \frac{1-sin(\omega{}n)}{1+sin(\omega{}n)}\\
+l[n] : \text{Low Frequecy Oscillator} \\ \\
+l[n] = \frac{1 + sin(\omega{}n)}{2} \\ \\
+f[n] = f_{min} + d l[n] ( f_{max}- f_{min}) \\ \\
+v_0[n] = x[n] +  y_N[n-1] f \\
+s_k[n] = v_k[n]+ a[n] y_k[n] \\
+y_k[n] = -a[n]v_k[n] + s_k[n-1] \\ 
+v_{k+1}[n] = y_k[n] \\
+y[n] = (1-m)x[n]+my_N[n] \\
+\end{array} \\ \\ 
+
+$$
+
+- Reverb:
+
+$$
+\begin{array}{ll}
+R : \text{Room Size} \\
+D : \text{damping} \\
+w : \text{Wet mix component of reverb} \\ 
+\delta{}_1, \delta{}_2, \delta{}_3, \delta{}_4 : \text{Delayed signal used for echo} \\ \\
+\delta{}_1 = f_S (0.029 + 0.02 R) \\
+\delta{}_2 = f_S (0.043 + 0.03 R) \\
+\delta{}_3 = f_S (0.071 + 0.04 R) \\
+\delta{}_4 = f_S (0.113 + 0.05 R) \\ \\
+r[n] = \frac{x[n-\delta{}_1]+x[n-\delta{}_2]+x[n-\delta{}_3]+x[n-\delta{}_4]}{4} \\ \\
+r_D[n] = (1-D)r[n] \\ \\
+y[n] = (1-w)x[n] + w r[n] \\
+\end{array} \\
+$$
+
+- Saturation:
+
+$$
+\begin{array}{ll}
+d : \text{Saturation Drive} \\
+y[n]= tanh(x[n] drive)
+\end{array}
+$$
